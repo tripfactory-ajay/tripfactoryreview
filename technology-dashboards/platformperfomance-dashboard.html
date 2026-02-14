@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform Performance Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f7fa; color: #1e293b; }
+        .header { background: white; border-bottom: 1px solid #e2e8f0; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .logo { width: 40px; height: 40px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 20px; }
+        .header-title h1 { font-size: 20px; font-weight: 600; color: #0f172a; margin-bottom: 2px; }
+        .header-title p { font-size: 12px; color: #64748b; }
+        .header-right { display: flex; gap: 12px; align-items: center; }
+        .tab-group { display: flex; background: #f1f5f9; border-radius: 6px; padding: 4px; }
+        .tab { padding: 6px 16px; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .tab.active { background: white; color: #1d4ed8; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .tab:not(.active) { color: #64748b; }
+        .btn { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
+        .btn-primary { background: #1d4ed8; color: white; }
+        .btn-secondary { background: white; border: 1px solid #e2e8f0; color: #475569; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .filters-bar { background: white; border-bottom: 1px solid #e2e8f0; padding: 12px 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .filter-label { font-size: 12px; color: #64748b; font-weight: 500; }
+        .filter-select { padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white; color: #334155; cursor: pointer; }
+        .dashboard-container { padding: 24px; max-width: 1600px; margin: 0 auto; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .alert-critical { background: linear-gradient(135deg, #fee2e2, #fecaca); border: 1px solid #dc2626; border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+        .alert-warning { background: linear-gradient(135deg, #fef3c7, #fde68a); border: 1px solid #f59e0b; border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+        .alert-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; }
+        .alert-critical .alert-icon { background: #dc2626; }
+        .alert-warning .alert-icon { background: #f59e0b; }
+        .alert-content h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+        .alert-critical .alert-content h3 { color: #991b1b; }
+        .alert-warning .alert-content h3 { color: #92400e; }
+        .alert-content p { font-size: 13px; }
+        .alert-critical .alert-content p { color: #7f1d1d; }
+        .alert-warning .alert-content p { color: #b45309; }
+        .alert-action { margin-left: auto; }
+
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .kpi-card { background: white; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; transition: transform 0.2s, box-shadow 0.2s; }
+        .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+        .kpi-card.critical { border-left: 4px solid #dc2626; }
+        .kpi-card.warning { border-left: 4px solid #f59e0b; }
+        .kpi-card.success { border-left: 4px solid #10b981; }
+        .kpi-card.info { border-left: 4px solid #3b82f6; }
+        .kpi-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; }
+        .kpi-label { font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .kpi-icon.red { background: #fee2e2; color: #dc2626; }
+        .kpi-icon.green { background: #dcfce7; color: #15803d; }
+        .kpi-icon.blue { background: #dbeafe; color: #1d4ed8; }
+        .kpi-icon.orange { background: #ffedd5; color: #c2410c; }
+        .kpi-icon.purple { background: #f3e8ff; color: #7c3aed; }
+        .kpi-value { font-size: 28px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+        .kpi-subtext { font-size: 12px; color: #64748b; }
+        .kpi-trend { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; margin-top: 8px; }
+        .trend-up { color: #15803d; }
+        .trend-down { color: #dc2626; }
+
+        .dashboard-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
+        .card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
+        .card-header { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 14px; font-weight: 600; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+        .card-title i { color: #3b82f6; }
+        .card-actions { display: flex; gap: 8px; }
+        .card-action { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; border: none; background: #f1f5f9; color: #475569; }
+        .card-action.active { background: #dbeafe; color: #1d4ed8; }
+        .card-body { padding: 20px; }
+        .col-6 { grid-column: span 6; }
+        .col-4 { grid-column: span 4; }
+        .col-8 { grid-column: span 8; }
+        .col-12 { grid-column: span 12; }
+        .col-3 { grid-column: span 3; }
+
+        .queue-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid; }
+        .queue-item.critical { border-left-color: #dc2626; }
+        .queue-item.warning { border-left-color: #f59e0b; }
+        .queue-item.success { border-left-color: #10b981; }
+        .queue-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .queue-icon.red { background: #fee2e2; color: #dc2626; }
+        .queue-icon.orange { background: #ffedd5; color: #c2410c; }
+        .queue-icon.green { background: #dcfce7; color: #15803d; }
+        .queue-info { flex: 1; }
+        .queue-name { font-size: 13px; font-weight: 600; color: #0f172a; }
+        .queue-meta { font-size: 11px; color: #64748b; }
+        .queue-count { font-size: 18px; font-weight: 700; color: #0f172a; }
+        .queue-time { font-size: 11px; color: #64748b; }
+
+        .sla-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .sla-box { text-align: center; padding: 16px; border-radius: 8px; }
+        .sla-box.critical { background: #fee2e2; border: 1px solid #fecaca; }
+        .sla-box.warning { background: #fef3c7; border: 1px solid #fde68a; }
+        .sla-box.success { background: #dcfce7; border: 1px solid #bbf7d0; }
+        .sla-box.info { background: #dbeafe; border: 1px solid #bfdbfe; }
+        .sla-hours { font-size: 11px; color: #64748b; font-weight: 600; margin-bottom: 4px; }
+        .sla-count { font-size: 24px; font-weight: 700; }
+        .sla-box.critical .sla-count { color: #dc2626; }
+        .sla-box.warning .sla-count { color: #f59e0b; }
+        .sla-box.success .sla-count { color: #15803d; }
+        .sla-box.info .sla-count { color: #1d4ed8; }
+        .sla-label { font-size: 10px; color: #64748b; margin-top: 4px; }
+
+        .touchpoint-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .touchpoint-label { min-width: 80px; font-size: 12px; color: #64748b; }
+        .touchpoint-progress { flex: 1; height: 24px; background: #f1f5f9; border-radius: 12px; overflow: hidden; }
+        .touchpoint-fill { height: 100%; border-radius: 12px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; color: white; font-size: 11px; font-weight: 600; transition: width 0.6s ease; }
+        .touchpoint-fill.email { background: linear-gradient(90deg, #3b82f6, #1d4ed8); }
+        .touchpoint-fill.whatsapp { background: linear-gradient(90deg, #10b981, #059669); }
+        .touchpoint-fill.phone { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .touchpoint-value { min-width: 50px; text-align: right; font-size: 14px; font-weight: 700; color: #0f172a; }
+
+        .funnel-container { display: flex; flex-direction: column; gap: 8px; }
+        .funnel-step { display: flex; align-items: center; gap: 12px; }
+        .funnel-bar-container { flex: 1; height: 40px; background: #f1f5f9; border-radius: 8px; overflow: hidden; position: relative; }
+        .funnel-bar { height: 100%; border-radius: 8px; display: flex; align-items: center; padding: 0 16px; color: white; font-weight: 600; font-size: 13px; transition: width 0.6s ease; }
+        .funnel-bar.b2c { background: linear-gradient(90deg, #3b82f6, #1d4ed8); }
+        .funnel-bar.b2b { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
+        .funnel-label { min-width: 100px; font-size: 12px; font-weight: 600; color: #334155; }
+        .funnel-value { min-width: 80px; text-align: right; font-size: 14px; font-weight: 700; color: #0f172a; }
+        .funnel-drop { min-width: 60px; text-align: right; font-size: 11px; color: #dc2626; }
+
+        .system-health-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .health-card { padding: 16px; border-radius: 10px; text-align: center; }
+        .health-card.good { background: #f0fdf4; border: 1px solid #bbf7d0; }
+        .health-card.warning { background: #fffbeb; border: 1px solid #fef3c7; }
+        .health-card.critical { background: #fef2f2; border: 1px solid #fecaca; }
+        .health-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 18px; }
+        .health-card.good .health-icon { background: #10b981; color: white; }
+        .health-card.warning .health-icon { background: #f59e0b; color: white; }
+        .health-card.critical .health-icon { background: #dc2626; color: white; }
+        .health-name { font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 4px; }
+        .health-status { font-size: 20px; font-weight: 700; }
+        .health-card.good .health-status { color: #15803d; }
+        .health-card.warning .health-status { color: #d97706; }
+        .health-card.critical .health-status { color: #dc2626; }
+        .health-subtext { font-size: 11px; color: #64748b; margin-top: 4px; }
+
+        .metric-table { width: 100%; border-collapse: collapse; }
+        .metric-table th, .metric-table td { padding: 10px; text-align: left; font-size: 12px; border-bottom: 1px solid #f1f5f9; }
+        .metric-table th { font-weight: 600; color: #64748b; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; background: #f8fafc; }
+        .metric-table td { color: #334155; }
+        .trend-indicator { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+        .trend-indicator.up { background: #dcfce7; color: #15803d; }
+        .trend-indicator.down { background: #fee2e2; color: #dc2626; }
+
+        .chart-container { position: relative; height: 250px; }
+        .chart-container-sm { position: relative; height: 200px; }
+
+        @media (max-width: 1200px) { .col-4, .col-6, .col-8, .col-3 { grid-column: span 12; } }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div class="logo">TF</div>
+            <div class="header-title">
+                <h1>Platform Performance Dashboard</h1>
+                <p>Quote Management, Response Times & System Health</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="tab-group">
+                <div class="tab active" data-tab="overview">Overview</div>
+                <div class="tab" data-tab="queues">Queues</div>
+                <div class="tab" data-tab="communication">Communication</div>
+                <div class="tab" data-tab="funnel">Funnel</div>
+                <div class="tab" data-tab="system">System Health</div>
+            </div>
+            <button class="btn btn-secondary"><i class="fas fa-download"></i> Export</button>
+        </div>
+    </div>
+
+    <div class="filters-bar">
+        <span class="filter-label">FILTERS:</span>
+        <select class="filter-select" id="timeFilter">
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+        </select>
+        <select class="filter-select" id="channelFilter">
+            <option value="all">All Channels</option>
+            <option value="b2c">B2C</option>
+            <option value="b2b">B2B</option>
+        </select>
+        <button class="btn btn-secondary" style="margin-left: auto;" onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh</button>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- OVERVIEW TAB -->
+        <div id="overview" class="tab-content active">
+            <!-- Critical Alerts -->
+            <div class="alert-critical">
+                <div class="alert-icon"><i class="fas fa-exclamation-circle"></i></div>
+                <div class="alert-content">
+                    <h3>Critical Queue Alert</h3>
+                    <p><strong>47 clients</strong> waiting for quotes >4 hours. <strong>12 enquiries</strong> untouched >24 hours. 
+                    <strong>3 agents</strong> idle with pending assignments. Immediate action required to prevent client loss.</p>
+                </div>
+                <div class="alert-action">
+                    <button class="btn btn-danger"><i class="fas fa-bolt"></i> Auto-Assign</button>
+                </div>
+            </div>
+
+            <!-- KPI Grid -->
+            <div class="kpi-grid">
+                <div class="kpi-card critical">
+                    <div class="kpi-header">
+                        <span class="kpi-label">Clients Awaiting Quotes</span>
+                        <div class="kpi-icon red"><i class="fas fa-user-clock"></i></div>
+                    </div>
+                    <div class="kpi-value" id="kpiWaitingClients">47</div>
+                    <div class="kpi-subtext">Average wait: 3.2 hours</div>
+                    <div class="kpi-trend trend-down"><i class="fas fa-arrow-up"></i> +8 vs yesterday</div>
+                </div>
+
+                <div class="kpi-card warning">
+                    <div class="kpi-header">
+                        <span class="kpi-label">Agents Idle / Waiting</span>
+                        <div class="kpi-icon orange"><i class="fas fa-user-slash"></i></div>
+                    </div>
+                    <div class="kpi-value" id="kpiIdleAgents">3</div>
+                    <div class="kpi-subtext">With pending assignments</div>
+                    <div class="kpi-trend trend-down"><i class="fas fa-exclamation-circle"></i> Rebalance needed</div>
+                </div>
+
+                <div class="kpi-card critical">
+                    <div class="kpi-header">
+                        <span class="kpi-label">SLA Breaches (>4hrs)</span>
+                        <div class="kpi-icon red"><i class="fas fa-clock"></i></div>
+                    </div>
+                    <div class="kpi-value" id="kpiSlaBreaches">23</div>
+                    <div class="kpi-subtext">12 untouched >24 hours</div>
+                    <div class="kpi-trend trend-down"><i class="fas fa-arrow-up"></i> +5 today</div>
+                </div>
+
+                <div class="kpi-card info">
+                    <div class="kpi-header">
+                        <span class="kpi-label">Avg Touchpoints/Client</span>
+                        <div class="kpi-icon blue"><i class="fas fa-comments"></i></div>
+                    </div>
+                    <div class="kpi-value" id="kpiTouchpoints">4.2</div>
+                    <div class="kpi-subtext">Risk: Over-communication</div>
+                    <div class="kpi-trend trend-up"><i class="fas fa-arrow-up"></i> +0.8 vs optimal</div>
+                </div>
+
+                <div class="kpi-card success">
+                    <div class="kpi-header">
+                        <span class="kpi-label">Avg Response Time</span>
+                        <div class="kpi-icon green"><i class="fas fa-reply"></i></div>
+                    </div>
+                    <div class="kpi-value" id="kpiResponseTime">2.4 hrs</div>
+                    <div class="kpi-subtext">Target: <2 hours</div>
+                    <div class="kpi-trend trend-up"><i class="fas fa-arrow-down"></i> -0.3 improvement</div>
+                </div>
+
+                <div class="kpi-card warning">
+                    <div class="kpi-header">
+                        <span class="kpi-label">Quote to Booking Rate</span>
+                        <div class="kpi-icon orange"><i class="fas fa-shopping-cart"></i></div>
+                    </div>
+                    <div class="kpi-value" id="kpiConversion">18.4%</div>
+                    <div class="kpi-subtext">Industry avg: 22%</div>
+                    <div class="kpi-trend trend-down"><i class="fas fa-arrow-down"></i> -2.1% vs target</div>
+                </div>
+            </div>
+
+            <!-- Row 2: SLA Breakdown + Queue Status -->
+            <div class="dashboard-grid">
+                <div class="card col-6">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-stopwatch"></i> Response Time SLA Breakdown</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="sla-grid">
+                            <div class="sla-box critical">
+                                <div class="sla-hours">>24 Hours</div>
+                                <div class="sla-count" id="sla24">12</div>
+                                <div class="sla-label">Critical</div>
+                            </div>
+                            <div class="sla-box warning">
+                                <div class="sla-hours">8-24 Hours</div>
+                                <div class="sla-count" id="sla8">18</div>
+                                <div class="sla-label">At Risk</div>
+                            </div>
+                            <div class="sla-box info">
+                                <div class="sla-hours">4-8 Hours</div>
+                                <div class="sla-count" id="sla4">23</div>
+                                <div class="sla-label">Warning</div>
+                            </div>
+                            <div class="sla-box success">
+                                <div class="sla-hours"><4 Hours</div>
+                                <div class="sla-count" id="sla2">89</div>
+                                <div class="sla-label">On Track</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 16px; padding: 12px; background: #fef2f2; border-radius: 8px; border-left: 4px solid #dc2626;">
+                            <div style="font-size: 12px; color: #991b1b; font-weight: 600; margin-bottom: 4px;"><i class="fas fa-exclamation-triangle"></i> Critical Issue</div>
+                            <div style="font-size: 12px; color: #7f1d1d;">12 enquiries untouched >24 hours. Auto-escalation triggered. Senior agents notified.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card col-6">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-list-ol"></i> Current Queue Status</div>
+                        <div class="card-actions"><button class="btn btn-primary" style="padding: 4px 12px; font-size: 11px;">View All</button></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="queue-item critical">
+                            <div class="queue-icon red"><i class="fas fa-plane"></i></div>
+                            <div class="queue-info">
+                                <div class="queue-name">Flight Quotes - B2C</div>
+                                <div class="queue-meta">Dubai, Maldives, Singapore routes</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="queue-count">28</div>
+                                <div class="queue-time">Avg 4.2 hrs</div>
+                            </div>
+                        </div>
+                        <div class="queue-item warning">
+                            <div class="queue-icon orange"><i class="fas fa-hotel"></i></div>
+                            <div class="queue-info">
+                                <div class="queue-name">Hotel Quotes - B2B</div>
+                                <div class="queue-meta">Corporate bookings pending</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="queue-count">14</div>
+                                <div class="queue-time">Avg 2.8 hrs</div>
+                            </div>
+                        </div>
+                        <div class="queue-item warning">
+                            <div class="queue-icon orange"><i class="fas fa-map-marked-alt"></i></div>
+                            <div class="queue-info">
+                                <div class="queue-name">Tour Packages</div>
+                                <div class="queue-meta">Custom itinerary requests</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="queue-count">5</div>
+                                <div class="queue-time">Avg 3.1 hrs</div>
+                            </div>
+                        </div>
+                        <div class="queue-item success">
+                            <div class="queue-icon green"><i class="fas fa-check-circle"></i></div>
+                            <div class="queue-info">
+                                <div class="queue-name">Agents Available</div>
+                                <div class="queue-meta">Ready for assignment</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="queue-count">8</div>
+                                <div class="queue-time">3 idle >30 min</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 3: Communication Touchpoints + Agent Performance -->
+            <div class="dashboard-grid" style="margin-top: 20px;">
+                <div class="card col-6">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-comments"></i> Communication Touchpoint Analysis</div>
+                        <div class="card-actions"><button class="card-action active">Per Client</button><button class="card-action">Per Booking</button></div>
+                    </div>
+                    <div class="card-body">
+                        <div style="margin-bottom: 16px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <span style="font-size: 13px; font-weight: 600; color: #0f172a;">Average Touchpoints per Client Journey</span>
+                                <span style="font-size: 20px; font-weight: 700; color: #dc2626;">4.2</span>
+                            </div>
+                            <div style="font-size: 12px; color: #64748b; margin-bottom: 16px;">Optimal range: 2-3 touchpoints. Current level risks client annoyance.</div>
+                        </div>
+
+                        <div class="touchpoint-bar">
+                            <span class="touchpoint-label"><i class="fas fa-envelope"></i> Email</span>
+                            <div class="touchpoint-progress">
+                                <div class="touchpoint-fill email" style="width: 85%;">2.1</div>
+                            </div>
+                            <span class="touchpoint-value">2.1</span>
+                        </div>
+                        <div class="touchpoint-bar">
+                            <span class="touchpoint-label"><i class="fab fa-whatsapp"></i> WhatsApp</span>
+                            <div class="touchpoint-progress">
+                                <div class="touchpoint-fill whatsapp" style="width: 65%;">1.6</div>
+                            </div>
+                            <span class="touchpoint-value">1.6</span>
+                        </div>
+                        <div class="touchpoint-bar">
+                            <span class="touchpoint-label"><i class="fas fa-phone"></i> Calls</span>
+                            <div class="touchpoint-progress">
+                                <div class="touchpoint-fill phone" style="width: 20%;">0.5</div>
+                            </div>
+                            <span class="touchpoint-value">0.5</span>
+                        </div>
+
+                        <div style="margin-top: 16px; padding: 12px; background: #fffbeb; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                            <div style="font-size: 12px; color: #92400e; font-weight: 600; margin-bottom: 4px;"><i class="fas fa-exclamation-triangle"></i> Over-Communication Risk</div>
+                            <div style="font-size: 12px; color: #b45309;">Clients receiving >3 touchpoints show 15% lower conversion. Recommend consolidating updates into single daily digest.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card col-6">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-user-tie"></i> Agent Response Performance</div>
+                    </div>
+                    <div class="card-body">
+                        <table class="metric-table">
+                            <thead>
+                                <tr><th>Agent</th><th>Avg Response</th><th>Quote Reply</th><th>SLA Met</th><th>Trend</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Priya Sharma</strong></td>
+                                    <td>1.2 hrs</td>
+                                    <td>45 min</td>
+                                    <td style="color: #15803d; font-weight: 600;">98%</td>
+                                    <td><span class="trend-indicator up"><i class="fas fa-arrow-up"></i> +2%</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Rajesh Kumar</strong></td>
+                                    <td>1.8 hrs</td>
+                                    <td>52 min</td>
+                                    <td style="color: #15803d; font-weight: 600;">94%</td>
+                                    <td><span class="trend-indicator up"><i class="fas fa-arrow-up"></i> +1%</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Sneha Reddy</strong></td>
+                                    <td>2.4 hrs</td>
+                                    <td>1.2 hrs</td>
+                                    <td style="color: #f59e0b; font-weight: 600;">87%</td>
+                                    <td><span class="trend-indicator down"><i class="fas fa-arrow-down"></i> -3%</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Amit Patel</strong></td>
+                                    <td>3.1 hrs</td>
+                                    <td>1.8 hrs</td>
+                                    <td style="color: #dc2626; font-weight: 600;">76%</td>
+                                    <td><span class="trend-indicator down"><i class="fas fa-arrow-down"></i> -5%</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Vikram Mehta</strong></td>
+                                    <td>4.2 hrs</td>
+                                    <td>2.4 hrs</td>
+                                    <td style="color: #dc2626; font-weight: 600;">68%</td>
+                                    <td><span class="trend-indicator down"><i class="fas fa-arrow-down"></i> -8%</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div style="margin-top: 12px; padding: 12px; background: #eff6ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                            <div style="font-size: 12px; color: #1d4ed8; font-weight: 600; margin-bottom: 4px;"><i class="fas fa-info-circle"></i> Coaching Required</div>
+                            <div style="font-size: 12px; color: #334155;">Amit Patel and Vikram Mehta need immediate coaching on response time management. Consider reassigning their overflow to Priya Sharma.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 4: Booking Funnel + System Health -->
+            <div class="dashboard-grid" style="margin-top: 20px;">
+                <div class="card col-8">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-filter"></i> Quote to Booking Funnel - Drop-off Analysis</div>
+                        <div class="card-actions"><button class="card-action active">Combined</button><button class="card-action">B2C</button><button class="card-action">B2B</button></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="funnel-container">
+                            <div class="funnel-step">
+                                <span class="funnel-label">Enquiries</span>
+                                <div class="funnel-bar-container">
+                                    <div class="funnel-bar b2c" style="width: 100%;">1,240 enquiries</div>
+                                </div>
+                                <span class="funnel-value">100%</span>
+                                <span class="funnel-drop"></span>
+                            </div>
+                            <div class="funnel-step">
+                                <span class="funnel-label">Quotes Sent</span>
+                                <div class="funnel-bar-container">
+                                    <div class="funnel-bar b2c" style="width: 78%;">968 quotes</div>
+                                </div>
+                                <span class="funnel-value">78%</span>
+                                <span class="funnel-drop"><i class="fas fa-arrow-down"></i> 22%</span>
+                            </div>
+                            <div class="funnel-step">
+                                <span class="funnel-label">Quote Viewed</span>
+                                <div class="funnel-bar-container">
+                                    <div class="funnel-bar b2c" style="width: 62%;">769 viewed</div>
+                                </div>
+                                <span class="funnel-value">62%</span>
+                                <span class="funnel-drop"><i class="fas fa-arrow-down"></i> 16%</span>
+                            </div>
+                            <div class="funnel-step">
+                                <span class="funnel-label">Negotiation</span>
+                                <div class="funnel-bar-container">
+                                    <div class="funnel-bar b2c" style="width: 34%;">422 engaged</div>
+                                </div>
+                                <span class="funnel-value">34%</span>
+                                <span class="funnel-drop"><i class="fas fa-arrow-down"></i> 28%</span>
+                            </div>
+                            <div class="funnel-step">
+                                <span class="funnel-label">Bookings</span>
+                                <div class="funnel-bar-container">
+                                    <div class="funnel-bar b2c" style="width: 18%;">228 bookings</div>
+                                </div>
+                                <span class="funnel-value">18.4%</span>
+                                <span class="funnel-drop"><i class="fas fa-arrow-down"></i> 15.6%</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 16px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                            <div style="padding: 12px; background: #fef2f2; border-radius: 8px; border-left: 4px solid #dc2626;">
+                                <div style="font-size: 12px; color: #991b1b; font-weight: 600; margin-bottom: 4px;">Biggest Drop: Quote to View</div>
+                                <div style="font-size: 12px; color: #7f1d1d;">16% never open quotes. Check email deliverability and subject lines.</div>
+                            </div>
+                            <div style="padding: 12px; background: #fffbeb; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                                <div style="font-size: 12px; color: #92400e; font-weight: 600; margin-bottom: 4px;">Critical Drop: View to Negotiation</div>
+                                <div style="font-size: 12px; color: #b45309;">28% view but don't engage. Price sensitivity or unclear value proposition.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card col-4">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-heartbeat"></i> System Health Status</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="system-health-grid">
+                            <div class="health-card good">
+                                <div class="health-icon"><i class="fas fa-server"></i></div>
+                                <div class="health-name">API Response</div>
+                                <div class="health-status">98ms</div>
+                                <div class="health-subtext">Target: <100ms</div>
+                            </div>
+                            <div class="health-card warning">
+                                <div class="health-icon"><i class="fas fa-globe"></i></div>
+                                <div class="health-name">Website Uptime</div>
+                                <div class="health-status">99.2%</div>
+                                <div class="health-subtext">3 hangs today</div>
+                            </div>
+                            <div class="health-card critical">
+                                <div class="health-icon"><i class="fas fa-bolt"></i></div>
+                                <div class="health-name">Quote Generation</div>
+                                <div class="health-status">4.2s</div>
+                                <div class="health-subtext">Target: <2s</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 16px;">
+                            <div style="font-size: 12px; font-weight: 600; color: #0f172a; margin-bottom: 12px;">Today's Issues</div>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #fef2f2; border-radius: 6px;">
+                                    <i class="fas fa-times-circle" style="color: #dc2626;"></i>
+                                    <span style="font-size: 12px; color: #7f1d1d;">3 quote generation timeouts (11:42 AM)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #fffbeb; border-radius: 6px;">
+                                    <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
+                                    <span style="font-size: 12px; color: #b45309;">Payment gateway slow (2:15 PM)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #f0fdf4; border-radius: 6px;">
+                                    <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                                    <span style="font-size: 12px; color: #15803d;">Email service restored (3:30 PM)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 5: Lost Client Analysis -->
+            <div class="dashboard-grid" style="margin-top: 20px;">
+                <div class="card col-12">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-user-times"></i> Lost Client Analysis - Why We Lose Them</div>
+                        <div class="card-actions"><button class="card-action active">This Week</button><button class="card-action">This Month</button></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="dashboard-grid">
+                            <div class="col-6">
+                                <div style="font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 16px;">B2C Loss Reasons (142 lost this week)</div>
+                                <div class="exposure-waterfall">
+                                    <div class="exposure-item">
+                                        <span class="exposure-label">No Response >24h</span>
+                                        <div class="exposure-bar-container">
+                                            <div class="exposure-bar flights" style="width: 85%; background: linear-gradient(90deg, #dc2626, #ef4444);">48 clients (34%)</div>
+                                        </div>
+                                        <span class="exposure-value">48</span>
+                                    </div>
+                                    <div class="exposure-item">
+                                        <span class="exposure-label">Price Too High</span>
+                                        <div class="exposure-bar-container">
+                                            <div class="exposure-bar hotels" style="width: 65%; background: linear-gradient(90deg, #f59e0b, #fbbf24);">37 clients (26%)</div>
+                                        </div>
+                                        <span class="exposure-value">37</span>
+                                    </div>
+                                    <div class="exposure-item">
+                                        <span class="exposure-label">Booked Elsewhere</span>
+                                        <div class="exposure-bar-container">
+                                            <div class="exposure-bar tours" style="width: 45%; background: linear-gradient(90deg, #3b82f6, #1d4ed8);">28 clients (20%)</div>
+                                        </div>
+                                        <span class="exposure-value">28</span>
+                                    </div>
+                                    <div class="exposure-item">
+                                        <span class="exposure-label">Poor Communication</span>
+                                        <div class="exposure-bar-container">
+                                            <div class="exposure-bar flights" style="width: 20%; background: linear-gradient(90deg, #8b5cf6, #7c3aed);">12 clients (8%)</div>
+                                        </div>
+                                        <span class="exposure-value">12</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div style="font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 16px;">B2B Loss Reasons (34 lost this week)</div>
+                                <div class="exposure-waterfall">
+                                    <div class="exposure-item">
+                                        <span class="exposure-label">Slow Response</span>
+                                        <div class="exposure-bar-container">
+                                            <div class="exposure-bar flights" style="width: 75%; background: linear-gradient(90deg, #dc2626, #ef4444);">14 clients (41%)</div>
+                                        </div>
+                                        <span class="exposure-value">14</span>
+                                    </div>
+                                    <div class="exposure-item">
+                                        <span class="exposure-label">No Availability</span>
+                                        <div class="exposure-bar-container">
+                                            <div class="exposure-bar hotels" style="width: 50%; background: linear-gradient(90deg, #f59e0b, #fbbf24);">9 clients (26%)</div>
+                                        </div>
+                                        <span class="exposure-value">9</span>
+                                    </div>
+                                    <div class="exposure-item">
+                                        <span class="exposure-label">Credit Terms</span>
+                                        <div class="exposure-bar-container">
+                                            <div class="exposure-bar tours" style="width: 30%; background: linear-gradient(90deg, #3b82f6, #1d4ed8);">6 clients (18%)</div>
+                                        </div>
+                                        <span class="exposure-value">6</span>
+                                    </div>
+                                    <div class="exposure-item">
+                                        <span class="exposure-label">Service Quality</span>
+                                        <div class="exposure-bar-container">
+                                            <div class="exposure-bar flights" style="width: 15%; background: linear-gradient(90deg, #8b5cf6, #7c3aed);">3 clients (9%)</div>
+                                        </div>
+                                        <span class="exposure-value">3</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 16px; padding: 16px; background: #fef2f2; border-radius: 8px; border-left: 4px solid #dc2626;">
+                            <div style="font-size: 13px; color: #991b1b; font-weight: 600; margin-bottom: 8px;"><i class="fas fa-exclamation-circle"></i> Critical Finding</div>
+                            <div style="font-size: 12px; color: #7f1d1d; line-height: 1.5;">
+                                <strong>48 B2C clients (34%)</strong> and <strong>14 B2B clients (41%)</strong> lost due to slow response times. 
+                                This is the #1 fixable issue. Implementing auto-escalation for enquiries >4 hours could recover 
+                                approximately <strong>$180K monthly revenue</strong>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUEUES TAB -->
+        <div id="queues" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="card col-8">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-chart-line"></i> Queue Trends - Last 7 Days</div></div>
+                    <div class="card-body">
+                        <div class="chart-container"><canvas id="queueTrendChart"></canvas></div>
+                    </div>
+                </div>
+                <div class="card col-4">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-clock"></i> Current SLA Status</div></div>
+                    <div class="card-body">
+                        <div class="chart-container-sm"><canvas id="slaPieChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMMUNICATION TAB -->
+        <div id="communication" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="card col-6">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-comments"></i> Touchpoint Distribution</div></div>
+                    <div class="card-body">
+                        <div class="chart-container"><canvas id="touchpointChart"></canvas></div>
+                    </div>
+                </div>
+                <div class="card col-6">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-chart-bar"></i> Touchpoints vs Conversion Rate</div></div>
+                    <div class="card-body">
+                        <div class="chart-container"><canvas id="conversionTouchChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FUNNEL TAB -->
+        <div id="funnel" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="card col-6">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-filter"></i> B2C Funnel Detail</div></div>
+                    <div class="card-body">
+                        <div class="chart-container"><canvas id="b2cFunnelChart"></canvas></div>
+                    </div>
+                </div>
+                <div class="card col-6">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-filter"></i> B2B Funnel Detail</div></div>
+                    <div class="card-body">
+                        <div class="chart-container"><canvas id="b2bFunnelChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SYSTEM TAB -->
+        <div id="system" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="card col-12">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-server"></i> System Performance Metrics</div></div>
+                    <div class="card-body">
+                        <div class="chart-container"><canvas id="systemPerfChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.getElementById(this.dataset.tab).classList.add('active');
+            });
+        });
+
+        function refreshData() {
+            location.reload();
+        }
+
+        // Initialise all charts
+        window.onload = function() {
+            // Queue Trend Chart
+            const queueCtx = document.getElementById('queueTrendChart');
+            if (queueCtx) {
+                new Chart(queueCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [{
+                            label: 'Waiting Clients',
+                            data: [32, 38, 45, 42, 47, 28, 35],
+                            borderColor: '#dc2626',
+                            backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }, {
+                            label: 'SLA Breaches',
+                            data: [12, 15, 18, 20, 23, 8, 14],
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'top', align: 'end' } }
+                    }
+                });
+            }
+
+            // SLA Pie Chart
+            const slaCtx = document.getElementById('slaPieChart');
+            if (slaCtx) {
+                new Chart(slaCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['<4hrs (Good)', '4-8hrs (Warning)', '8-24hrs (At Risk)', '>24hrs (Critical)'],
+                        datasets: [{
+                            data: [89, 23, 18, 12],
+                            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#dc2626'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+                    }
+                });
+            }
+
+            // Touchpoint Chart
+            const touchCtx = document.getElementById('touchpointChart');
+            if (touchCtx) {
+                new Chart(touchCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Email', 'WhatsApp', 'Phone', 'SMS'],
+                        datasets: [{
+                            label: 'Avg per Client',
+                            data: [2.1, 1.6, 0.5, 0.3],
+                            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'],
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            // Conversion vs Touchpoints
+            const convCtx = document.getElementById('conversionTouchChart');
+            if (convCtx) {
+                new Chart(convCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['1', '2', '3', '4', '5', '6+'],
+                        datasets: [{
+                            label: 'Conversion Rate %',
+                            data: [12, 22, 24, 18, 14, 8],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { title: { display: true, text: 'Number of Touchpoints' } },
+                            y: { title: { display: true, text: 'Conversion %' } }
+                        }
+                    }
+                });
+            }
+
+            // B2C Funnel
+            const b2cCtx = document.getElementById('b2cFunnelChart');
+            if (b2cCtx) {
+                new Chart(b2cCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Enquiries', 'Quotes', 'Viewed', 'Negotiation', 'Booked'],
+                        datasets: [{
+                            label: 'B2C',
+                            data: [890, 680, 520, 280, 145],
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            // B2B Funnel
+            const b2bCtx = document.getElementById('b2bFunnelChart');
+            if (b2bCtx) {
+                new Chart(b2bCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Enquiries', 'Quotes', 'Viewed', 'Negotiation', 'Booked'],
+                        datasets: [{
+                            label: 'B2B',
+                            data: [350, 288, 249, 142, 83],
+                            backgroundColor: '#8b5cf6',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            // System Performance
+            const sysCtx = document.getElementById('systemPerfChart');
+            if (sysCtx) {
+                new Chart(sysCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                        datasets: [{
+                            label: 'Quote Gen Time (ms)',
+                            data: [1200, 1100, 4200, 3800, 3500, 1800],
+                            borderColor: '#dc2626',
+                            backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }, {
+                            label: 'API Response (ms)',
+                            data: [85, 82, 98, 105, 95, 88],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'top', align: 'end' } }
+                    }
+                });
+            }
+        };
+    </script>
+</body>
+</html>

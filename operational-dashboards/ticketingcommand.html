@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airline Ticketing Command Center - Trip Factory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .metric-card { transition: transform 0.2s; }
+        .metric-card:hover { transform: translateY(-2px); }
+        .urgent-badge { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+        .warning-badge { background: #fffbeb; color: #d97706; border: 1px solid #fcd34d; }
+        .success-badge { background: #f0fdf4; color: #16a34a; border: 1px solid #86efac; }
+        .info-badge { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+        .neutral-badge { background: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .progress-bar { height: 8px; border-radius: 4px; background: #e5e7eb; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+        .table-row:hover { background-color: #f9fafb; }
+        .action-btn { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-outline { border: 1px solid #d1d5db; color: #374151; background: white; }
+        .btn-outline:hover { background: #f9fafb; }
+        .filter-select { 
+            background: white; border: 1px solid #e5e7eb; border-radius: 8px; 
+            padding: 8px 12px; font-size: 14px; color: #374151; outline: none;
+        }
+        .filter-select:focus { border-color: #3b82f6; }
+        .deadline-urgent { color: #dc2626; font-weight: 600; }
+        .deadline-warning { color: #d97706; font-weight: 600; }
+        .deadline-ok { color: #16a34a; }
+        .price-variance-high { background: #fef2f2; color: #dc2626; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+        .price-variance-med { background: #fffbeb; color: #d97706; padding: 2px 8px; border-radius: 4px; }
+        .price-variance-low { background: #f0fdf4; color: #16a34a; padding: 2px 8px; border-radius: 4px; }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-[1600px] mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+                        <i class="fas fa-plane-departure text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">Airline Ticketing Command Center</h1>
+                        <p class="text-sm text-gray-500">Ticketing Operations & Deadline Management</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button class="action-btn btn-outline flex items-center gap-2">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                    <button class="action-btn btn-primary flex items-center gap-2">
+                        <i class="fas fa-ticket-alt"></i> New Booking
+                    </button>
+                    <div class="flex items-center gap-2 ml-4 px-3 py-1 bg-red-50 text-red-700 rounded-full text-sm font-medium border border-red-200">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>12 Critical</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filters Bar -->
+    <div class="bg-white border-b border-gray-200 py-3">
+        <div class="max-w-[1600px] mx-auto px-6 flex items-center gap-4 flex-wrap">
+            <span class="text-sm font-semibold text-gray-700 uppercase tracking-wider">Filters:</span>
+            
+            <select class="filter-select">
+                <option>All Airlines</option>
+                <option>IndiGo</option>
+                <option>Air India</option>
+                <option>Emirates</option>
+                <option>Singapore Airlines</option>
+                <option>Vistara</option>
+            </select>
+
+            <select class="filter-select">
+                <option>All Routes</option>
+                <option>Domestic</option>
+                <option>International</option>
+                <option>Schengen</option>
+                <option>APAC</option>
+            </select>
+
+            <select class="filter-select">
+                <option>All Agents</option>
+                <option>Ticket Team A</option>
+                <option>Ticket Team B</option>
+                <option>Night Shift</option>
+            </select>
+
+            <select class="filter-select">
+                <option>All Status</option>
+                <option>Pending Ticketing</option>
+                <option>Price Variance</option>
+                <option>Deadline < 24h</option>
+                <option>Issued</option>
+            </select>
+
+            <select class="filter-select">
+                <option>Today</option>
+                <option>Next 24 Hours</option>
+                <option>This Week</option>
+                <option>This Month</option>
+            </select>
+
+            <button class="text-blue-600 text-sm font-medium hover:underline ml-auto">
+                <i class="fas fa-undo mr-1"></i> Reset
+            </button>
+        </div>
+    </div>
+
+    <main class="max-w-[1600px] mx-auto px-6 py-6 space-y-6">
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4">
+            <div class="card metric-card p-4">
+                <div class="text-sm text-gray-500 mb-1">Total Pending</div>
+                <div class="text-2xl font-bold text-gray-900">247</div>
+                <div class="text-xs text-green-600 mt-1 flex items-center gap-1">
+                    <i class="fas fa-arrow-down"></i> 12% vs yesterday
+                </div>
+            </div>
+
+            <div class="card metric-card p-4 border-l-4 border-red-500">
+                <div class="text-sm text-gray-500 mb-1">Critical < 4hrs</div>
+                <div class="text-2xl font-bold text-red-600">18</div>
+                <div class="text-xs text-red-600 mt-1 font-medium">Immediate action</div>
+            </div>
+
+            <div class="card metric-card p-4 border-l-4 border-yellow-500">
+                <div class="text-sm text-gray-500 mb-1">Deadline < 24h</div>
+                <div class="text-2xl font-bold text-yellow-600">42</div>
+                <div class="text-xs text-yellow-600 mt-1">High priority</div>
+            </div>
+
+            <div class="card metric-card p-4 border-l-4 border-orange-500">
+                <div class="text-sm text-gray-500 mb-1">Price Variance</div>
+                <div class="text-2xl font-bold text-orange-600">₹4.2L</div>
+                <div class="text-xs text-gray-500 mt-1">23 bookings affected</div>
+            </div>
+
+            <div class="card metric-card p-4">
+                <div class="text-sm text-gray-500 mb-1">Avg Response</div>
+                <div class="text-2xl font-bold text-gray-900">2.4 hrs</div>
+                <div class="text-xs text-green-600 mt-1 flex items-center gap-1">
+                    <i class="fas fa-arrow-down"></i> 0.3 hrs
+                </div>
+            </div>
+
+            <div class="card metric-card p-4">
+                <div class="text-sm text-gray-500 mb-1">Issued Today</div>
+                <div class="text-2xl font-bold text-green-600">89</div>
+                <div class="text-xs text-gray-500 mt-1">₹12.4Cr value</div>
+            </div>
+
+            <div class="card metric-card p-4">
+                <div class="text-sm text-gray-500 mb-1">Queue Time</div>
+                <div class="text-2xl font-bold text-gray-900">45 min</div>
+                <div class="text-xs text-green-600 mt-1">Within SLA</div>
+            </div>
+
+            <div class="card metric-card p-4">
+                <div class="text-sm text-gray-500 mb-1">Auto-Issue Rate</div>
+                <div class="text-2xl font-bold text-blue-600">78%</div>
+                <div class="text-xs text-gray-500 mt-1">+5% this week</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Critical Deadlines Section -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Priority Actions -->
+                <div class="card p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-clock text-red-500"></i>
+                            <h2 class="text-lg font-bold text-gray-900">Critical Ticketing Deadlines</h2>
+                        </div>
+                        <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-semibold">18 Urgent</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        <!-- Critical Item 1 -->
+                        <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center text-red-600 font-bold text-sm">
+                                    VS
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">TKT-2024-0892 • Emirates EK505</div>
+                                    <div class="text-sm text-gray-600">Mumbai → Dubai • 4 PAX • Mr. Sharma</div>
+                                    <div class="text-xs text-red-600 font-medium mt-1">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                                        Deadline: 2 hours remaining
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-lg font-bold text-gray-900">₹1.24L</div>
+                                <div class="text-xs text-red-600 font-medium mb-2">Price increased ₹8,400</div>
+                                <button class="action-btn btn-primary">Issue Now</button>
+                            </div>
+                        </div>
+
+                        <!-- Critical Item 2 -->
+                        <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center text-red-600 font-bold text-sm">
+                                    AK
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">TKT-2024-0895 • Singapore Airlines SQ423</div>
+                                    <div class="text-sm text-gray-600">Delhi → Singapore • 2 PAX • Mrs. Gupta</div>
+                                    <div class="text-xs text-red-600 font-medium mt-1">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                                        Deadline: 3.5 hours remaining
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-lg font-bold text-gray-900">₹89K</div>
+                                <div class="text-xs text-gray-500 mb-2">Price unchanged</div>
+                                <button class="action-btn btn-primary">Issue Now</button>
+                            </div>
+                        </div>
+
+                        <!-- Warning Item -->
+                        <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-100">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-700 font-bold text-sm">
+                                    PR
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">TKT-2024-0901 • Vistara UK995</div>
+                                    <div class="text-sm text-gray-600">Bangalore → London • 1 PAX • Mr. Reddy</div>
+                                    <div class="text-xs text-yellow-700 font-medium mt-1">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        Deadline: 18 hours remaining
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-lg font-bold text-gray-900">₹67K</div>
+                                <div class="text-xs text-orange-600 font-medium mb-2">Price dropped ₹2,100</div>
+                                <button class="action-btn btn-outline">Review</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Price Variance Monitor -->
+                <div class="card p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-chart-line text-orange-500"></i>
+                            <h2 class="text-lg font-bold text-gray-900">Fare Variance Monitor</h2>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="text-sm text-blue-600 font-medium hover:underline">View All</button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="text-xs text-gray-500 uppercase bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left">Booking ID</th>
+                                    <th class="px-4 py-3 text-left">Route</th>
+                                    <th class="px-4 py-3 text-left">Quoted</th>
+                                    <th class="px-4 py-3 text-left">Current</th>
+                                    <th class="px-4 py-3 text-left">Variance</th>
+                                    <th class="px-4 py-3 text-left">Status</th>
+                                    <th class="px-4 py-3 text-left">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm">
+                                <tr class="table-row border-b border-gray-100">
+                                    <td class="px-4 py-3 font-medium">BKG-4451</td>
+                                    <td class="px-4 py-3">BOM-DXB</td>
+                                    <td class="px-4 py-3">₹24,500</td>
+                                    <td class="px-4 py-3">₹28,900</td>
+                                    <td class="px-4 py-3"><span class="price-variance-high">+₹4,400 (+18%)</span></td>
+                                    <td class="px-4 py-3"><span class="urgent-badge px-2 py-1 rounded text-xs">Customer Approval</span></td>
+                                    <td class="px-4 py-3"><button class="text-blue-600 font-medium text-xs">Contact Agent</button></td>
+                                </tr>
+                                <tr class="table-row border-b border-gray-100">
+                                    <td class="px-4 py-3 font-medium">BKG-4453</td>
+                                    <td class="px-4 py-3">DEL-SIN</td>
+                                    <td class="px-4 py-3">₹32,000</td>
+                                    <td class="px-4 py-3">₹35,500</td>
+                                    <td class="px-4 py-3"><span class="price-variance-med">+₹3,500 (+11%)</span></td>
+                                    <td class="px-4 py-3"><span class="warning-badge px-2 py-1 rounded text-xs">Pending</span></td>
+                                    <td class="px-4 py-3"><button class="text-blue-600 font-medium text-xs">Approve</button></td>
+                                </tr>
+                                <tr class="table-row border-b border-gray-100">
+                                    <td class="px-4 py-3 font-medium">BKG-4458</td>
+                                    <td class="px-4 py-3">BLR-LHR</td>
+                                    <td class="px-4 py-3">₹45,000</td>
+                                    <td class="px-4 py-3">₹42,800</td>
+                                    <td class="px-4 py-3"><span class="price-variance-low">-₹2,200 (-5%)</span></td>
+                                    <td class="px-4 py-3"><span class="success-badge px-2 py-1 rounded text-xs">Auto-Issue</span></td>
+                                    <td class="px-4 py-3"><button class="text-gray-400 text-xs">Processed</button></td>
+                                </tr>
+                                <tr class="table-row">
+                                    <td class="px-4 py-3 font-medium">BKG-4462</td>
+                                    <td class="px-4 py-3">MAA-CMB</td>
+                                    <td class="px-4 py-3">₹18,500</td>
+                                    <td class="px-4 py-3">₹22,100</td>
+                                    <td class="px-4 py-3"><span class="price-variance-high">+₹3,600 (+19%)</span></td>
+                                    <td class="px-4 py-3"><span class="urgent-badge px-2 py-1 rounded text-xs">Expired</span></td>
+                                    <td class="px-4 py-3"><button class="text-red-600 font-medium text-xs">Requote</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Ticketing Queue -->
+                <div class="card p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-list-ol text-blue-500"></i>
+                            <h2 class="text-lg font-bold text-gray-900">Active Ticketing Queue</h2>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="action-btn btn-outline text-xs"><i class="fas fa-filter mr-1"></i> Filter</button>
+                            <button class="action-btn btn-primary text-xs"><i class="fas fa-play mr-1"></i> Auto-Process</button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="text-xs text-gray-500 uppercase bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left"><input type="checkbox" class="rounded"></th>
+                                    <th class="px-4 py-3 text-left">PNR/Booking</th>
+                                    <th class="px-4 py-3 text-left">Passenger</th>
+                                    <th class="px-4 py-3 text-left">Flight</th>
+                                    <th class="px-4 py-3 text-left">Deadline</th>
+                                    <th class="px-4 py-3 text-left">Agent</th>
+                                    <th class="px-4 py-3 text-left">Status</th>
+                                    <th class="px-4 py-3 text-left">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm">
+                                <tr class="table-row border-b border-gray-100">
+                                    <td class="px-4 py-3"><input type="checkbox" class="rounded"></td>
+                                    <td class="px-4 py-3">
+                                        <div class="font-medium">PNR: 4XJ9P</div>
+                                        <div class="text-xs text-gray-500">BKG-4451</div>
+                                    </td>
+                                    <td class="px-4 py-3">Mr. Vikram Singh</td>
+                                    <td class="px-4 py-3">
+                                        <div class="font-medium">EK505</div>
+                                        <div class="text-xs text-gray-500">BOM-DXB 14:30</div>
+                                    </td>
+                                    <td class="px-4 py-3 deadline-urgent">
+                                        <div class="flex items-center gap-1">
+                                            <i class="fas fa-fire"></i> 2h 15m
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs text-blue-700 font-bold">A</div>
+                                            <span>Agent A</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3"><span class="urgent-badge px-2 py-1 rounded text-xs">Price Changed</span></td>
+                                    <td class="px-4 py-3"><button class="action-btn btn-primary text-xs">Issue</button></td>
+                                </tr>
+                                <tr class="table-row border-b border-gray-100">
+                                    <td class="px-4 py-3"><input type="checkbox" class="rounded"></td>
+                                    <td class="px-4 py-3">
+                                        <div class="font-medium">PNR: 8K2MN</div>
+                                        <div class="text-xs text-gray-500">BKG-4452</div>
+                                    </td>
+                                    <td class="px-4 py-3">Mrs. Priya Patel</td>
+                                    <td class="px-4 py-3">
+                                        <div class="font-medium">6E-234</div>
+                                        <div class="text-xs text-gray-500">DEL-BOM 09:15</div>
+                                    </td>
+                                    <td class="px-4 py-3 deadline-warning">
+                                        <div class="flex items-center gap-1">
+                                            <i class="fas fa-clock"></i> 8h 30m
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center text-xs text-green-700 font-bold">B</div>
+                                            <span>Agent B</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3"><span class="info-badge px-2 py-1 rounded text-xs">Ready</span></td>
+                                    <td class="px-4 py-3"><button class="action-btn btn-primary text-xs">Issue</button></td>
+                                </tr>
+                                <tr class="table-row border-b border-gray-100">
+                                    <td class="px-4 py-3"><input type="checkbox" class="rounded"></td>
+                                    <td class="px-4 py-3">
+                                        <div class="font-medium">PNR: 9P3QL</div>
+                                        <div class="text-xs text-gray-500">BKG-4453</div>
+                                    </td>
+                                    <td class="px-4 py-3">Mr. Amit Kumar</td>
+                                    <td class="px-4 py-3">
+                                        <div class="font-medium">SQ423</div>
+                                        <div class="text-xs text-gray-500">DEL-SIN 23:45</div>
+                                    </td>
+                                    <td class="px-4 py-3 deadline-ok">
+                                        <div class="flex items-center gap-1">
+                                            <i class="fas fa-check-circle"></i> 14h 20m
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center text-xs text-purple-700 font-bold">C</div>
+                                            <span>Agent C</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3"><span class="warning-badge px-2 py-1 rounded text-xs">Docs Pending</span></td>
+                                    <td class="px-4 py-3"><button class="action-btn btn-outline text-xs">Follow Up</button></td>
+                                </tr>
+                                <tr class="table-row">
+                                    <td class="px-4 py-3"><input type="checkbox" class="rounded"></td>
+                                    <td class="px-4 py-3">
+                                        <div class="font-medium">PNR: 2R7TZ</div>
+                                        <div class="text-xs text-gray-500">BKG-4454</div>
+                                    </td>
+                                    <td class="px-4 py-3">Ms. Sneha Reddy</td>
+                                    <td class="px-4 py-3">
+                                        <div class="font-medium">AI-126</div>
+                                        <div class="text-xs text-gray-500">BOM-LHR 02:30</div>
+                                    </td>
+                                    <td class="px-4 py-3 deadline-ok">
+                                        <div class="flex items-center gap-1">
+                                            <i class="fas fa-check-circle"></i> 22h 45m
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs text-blue-700 font-bold">A</div>
+                                            <span>Agent A</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3"><span class="neutral-badge px-2 py-1 rounded text-xs">On Hold</span></td>
+                                    <td class="px-4 py-3"><button class="action-btn btn-outline text-xs">Resume</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar -->
+            <div class="space-y-6">
+                
+                <!-- Team Performance -->
+                <div class="card p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-gray-900">Ticketing Team Performance</h2>
+                        <select class="text-xs border rounded px-2 py-1">
+                            <option>Today</option>
+                            <option>This Week</option>
+                        </select>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-700 font-bold text-xs">1</div>
+                                <div>
+                                    <div class="font-semibold text-sm">Agent Team A</div>
+                                    <div class="text-xs text-gray-500">32 tickets • 98% accuracy</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-lg font-bold text-green-600">24</div>
+                                <div class="text-xs text-gray-500">issued</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 font-bold text-xs">2</div>
+                                <div>
+                                    <div class="font-semibold text-sm">Agent Team B</div>
+                                    <div class="text-xs text-gray-500">28 tickets • 96% accuracy</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-lg font-bold text-green-600">21</div>
+                                <div class="text-xs text-gray-500">issued</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 font-bold text-xs">3</div>
+                                <div>
+                                    <div class="font-semibold text-sm">Night Shift</div>
+                                    <div class="text-xs text-gray-500">18 tickets • 94% accuracy</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-lg font-bold text-green-600">15</div>
+                                <div class="text-xs text-gray-500">issued</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-600">Team Target</span>
+                            <span class="font-semibold">87%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill bg-blue-500" style="width: 87%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Airlines Status -->
+                <div class="card p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-gray-900">Airline API Status</h2>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="status-dot bg-green-500"></span>
+                                <span class="text-sm font-medium">IndiGo</span>
+                            </div>
+                            <span class="text-xs text-green-600 font-medium">Operational</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="status-dot bg-green-500"></span>
+                                <span class="text-sm font-medium">Air India</span>
+                            </div>
+                            <span class="text-xs text-green-600 font-medium">Operational</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="status-dot bg-yellow-500"></span>
+                                <span class="text-sm font-medium">Emirates</span>
+                            </div>
+                            <span class="text-xs text-yellow-600 font-medium">Slow Response</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="status-dot bg-green-500"></span>
+                                <span class="text-sm font-medium">Singapore Air</span>
+                            </div>
+                            <span class="text-xs text-green-600 font-medium">Operational</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="status-dot bg-red-500"></span>
+                                <span class="text-sm font-medium">Vistara</span>
+                            </div>
+                            <span class="text-xs text-red-600 font-medium">Maintenance</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SLA Monitor -->
+                <div class="card p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-gray-900">SLA Performance</h2>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Within 4 Hours</span>
+                                <span class="font-semibold text-green-600">94%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill bg-green-500" style="width: 94%"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Price Lock Validity</span>
+                                <span class="font-semibold text-blue-600">89%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill bg-blue-500" style="width: 89%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Auto-Issue Success</span>
+                                <span class="font-semibold text-purple-600">78%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill bg-purple-500" style="width: 78%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="card p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100">
+                    <h3 class="font-bold text-gray-900 mb-3">Today's Summary</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center p-3 bg-white rounded-lg shadow-sm">
+                            <div class="text-2xl font-bold text-blue-600">156</div>
+                            <div class="text-xs text-gray-600">Total Bookings</div>
+                        </div>
+                        <div class="text-center p-3 bg-white rounded-lg shadow-sm">
+                            <div class="text-2xl font-bold text-green-600">89</div>
+                            <div class="text-xs text-gray-600">Tickets Issued</div>
+                        </div>
+                        <div class="text-center p-3 bg-white rounded-lg shadow-sm">
+                            <div class="text-2xl font-bold text-orange-600">23</div>
+                            <div class="text-xs text-gray-600">In Queue</div>
+                        </div>
+                        <div class="text-center p-3 bg-white rounded-lg shadow-sm">
+                            <div class="text-2xl font-bold text-red-600">4</div>
+                            <div class="text-xs text-gray-600">Exceptions</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Bottom Section: Aging Analysis & Knowledge Gaps -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Ticket Aging Analysis -->
+            <div class="card p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-gray-900">Ticket Aging Analysis</h2>
+                </div>
+                
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-12 bg-green-500 rounded-full"></div>
+                            <div>
+                                <div class="font-semibold text-sm">0-4 Hours</div>
+                                <div class="text-xs text-gray-600">124 tickets</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-lg font-bold text-green-600">52%</div>
+                            <div class="text-xs text-green-600">On track</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-12 bg-blue-500 rounded-full"></div>
+                            <div>
+                                <div class="font-semibold text-sm">4-12 Hours</div>
+                                <div class="text-xs text-gray-600">68 tickets</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-lg font-bold text-blue-600">28%</div>
+                            <div class="text-xs text-blue-600">Standard</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-12 bg-yellow-500 rounded-full"></div>
+                            <div>
+                                <div class="font-semibold text-sm">12-24 Hours</div>
+                                <div class="text-xs text-gray-600">32 tickets</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-lg font-bold text-yellow-600">13%</div>
+                            <div class="text-xs text-yellow-600">Warning</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-12 bg-red-500 rounded-full"></div>
+                            <div>
+                                <div class="font-semibold text-sm">24+ Hours</div>
+                                <div class="text-xs text-gray-600">18 tickets</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-lg font-bold text-red-600">7%</div>
+                            <div class="text-xs text-red-600">Critical</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Common Issues -->
+            <div class="card p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-gray-900">Common Ticketing Issues</h2>
+                </div>
+                
+                <div class="space-y-3">
+                    <div class="p-3 border border-gray-200 rounded-lg">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-red-600">
+                                <i class="fas fa-tag text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-semibold text-sm">Fare Discrepancy</div>
+                                <div class="text-xs text-gray-600 mb-2">23 cases • Avg resolution: 45 min</div>
+                                <div class="flex gap-2">
+                                    <span class="text-xs bg-red-50 text-red-700 px-2 py-1 rounded">High Impact</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 border border-gray-200 rounded-lg">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center text-yellow-700">
+                                <i class="fas fa-passport text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-semibold text-sm">Passport/Visa Mismatch</div>
+                                <div class="text-xs text-gray-600 mb-2">18 cases • Avg resolution: 30 min</div>
+                                <div class="flex gap-2">
+                                    <span class="text-xs bg-yellow-50 text-yellow-700 px-2 py-1 rounded">Medium</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 border border-gray-200 rounded-lg">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-700">
+                                <i class="fas fa-credit-card text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-semibold text-sm">Payment Gateway Fail</div>
+                                <div class="text-xs text-gray-600 mb-2">12 cases • Avg resolution: 15 min</div>
+                                <div class="flex gap-2">
+                                    <span class="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">Low</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 border border-gray-200 rounded-lg">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center text-purple-700">
+                                <i class="fas fa-suitcase text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-semibold text-sm">Baggage Add-on Issues</div>
+                                <div class="text-xs text-gray-600 mb-2">8 cases • Avg resolution: 20 min</div>
+                                <div class="flex gap-2">
+                                    <span class="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">Low</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Automation Rules -->
+            <div class="card p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-gray-900">Auto-Issue Rules</h2>
+                    <button class="text-blue-600 text-sm font-medium">Configure</button>
+                </div>
+                
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span class="text-sm font-medium">Domestic < ₹25K</span>
+                        </div>
+                        <span class="text-xs text-green-600 font-medium">Active</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span class="text-sm font-medium">No Price Variance</span>
+                        </div>
+                        <span class="text-xs text-green-600 font-medium">Active</span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span class="text-sm font-medium">Docs Verified</span>
+                        </div>
+                        <span class="text-xs text-green-600 font-medium">Active</span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg opacity-60">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                            <span class="text-sm font-medium">International > ₹1L</span>
+                        </div>
+                        <span class="text-xs text-gray-500 font-medium">Manual</span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg opacity-60">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                            <span class="text-sm font-medium">Corporate Rates</span>
+                        </div>
+                        <span class="text-xs text-gray-500 font-medium">Manual</span>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                    <div class="flex items-start gap-2">
+                        <i class="fas fa-info-circle text-blue-600 mt-0.5"></i>
+                        <div class="text-xs text-blue-800">
+                            <strong>Tip:</strong> Enabling auto-issue for "Price Drop < 5%" could save 2.3 hours daily.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+</body>
+</html>

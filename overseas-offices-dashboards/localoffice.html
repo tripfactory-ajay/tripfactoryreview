@@ -1,0 +1,1653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Factory Local Office - Financial & Product Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        .metric-card { transition: all 0.2s; }
+        .metric-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .nav-tab { 
+            padding: 12px 24px; border-bottom: 3px solid transparent; 
+            font-weight: 500; color: #64748b; cursor: pointer; transition: all 0.2s;
+            background: none; border-top: none; border-left: none; border-right: none;
+        }
+        .nav-tab.active { border-bottom-color: #2563eb; color: #2563eb; background: #eff6ff; }
+        .urgent-badge { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+        .warning-badge { background: #fffbeb; color: #d97706; border: 1px solid #fcd34d; }
+        .success-badge { background: #f0fdf4; color: #16a34a; border: 1px solid #86efac; }
+        .info-badge { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+        .purple-badge { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
+        .progress-bar { height: 8px; border-radius: 4px; background: #e2e8f0; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+        .table-row:hover { background-color: #f8fafc; }
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+        .dashboard-section { display: none; }
+        .dashboard-section.active { display: block; }
+        .trend-up { color: #16a34a; }
+        .trend-down { color: #dc2626; }
+        .heatmap-cell { 
+            width: 100%; height: 40px; border-radius: 6px; display: flex; 
+            align-items: center; justify-content: center; font-size: 12px; font-weight: 600;
+        }
+        .sankey-bar { height: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: 600; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Main Navigation -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-[1600px] mx-auto px-6">
+            <div class="flex items-center justify-between py-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-emerald-600 to-blue-600 rounded-lg flex items-center justify-center text-white">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-slate-900">Local Office Intelligence Suite</h1>
+                        <p class="text-sm text-slate-500">Financial & Product Analytics</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-sm text-slate-500">Select Dashboard:</span>
+                    <select id="dashboard-selector" onchange="switchDashboard(this.value)" class="border border-slate-300 rounded-lg px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="localized-finance">Localized Financials</option>
+                        <option value="product-intelligence">Product Intelligence</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Sub Navigation -->
+            <div class="flex border-t border-slate-200" id="sub-nav">
+                <button class="nav-tab active" onclick="switchView('overview', this)"><i class="fas fa-chart-line mr-2"></i>Overview</button>
+                <button class="nav-tab" onclick="switchView('analytics', this)"><i class="fas fa-microscope mr-2"></i>Deep Dive</button>
+                <button class="nav-tab" onclick="switchView('alerts', this)"><i class="fas fa-bell mr-2"></i>Alerts & Actions</button>
+                <button class="nav-tab" onclick="switchView('forecasts', this)"><i class="fas fa-crystal-ball mr-2"></i>Forecasts</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-[1600px] mx-auto px-6 py-6">
+
+        <!-- ========================================== -->
+        <!-- 1. LOCALIZED FINANCIAL DASHBOARD -->
+        <!-- ========================================== -->
+        <div id="localized-finance" class="dashboard-section active">
+            
+            <!-- Overview View -->
+            <div id="localized-finance-overview" class="view-section active">
+                <!-- Regional P&L Summary -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="card metric-card p-4 border-l-4 border-emerald-500">
+                        <div class="text-sm text-slate-500 mb-1">Gross Revenue (MTD)</div>
+                        <div class="text-2xl font-bold text-slate-900">₹1.24Cr</div>
+                        <div class="text-xs text-emerald-600 mt-1 flex items-center gap-1">
+                            <i class="fas fa-arrow-up"></i> 18% vs last month
+                        </div>
+                        <div class="text-xs text-slate-400 mt-1">Target: ₹1.5Cr (83%)</div>
+                    </div>
+                    <div class="card metric-card p-4 border-l-4 border-blue-500">
+                        <div class="text-sm text-slate-500 mb-1">Net Profit Margin</div>
+                        <div class="text-2xl font-bold text-blue-600">12.4%</div>
+                        <div class="text-xs text-emerald-600 mt-1 flex items-center gap-1">
+                            <i class="fas fa-arrow-up"></i> 1.2% vs last month
+                        </div>
+                        <div class="text-xs text-slate-400 mt-1">Branch target: 15%</div>
+                    </div>
+                    <div class="card metric-card p-4 border-l-4 border-orange-500">
+                        <div class="text-sm text-slate-500 mb-1">Local Operating Costs</div>
+                        <div class="text-2xl font-bold text-orange-600">₹18.5L</div>
+                        <div class="text-xs text-red-600 mt-1 flex items-center gap-1">
+                            <i class="fas fa-arrow-up"></i> 5% over budget
+                        </div>
+                        <div class="text-xs text-slate-400 mt-1">Rent + Staff + Utilities</div>
+                    </div>
+                    <div class="card metric-card p-4 border-l-4 border-purple-500">
+                        <div class="text-sm text-slate-500 mb-1">GST Payable (Dec)</div>
+                        <div class="text-2xl font-bold text-purple-600">₹2.24L</div>
+                        <div class="text-xs text-orange-600 mt-1">Due: Jan 20, 2025</div>
+                        <div class="text-xs text-slate-400 mt-1">Input credit: ₹89K</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Revenue Breakdown -->
+                    <div class="lg:col-span-2 card p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-bold text-slate-900">Revenue Breakdown by Source</h2>
+                            <div class="flex gap-2">
+                                <button class="px-3 py-1 text-xs border rounded hover:bg-slate-50">This Month</button>
+                                <button class="px-3 py-1 text-xs border rounded hover:bg-slate-50">QTD</button>
+                                <button class="px-3 py-1 text-xs border rounded hover:bg-slate-50">YTD</button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Revenue Streams -->
+                            <div class="space-y-4">
+                                <h3 class="font-semibold text-sm text-slate-700 mb-3">By Business Line</h3>
+                                
+                                <div class="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="font-semibold text-emerald-900">Package Tours</span>
+                                        <span class="text-emerald-700 font-bold">₹68L (55%)</span>
+                                    </div>
+                                    <div class="progress-bar mb-2">
+                                        <div class="progress-fill bg-emerald-500" style="width: 55%"></div>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-emerald-700">
+                                        <span>Margin: 18%</span>
+                                        <span class="trend-up"><i class="fas fa-arrow-up mr-1"></i>12%</span>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="font-semibold text-blue-900">Flight Tickets</span>
+                                        <span class="text-blue-700 font-bold">₹31L (25%)</span>
+                                    </div>
+                                    <div class="progress-bar mb-2">
+                                        <div class="progress-fill bg-blue-500" style="width: 25%"></div>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-blue-700">
+                                        <span>Margin: 4%</span>
+                                        <span class="trend-down"><i class="fas fa-arrow-down mr-1"></i>3%</span>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="font-semibold text-purple-900">Hotels</span>
+                                        <span class="text-purple-700 font-bold">₹18.6L (15%)</span>
+                                    </div>
+                                    <div class="progress-bar mb-2">
+                                        <div class="progress-fill bg-purple-500" style="width: 15%"></div>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-purple-700">
+                                        <span>Margin: 12%</span>
+                                        <span class="trend-up"><i class="fas fa-arrow-up mr-1"></i>8%</span>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 bg-orange-50 rounded-lg border border-orange-200">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="font-semibold text-orange-900">Activities & Others</span>
+                                        <span class="text-orange-700 font-bold">₹6.4L (5%)</span>
+                                    </div>
+                                    <div class="progress-bar mb-2">
+                                        <div class="progress-fill bg-orange-500" style="width: 5%"></div>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-orange-700">
+                                        <span>Margin: 22%</span>
+                                        <span class="trend-up"><i class="fas fa-arrow-up mr-1"></i>15%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Customer Segments -->
+                            <div class="space-y-4">
+                                <h3 class="font-semibold text-sm text-slate-700 mb-3">By Customer Segment</h3>
+                                
+                                <div class="p-4 border border-slate-200 rounded-lg">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                                                <i class="fas fa-building"></i>
+                                            </div>
+                                            <div>
+                                                <div class="font-semibold text-sm">B2B Corporate</div>
+                                                <div class="text-xs text-slate-500">32 clients</div>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="font-bold text-slate-900">₹52L</div>
+                                            <div class="text-xs text-emerald-600">42% of revenue</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-xs text-slate-600">Avg deal size: ₹1.6L • Retention: 94%</div>
+                                </div>
+
+                                <div class="p-4 border border-slate-200 rounded-lg">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+                                                <i class="fas fa-users"></i>
+                                            </div>
+                                            <div>
+                                                <div class="font-semibold text-sm">B2C Direct</div>
+                                                <div class="text-xs text-slate-500">486 customers</div>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="font-bold text-slate-900">₹48L</div>
+                                            <div class="text-xs text-emerald-600">39% of revenue</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-xs text-slate-600">Avg booking: ₹9,800 • Repeat: 23%</div>
+                                </div>
+
+                                <div class="p-4 border border-slate-200 rounded-lg">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">
+                                                <i class="fas fa-handshake"></i>
+                                            </div>
+                                            <div>
+                                                <div class="font-semibold text-sm">Travel Agents</div>
+                                                <div class="text-xs text-slate-500">18 partners</div>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="font-bold text-slate-900">₹24L</div>
+                                            <div class="text-xs text-emerald-600">19% of revenue</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-xs text-slate-600">Commission paid: ₹2.4L • Active: 14</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tax & Compliance -->
+                    <div class="card p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Tax & Compliance Status</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-semibold text-green-900">GST Filing</span>
+                                    <span class="success-badge px-2 py-1 rounded text-xs">On Track</span>
+                                </div>
+                                <div class="text-sm text-green-700 mb-2">December 2024 Return</div>
+                                <div class="text-xs text-slate-600 mb-3">Due: Jan 20, 2025 • 8 days remaining</div>
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-slate-600">Collected: ₹2.24L</span>
+                                    <span class="text-slate-600">Payable: ₹1.35L</span>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-semibold text-yellow-900">TDS Deposits</span>
+                                    <span class="warning-badge px-2 py-1 rounded text-xs">Action Needed</span>
+                                </div>
+                                <div class="text-sm text-yellow-700 mb-2">Q3 FY 2024-25</div>
+                                <div class="text-xs text-slate-600 mb-3">Due: Jan 7, 2025 • 5 days remaining</div>
+                                <div class="text-xs text-yellow-700 font-medium">Amount: ₹45,800</div>
+                                <button class="mt-2 w-full py-1.5 bg-yellow-600 text-white rounded text-xs">Prepare Challan</button>
+                            </div>
+
+                            <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-semibold text-blue-900">Professional Tax</span>
+                                    <span class="info-badge px-2 py-1 rounded text-xs">Upcoming</span>
+                                </div>
+                                <div class="text-sm text-blue-700 mb-2">Annual Return</div>
+                                <div class="text-xs text-slate-600 mb-3">Due: Jan 31, 2025</div>
+                                <div class="text-xs text-blue-700">For 42 employees</div>
+                            </div>
+
+                            <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-semibold text-slate-900">Input Credit Reconciliation</span>
+                                    <span class="neutral-badge px-2 py-1 rounded text-xs">Pending</span>
+                                </div>
+                                <div class="text-sm text-slate-600 mb-2">Match vendor invoices with GST portal</div>
+                                <div class="text-xs text-slate-500">23 invoices pending</div>
+                                <button class="mt-2 w-full py-1.5 border border-slate-300 rounded text-xs hover:bg-slate-100">Start Reconciliation</button>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-6 border-t border-slate-200">
+                            <h4 class="font-semibold text-sm mb-3">Local Tax Benefits</h4>
+                            <div class="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                                <div class="flex items-start gap-2">
+                                    <i class="fas fa-check-circle text-emerald-600 mt-0.5"></i>
+                                    <div class="text-sm text-emerald-800">
+                                        <strong>SEZ Advantage:</strong> 10% of bookings qualify for GST exemption. Saved ₹24K this month.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cost Analysis -->
+                <div class="card p-6 mt-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-slate-900">Operating Cost Analysis</h3>
+                        <span class="text-sm text-slate-500">Budget vs Actual (MTD)</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div class="p-4 border border-slate-200 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium">Rent</span>
+                                <span class="text-xs text-slate-500">Fixed</span>
+                            </div>
+                            <div class="text-lg font-bold text-slate-900">₹4.5L</div>
+                            <div class="text-xs text-slate-500">Budget: ₹4.5L</div>
+                            <div class="mt-2 progress-bar">
+                                <div class="progress-fill bg-blue-500" style="width: 100%"></div>
+                            </div>
+                            <div class="text-xs text-emerald-600 mt-1">On budget</div>
+                        </div>
+
+                        <div class="p-4 border border-slate-200 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium">Salaries</span>
+                                <span class="text-xs text-slate-500">Fixed</span>
+                            </div>
+                            <div class="text-lg font-bold text-slate-900">₹8.2L</div>
+                            <div class="text-xs text-slate-500">Budget: ₹8L</div>
+                            <div class="mt-2 progress-bar">
+                                <div class="progress-fill bg-yellow-500" style="width: 102%"></div>
+                            </div>
+                            <div class="text-xs text-yellow-600 mt-1">+2% over</div>
+                        </div>
+
+                        <div class="p-4 border border-slate-200 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium">Marketing</span>
+                                <span class="text-xs text-slate-500">Variable</span>
+                            </div>
+                            <div class="text-lg font-bold text-slate-900">₹2.8L</div>
+                            <div class="text-xs text-slate-500">Budget: ₹3.5L</div>
+                            <div class="mt-2 progress-bar">
+                                <div class="progress-fill bg-emerald-500" style="width: 80%"></div>
+                            </div>
+                            <div class="text-xs text-emerald-600 mt-1">-20% under</div>
+                        </div>
+
+                        <div class="p-4 border border-slate-200 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium">Utilities</span>
+                                <span class="text-xs text-slate-500">Semi-fixed</span>
+                            </div>
+                            <div class="text-lg font-bold text-slate-900">₹1.5L</div>
+                            <div class="text-xs text-slate-500">Budget: ₹1.2L</div>
+                            <div class="mt-2 progress-bar">
+                                <div class="progress-fill bg-red-500" style="width: 125%"></div>
+                            </div>
+                            <div class="text-xs text-red-600 mt-1">+25% over</div>
+                        </div>
+
+                        <div class="p-4 border border-slate-200 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium">Miscellaneous</span>
+                                <span class="text-xs text-slate-500">Variable</span>
+                            </div>
+                            <div class="text-lg font-bold text-slate-900">₹1.5L</div>
+                            <div class="text-xs text-slate-500">Budget: ₹1L</div>
+                            <div class="mt-2 progress-bar">
+                                <div class="progress-fill bg-orange-500" style="width: 150%"></div>
+                            </div>
+                            <div class="text-xs text-orange-600 mt-1">+50% over</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics View -->
+            <div id="localized-finance-analytics" class="view-section">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="card p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Monthly P&L Trend</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4">
+                                <span class="text-sm w-16">Jul</span>
+                                <div class="flex-1 bg-slate-100 rounded-lg h-8 relative overflow-hidden">
+                                    <div class="absolute left-0 top-0 h-full bg-emerald-500 flex items-center justify-end pr-2" style="width: 65%">
+                                        <span class="text-xs text-white font-medium">₹98L</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs text-emerald-600 w-12">12%</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="text-sm w-16">Aug</span>
+                                <div class="flex-1 bg-slate-100 rounded-lg h-8 relative overflow-hidden">
+                                    <div class="absolute left-0 top-0 h-full bg-emerald-500 flex items-center justify-end pr-2" style="width: 72%">
+                                        <span class="text-xs text-white font-medium">₹1.08Cr</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs text-emerald-600 w-12">13%</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="text-sm w-16">Sep</span>
+                                <div class="flex-1 bg-slate-100 rounded-lg h-8 relative overflow-hidden">
+                                    <div class="absolute left-0 top-0 h-full bg-emerald-500 flex items-center justify-end pr-2" style="width: 80%">
+                                        <span class="text-xs text-white font-medium">₹1.15Cr</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs text-emerald-600 w-12">14%</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="text-sm w-16">Oct</span>
+                                <div class="flex-1 bg-slate-100 rounded-lg h-8 relative overflow-hidden">
+                                    <div class="absolute left-0 top-0 h-full bg-emerald-500 flex items-center justify-end pr-2" style="width: 85%">
+                                        <span class="text-xs text-white font-medium">₹1.22Cr</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs text-emerald-600 w-12">15%</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="text-sm w-16">Nov</span>
+                                <div class="flex-1 bg-slate-100 rounded-lg h-8 relative overflow-hidden">
+                                    <div class="absolute left-0 top-0 h-full bg-emerald-500 flex items-center justify-end pr-2" style="width: 78%">
+                                        <span class="text-xs text-white font-medium">₹1.12Cr</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs text-yellow-600 w-12">11%</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="text-sm w-16 font-bold">Dec</span>
+                                <div class="flex-1 bg-slate-100 rounded-lg h-8 relative overflow-hidden">
+                                    <div class="absolute left-0 top-0 h-full bg-blue-500 flex items-center justify-end pr-2" style="width: 83%">
+                                        <span class="text-xs text-white font-medium">₹1.24Cr</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs text-emerald-600 w-12 font-bold">12.4%</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 p-3 bg-slate-50 rounded-lg text-xs text-slate-600">
+                            <i class="fas fa-info-circle mr-2"></i>Green bars represent revenue, percentage shows net margin
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Cash Flow Analysis</h3>
+                        <div class="space-y-4">
+                            <div class="p-4 border border-slate-200 rounded-lg">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-semibold">Opening Balance (Dec 1)</span>
+                                    <span class="font-bold text-slate-900">₹12.5L</span>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-emerald-600"><i class="fas fa-arrow-down mr-2"></i>Customer Collections</span>
+                                    <span class="font-medium text-emerald-600">+ ₹1.18Cr</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-red-600"><i class="fas fa-arrow-up mr-2"></i>Vendor Payments</span>
+                                    <span class="font-medium text-red-600">- ₹89L</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-red-600"><i class="fas fa-arrow-up mr-2"></i>Operating Expenses</span>
+                                    <span class="font-medium text-red-600">- ₹18.5L</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-red-600"><i class="fas fa-arrow-up mr-2"></i>Tax Payments</span>
+                                    <span class="font-medium text-red-600">- ₹2.1L</span>
+                                </div>
+                            </div>
+
+                            <div class="border-t border-slate-200 pt-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-semibold">Net Cash Flow</span>
+                                    <span class="font-bold text-emerald-600">+ ₹8.4L</span>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-semibold text-emerald-900">Projected Closing (Dec 31)</span>
+                                    <span class="font-bold text-emerald-800 text-xl">₹20.9L</span>
+                                </div>
+                                <div class="text-xs text-emerald-700 mt-1">Healthy cash position</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="font-bold text-slate-900 mb-4">Regional Benchmark Comparison</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-50 text-slate-600 uppercase text-xs">
+                                <tr>
+                                    <th class="px-4 py-3 text-left">Metric</th>
+                                    <th class="px-4 py-3 text-left">Your Branch</th>
+                                    <th class="px-4 py-3 text-left">City Average</th>
+                                    <th class="px-4 py-3 text-left">Top Performer</th>
+                                    <th class="px-4 py-3 text-left">Variance</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200">
+                                <tr class="table-row">
+                                    <td class="px-4 py-3 font-medium">Revenue per Employee</td>
+                                    <td class="px-4 py-3 font-bold">₹2.95L</td>
+                                    <td class="px-4 py-3">₹2.8L</td>
+                                    <td class="px-4 py-3">₹3.4L</td>
+                                    <td class="px-4 py-3 text-emerald-600"><i class="fas fa-arrow-up mr-1"></i>+5%</td>
+                                </tr>
+                                <tr class="table-row">
+                                    <td class="px-4 py-3 font-medium">Operating Cost Ratio</td>
+                                    <td class="px-4 py-3 font-bold">14.9%</td>
+                                    <td class="px-4 py-3">16.2%</td>
+                                    <td class="px-4 py-3">13.8%</td>
+                                    <td class="px-4 py-3 text-emerald-600"><i class="fas fa-arrow-up mr-1"></i>Better</td>
+                                </tr>
+                                <tr class="table-row">
+                                    <td class="px-4 py-3 font-medium">Customer Acquisition Cost</td>
+                                    <td class="px-4 py-3 font-bold">₹1,850</td>
+                                    <td class="px-4 py-3">₹1,600</td>
+                                    <td class="px-4 py-3">₹1,200</td>
+                                    <td class="px-4 py-3 text-red-600"><i class="fas fa-arrow-down mr-1"></i>-16%</td>
+                                </tr>
+                                <tr class="table-row">
+                                    <td class="px-4 py-3 font-medium">Collection Period (Days)</td>
+                                    <td class="px-4 py-3 font-bold">18 days</td>
+                                    <td class="px-4 py-3">22 days</td>
+                                    <td class="px-4 py-3">15 days</td>
+                                    <td class="px-4 py-3 text-emerald-600"><i class="fas fa-arrow-up mr-1"></i>Better</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts View -->
+            <div id="localized-finance-alerts" class="view-section">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Financial Alerts</h3>
+                        <div class="space-y-3">
+                            <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-exclamation-triangle text-red-500 mt-1"></i>
+                                    <div class="flex-1">
+                                        <div class="font-semibold text-red-900">Budget Overrun: Utilities</div>
+                                        <div class="text-sm text-red-700">Electricity bill 25% higher than budgeted. Investigate AC usage pattern.</div>
+                                        <div class="text-xs text-red-600 mt-2">Variance: +₹30K | Action required by: Dec 20</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-clock text-yellow-600 mt-1"></i>
+                                    <div class="flex-1">
+                                        <div class="font-semibold text-yellow-900">Payment Due: Office Mart</div>
+                                        <div class="text-sm text-yellow-700">Invoice #INV-2024-4451 for ₹45,800 due in 3 days.</div>
+                                        <div class="mt-3 flex gap-2">
+                                            <button class="px-3 py-1 bg-yellow-600 text-white rounded text-sm">Schedule Payment</button>
+                                            <button class="px-3 py-1 border border-slate-300 rounded text-sm">View Invoice</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-file-invoice text-blue-600 mt-1"></i>
+                                    <div class="flex-1">
+                                        <div class="font-semibold text-blue-900">GST Input Credit Mismatch</div>
+                                        <div class="text-sm text-blue-700">3 vendor invoices not reflecting in GST portal.</div>
+                                        <div class="text-xs text-blue-600 mt-2">Amount at risk: ₹12,400</div>
+                                        <button class="mt-2 text-xs bg-blue-600 text-white px-3 py-1 rounded">Reconcile Now</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Approval Queue</h3>
+                        <div class="space-y-3">
+                            <div class="p-4 border border-slate-200 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-semibold">Overtime Approval</span>
+                                    <span class="warning-badge px-2 py-1 rounded text-xs">Pending</span>
+                                </div>
+                                <div class="text-sm text-slate-600 mb-2">Operations team - 45 hours (Dec 15-20)</div>
+                                <div class="text-lg font-bold text-slate-900">₹18,000</div>
+                                <div class="mt-3 flex gap-2">
+                                    <button class="px-4 py-1.5 bg-green-600 text-white rounded text-sm">Approve</button>
+                                    <button class="px-4 py-1.5 border border-slate-300 rounded text-sm">Modify</button>
+                                    <button class="px-4 py-1.5 border border-slate-300 rounded text-sm">Reject</button>
+                                </div>
+                            </div>
+
+                            <div class="p-4 border border-slate-200 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-semibold">Marketing Campaign</span>
+                                    <span class="info-badge px-2 py-1 rounded text-xs">New</span>
+                                </div>
+                                <div class="text-sm text-slate-600 mb-2">New Year special - Social media + print</div>
+                                <div class="text-lg font-bold text-slate-900">₹75,000</div>
+                                <div class="mt-3 flex gap-2">
+                                    <button class="px-4 py-1.5 bg-green-600 text-white rounded text-sm">Approve</button>
+                                    <button class="px-4 py-1.5 border border-slate-300 rounded text-sm">Review Plan</button>
+                                </div>
+                            </div>
+
+                            <div class="p-4 border border-slate-200 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-semibold">Office Equipment Purchase</span>
+                                    <span class="urgent-badge px-2 py-1 rounded text-xs">Urgent</span>
+                                </div>
+                                <div class="text-sm text-slate-600 mb-2">2 laptops for new joiners</div>
+                                <div class="text-lg font-bold text-slate-900">₹1,20,000</div>
+                                <div class="mt-3 flex gap-2">
+                                    <button class="px-4 py-1.5 bg-green-600 text-white rounded text-sm">Approve</button>
+                                    <button class="px-4 py-1.5 border border-slate-300 rounded text-sm">Check Quotes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Forecasts View -->
+            <div id="localized-finance-forecasts" class="view-section">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="card p-6 bg-gradient-to-br from-emerald-50 to-white border-emerald-200">
+                        <h3 class="font-bold text-emerald-900 mb-2">Q1 2025 Projection</h3>
+                        <div class="text-3xl font-bold text-emerald-700 mb-2">₹4.2Cr</div>
+                        <div class="text-sm text-emerald-600 mb-4">Expected Revenue</div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">January</span>
+                                <span class="font-medium">₹1.35Cr</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">February</span>
+                                <span class="font-medium">₹1.28Cr</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">March</span>
+                                <span class="font-medium">₹1.57Cr</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 p-3 bg-emerald-100 rounded-lg">
+                            <div class="text-xs text-emerald-800">
+                                <i class="fas fa-chart-line mr-2"></i>+15% growth expected due to summer bookings
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6 bg-gradient-to-br from-blue-50 to-white border-blue-200">
+                        <h3 class="font-bold text-blue-900 mb-2">Tax Planning</h3>
+                        <div class="text-3xl font-bold text-blue-700 mb-2">₹8.5L</div>
+                        <div class="text-sm text-blue-600 mb-4">Estimated Annual Tax</div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Advance Tax Paid</span>
+                                <span class="font-medium">₹6.2L</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Balance Due</span>
+                                <span class="font-medium text-red-600">₹2.3L</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Due Date</span>
+                                <span class="font-medium">Mar 15, 2025</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 p-3 bg-blue-100 rounded-lg">
+                            <div class="text-xs text-blue-800">
+                                <i class="fas fa-piggy-bank mr-2"></i>Set aside ₹38K/month for tax reserve
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6 bg-gradient-to-br from-purple-50 to-white border-purple-200">
+                        <h3 class="font-bold text-purple-900 mb-2">Working Capital Need</h3>
+                        <div class="text-3xl font-bold text-purple-700 mb-2">₹15L</div>
+                        <div class="text-sm text-purple-600 mb-4">Peak Season (Mar-May)</div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Current Cash</span>
+                                <span class="font-medium">₹20.9L</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Buffer Required</span>
+                                <span class="font-medium">₹10L</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Surplus/(Deficit)</span>
+                                <span class="font-medium text-emerald-600">+₹5.9L</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 p-3 bg-purple-100 rounded-lg">
+                            <div class="text-xs text-purple-800">
+                                <i class="fas fa-check-circle mr-2"></i>Healthy position, no additional funding needed
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="font-bold text-slate-900 mb-4">Scenario Planning</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="p-4 border-2 border-slate-200 rounded-lg">
+                            <div class="font-semibold text-slate-700 mb-2">Conservative</div>
+                            <div class="text-2xl font-bold text-slate-900 mb-1">₹3.8Cr</div>
+                            <div class="text-sm text-slate-500 mb-3">-10% from base case</div>
+                            <div class="text-xs text-slate-600 space-y-1">
+                                <p>• Economic slowdown</p>
+                                <p>• Reduced corporate travel</p>
+                                <p>• Higher customer acquisition cost</p>
+                            </div>
+                            <div class="mt-3 p-2 bg-yellow-50 rounded text-xs text-yellow-800">
+                                Mitigation: Reduce marketing spend by 20%
+                            </div>
+                        </div>
+
+                        <div class="p-4 border-2 border-emerald-500 rounded-lg bg-emerald-50">
+                            <div class="font-semibold text-emerald-800 mb-2">Base Case</div>
+                            <div class="text-2xl font-bold text-emerald-700 mb-1">₹4.2Cr</div>
+                            <div class="text-sm text-emerald-600 mb-3">Current projection</div>
+                            <div class="text-xs text-emerald-700 space-y-1">
+                                <p>• Steady market growth</p>
+                                <p>• New product launches</p>
+                                <p>• Stable customer retention</p>
+                            </div>
+                            <div class="mt-3 p-2 bg-emerald-100 rounded text-xs text-emerald-800">
+                                Status: On track
+                            </div>
+                        </div>
+
+                        <div class="p-4 border-2 border-slate-200 rounded-lg">
+                            <div class="font-semibold text-slate-700 mb-2">Optimistic</div>
+                            <div class="text-2xl font-bold text-slate-900 mb-1">₹4.8Cr</div>
+                            <div class="text-sm text-slate-500 mb-3">+14% from base case</div>
+                            <div class="text-xs text-slate-600 space-y-1">
+                                <p>• Major corporate contract win</p>
+                                <p>• Successful festive campaign</p>
+                                <p>• New franchise opening</p>
+                            </div>
+                            <div class="mt-3 p-2 bg-emerald-50 rounded text-xs text-emerald-800">
+                                Opportunity: Hire 3 more sales staff
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- 2. PRODUCT INTELLIGENCE DASHBOARD -->
+        <!-- ========================================== -->
+        <div id="product-intelligence" class="dashboard-section">
+            
+            <!-- Overview View -->
+            <div id="product-intelligence-overview" class="view-section active">
+                <!-- Demand Intelligence -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="card metric-card p-4 border-l-4 border-red-500">
+                        <div class="text-sm text-slate-500 mb-1">Lost Business (MTD)</div>
+                        <div class="text-2xl font-bold text-red-600">₹24.5L</div>
+                        <div class="text-xs text-red-600 mt-1">156 enquiries not converted</div>
+                        <div class="text-xs text-slate-400 mt-1">Top reason: Price</div>
+                    </div>
+                    <div class="card metric-card p-4 border-l-4 border-orange-500">
+                        <div class="text-sm text-slate-500 mb-1">Unmet Demand</div>
+                        <div class="text-2xl font-bold text-orange-600">18 Products</div>
+                        <div class="text-xs text-orange-600 mt-1">High searches, no inventory</div>
+                        <div class="text-xs text-slate-400 mt-1">Potential: ₹8.2L/month</div>
+                    </div>
+                    <div class="card metric-card p-4 border-l-4 border-blue-500">
+                        <div class="text-sm text-slate-500 mb-1">Price Sensitivity</div>
+                        <div class="text-2xl font-bold text-blue-600">High</div>
+                        <div class="text-xs text-blue-600 mt-1">32% drop-off at checkout</div>
+                        <div class="text-xs text-slate-400 mt-1">Avg price gap: 12%</div>
+                    </div>
+                    <div class="card metric-card p-4 border-l-4 border-emerald-500">
+                        <div class="text-sm text-slate-500 mb-1">Competitive Win Rate</div>
+                        <div class="text-2xl font-bold text-emerald-600">68%</div>
+                        <div class="text-xs text-emerald-600 mt-1"><i class="fas fa-arrow-up mr-1"></i>5% this month</div>
+                        <div class="text-xs text-slate-400 mt-1">vs MakeMyTrip, Yatra</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Lost Business Analysis -->
+                    <div class="lg:col-span-2 card p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-bold text-slate-900">Lost Business Analysis</h2>
+                            <button class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm">View All 156</button>
+                        </div>
+
+                        <!-- Sankey-style Flow -->
+                        <div class="mb-6">
+                            <h3 class="font-semibold text-sm text-slate-700 mb-3">Conversion Funnel - Where We Lose Them</h3>
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-24 text-xs text-slate-600">Enquiries</div>
+                                    <div class="flex-1">
+                                        <div class="sankey-bar bg-blue-500" style="width: 100%">412</div>
+                                    </div>
+                                    <div class="w-16 text-xs text-slate-500">100%</div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="w-24 text-xs text-slate-600">Quoted</div>
+                                    <div class="flex-1">
+                                        <div class="sankey-bar bg-blue-400" style="width: 85%">350</div>
+                                    </div>
+                                    <div class="w-16 text-xs text-slate-500">85%</div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="w-24 text-xs text-slate-600">Negotiating</div>
+                                    <div class="flex-1">
+                                        <div class="sankey-bar bg-yellow-400 text-slate-800" style="width: 45%">185</div>
+                                    </div>
+                                    <div class="w-16 text-xs text-slate-500">45%</div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="w-24 text-xs text-slate-600">Won</div>
+                                    <div class="flex-1">
+                                        <div class="sankey-bar bg-emerald-500" style="width: 38%">156</div>
+                                    </div>
+                                    <div class="w-16 text-xs text-emerald-600 font-medium">38%</div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="w-24 text-xs text-red-600 font-medium">Lost</div>
+                                    <div class="flex-1">
+                                        <div class="sankey-bar bg-red-500" style="width: 62%">256</div>
+                                    </div>
+                                    <div class="w-16 text-xs text-red-600 font-medium">62%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Loss Reasons -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h3 class="font-semibold text-sm text-slate-700 mb-3">Top Reasons for Loss</h3>
+                                <div class="space-y-3">
+                                    <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                                        <div class="flex justify-between items-center mb-1">
+                                            <span class="font-medium text-red-900">Price Too High</span>
+                                            <span class="text-red-700 font-bold">34%</span>
+                                        </div>
+                                        <div class="text-xs text-red-700 mb-2">87 enquiries lost</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill bg-red-500" style="width: 34%"></div>
+                                        </div>
+                                        <div class="mt-2 text-xs text-red-600">
+                                            <i class="fas fa-lightbulb mr-1"></i>Action: Negotiate better vendor rates
+                                        </div>
+                                    </div>
+
+                                    <div class="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                                        <div class="flex justify-between items-center mb-1">
+                                            <span class="font-medium text-orange-900">Product Not Available</span>
+                                            <span class="text-orange-700 font-bold">28%</span>
+                                        </div>
+                                        <div class="text-xs text-orange-700 mb-2">72 enquiries lost</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill bg-orange-500" style="width: 28%"></div>
+                                        </div>
+                                        <div class="mt-2 text-xs text-orange-700">
+                                            <i class="fas fa-lightbulb mr-1"></i>Action: Add 5 new hotel partners
+                                        </div>
+                                    </div>
+
+                                    <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                                        <div class="flex justify-between items-center mb-1">
+                                            <span class="font-medium text-yellow-900">Customer Delayed</span>
+                                            <span class="text-yellow-700 font-bold">22%</span>
+                                        </div>
+                                        <div class="text-xs text-yellow-700 mb-2">56 enquiries lost</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill bg-yellow-500" style="width: 22%"></div>
+                                        </div>
+                                        <div class="mt-2 text-xs text-yellow-700">
+                                            <i class="fas fa-lightbulb mr-1"></i>Action: Implement follow-up automation
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="font-semibold text-sm text-slate-700 mb-3">Competitor Wins</h3>
+                                <div class="space-y-3">
+                                    <div class="p-3 border border-slate-200 rounded-lg">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="font-semibold">MakeMyTrip</span>
+                                            <span class="text-red-600 font-bold">42 wins</span>
+                                        </div>
+                                        <div class="text-xs text-slate-600 mb-2">Mainly on price & brand recognition</div>
+                                        <div class="flex gap-2 text-xs">
+                                            <span class="px-2 py-1 bg-red-100 text-red-700 rounded">Price -8%</span>
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded">Better UI</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-3 border border-slate-200 rounded-lg">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="font-semibold">Yatra</span>
+                                            <span class="text-red-600 font-bold">28 wins</span>
+                                        </div>
+                                        <div class="text-xs text-slate-600 mb-2">Corporate discounts & loyalty</div>
+                                        <div class="flex gap-2 text-xs">
+                                            <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded">B2B Focus</span>
+                                            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded">Rewards</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-3 border border-slate-200 rounded-lg">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="font-semibold">Booking.com</span>
+                                            <span class="text-red-600 font-bold">18 wins</span>
+                                        </div>
+                                        <div class="text-xs text-slate-600 mb-2">International inventory</div>
+                                        <div class="flex gap-2 text-xs">
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded">Global</span>
+                                            <span class="px-2 py-1 bg-green-100 text-green-700 rounded">Free Cancel</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-3 border border-slate-200 rounded-lg">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="font-semibold">Local Agents</span>
+                                            <span class="text-red-600 font-bold">15 wins</span>
+                                        </div>
+                                        <div class="text-xs text-slate-600 mb-2">Personal relationship & cash deals</div>
+                                        <div class="flex gap-2 text-xs">
+                                            <span class="px-2 py-1 bg-slate-100 text-slate-700 rounded">Cash</span>
+                                            <span class="px-2 py-1 bg-orange-100 text-orange-700 rounded">Local</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Unmet Demand -->
+                    <div class="card p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Unmet Demand Opportunities</h3>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-red-50 rounded-lg border border-red-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-semibold text-red-900">Luxury Yacht Dinner</span>
+                                    <span class="urgent-badge px-2 py-1 rounded text-xs">High Demand</span>
+                                </div>
+                                <div class="text-sm text-red-700 mb-2">78 searches, 0 conversion</div>
+                                <div class="text-xs text-slate-600 mb-3">Avg budget: ₹25,000 per person</div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-emerald-600 font-medium">Potential: ₹3.9L/month</span>
+                                    <button class="px-3 py-1 bg-red-600 text-white rounded text-xs">Find Supplier</button>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-orange-50 rounded-lg border border-orange-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-semibold text-orange-900">Helicopter Tour Dubai</span>
+                                    <span class="warning-badge px-2 py-1 rounded text-xs">Medium</span>
+                                </div>
+                                <div class="text-sm text-orange-700 mb-2">45 searches, 0 conversion</div>
+                                <div class="text-xs text-slate-600 mb-3">Avg budget: ₹15,000 per person</div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-emerald-600 font-medium">Potential: ₹1.35L/month</span>
+                                    <button class="px-3 py-1 bg-orange-600 text-white rounded text-xs">Onboard Vendor</button>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-semibold text-yellow-900">Private Desert Camping</span>
+                                    <span class="warning-badge px-2 py-1 rounded text-xs">Medium</span>
+                                </div>
+                                <div class="text-sm text-yellow-700 mb-2">38 searches, 0 conversion</div>
+                                <div class="text-xs text-slate-600 mb-3">Avg budget: ₹12,000 per night</div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-emerald-600 font-medium">Potential: ₹1.14L/month</span>
+                                    <button class="px-3 py-1 bg-yellow-600 text-white rounded text-xs">Research</button>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-semibold text-blue-900">Burj Khalifa SKY Deck</span>
+                                    <span class="info-badge px-2 py-1 rounded text-xs">Seasonal</span>
+                                </div>
+                                <div class="text-sm text-blue-700 mb-2">32 searches, limited slots</div>
+                                <div class="text-xs text-slate-600 mb-3">Avg budget: ₹5,000 per person</div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-emerald-600 font-medium">Potential: ₹80K/month</span>
+                                    <button class="px-3 py-1 bg-blue-600 text-white rounded text-xs">Negotiate Bulk</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-6 border-t border-slate-200">
+                            <div class="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-chart-line text-emerald-600 mt-1"></i>
+                                    <div>
+                                        <div class="font-semibold text-emerald-900">Total Opportunity</div>
+                                        <div class="text-2xl font-bold text-emerald-700">₹8.2L/month</div>
+                                        <div class="text-xs text-emerald-600 mt-1">If all unmet demand is captured</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Demand Heatmap -->
+                <div class="card p-6 mt-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-slate-900">Product Demand Heatmap - Next 30 Days</h3>
+                        <div class="flex gap-2">
+                            <select class="border rounded-lg px-3 py-1 text-sm">
+                                <option>All Categories</option>
+                                <option>Domestic Packages</option>
+                                <option>International</option>
+                                <option>Activities</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-7 gap-2 mb-4">
+                        <div class="text-center text-xs text-slate-500 font-medium">Week 1</div>
+                        <div class="text-center text-xs text-slate-500 font-medium">Week 2</div>
+                        <div class="text-center text-xs text-slate-500 font-medium">Week 3</div>
+                        <div class="text-center text-xs text-slate-500 font-medium">Week 4</div>
+                        <div class="text-center text-xs text-slate-500 font-medium"></div>
+                        <div class="text-center text-xs text-slate-500 font-medium"></div>
+                        <div class="text-center text-xs text-slate-500 font-medium"></div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="grid grid-cols-8 gap-2 items-center">
+                            <div class="text-sm font-medium text-slate-700">Dubai Packages</div>
+                            <div class="heatmap-cell bg-red-500 text-white">High</div>
+                            <div class="heatmap-cell bg-red-400 text-white">High</div>
+                            <div class="heatmap-cell bg-orange-400 text-white">Med</div>
+                            <div class="heatmap-cell bg-yellow-400 text-slate-800">Low</div>
+                            <div class="col-span-3"></div>
+                        </div>
+                        <div class="grid grid-cols-8 gap-2 items-center">
+                            <div class="text-sm font-medium text-slate-700">Singapore</div>
+                            <div class="heatmap-cell bg-orange-400 text-white">Med</div>
+                            <div class="heatmap-cell bg-red-500 text-white">High</div>
+                            <div class="heatmap-cell bg-red-500 text-white">High</div>
+                            <div class="heatmap-cell bg-orange-400 text-white">Med</div>
+                            <div class="col-span-3"></div>
+                        </div>
+                        <div class="grid grid-cols-8 gap-2 items-center">
+                            <div class="text-sm font-medium text-slate-700">Thailand</div>
+                            <div class="heatmap-cell bg-yellow-400 text-slate-800">Low</div>
+                            <div class="heatmap-cell bg-orange-400 text-white">Med</div>
+                            <div class="heatmap-cell bg-red-400 text-white">High</div>
+                            <div class="heatmap-cell bg-red-500 text-white">High</div>
+                            <div class="col-span-3"></div>
+                        </div>
+                        <div class="grid grid-cols-8 gap-2 items-center">
+                            <div class="text-sm font-medium text-slate-700">Europe</div>
+                            <div class="heatmap-cell bg-green-400 text-white">Plan</div>
+                            <div class="heatmap-cell bg-yellow-400 text-slate-800">Low</div>
+                            <div class="heatmap-cell bg-orange-400 text-white">Med</div>
+                            <div class="heatmap-cell bg-red-400 text-white">High</div>
+                            <div class="col-span-3"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex items-center gap-4 text-xs">
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-red-500 rounded"></div>
+                            <span>High Demand (Book Now)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-orange-400 rounded"></div>
+                            <span>Medium (Plan Ahead)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-yellow-400 rounded"></div>
+                            <span>Low (Promote)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-green-400 rounded"></div>
+                            <span>Planning Phase</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics View -->
+            <div id="product-intelligence-analytics" class="view-section">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="card p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Price Elasticity Analysis</h3>
+                        <div class="space-y-4">
+                            <div class="p-4 border border-slate-200 rounded-lg">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-semibold">Dubai 3N/4D Package</span>
+                                    <span class="text-emerald-600 font-bold">Elastic</span>
+                                </div>
+                                <div class="text-sm text-slate-600 mb-3">Current: ₹45,000 | Competitor: ₹42,000</div>
+                                <div class="flex items-center gap-4 mb-2">
+                                    <span class="text-xs text-slate-500">₹40K</span>
+                                    <div class="flex-1 bg-slate-100 rounded-full h-2">
+                                        <div class="bg-emerald-500 h-2 rounded-full" style="width: 90%"></div>
+                                    </div>
+                                    <span class="text-xs text-emerald-600 font-medium">+45% bookings</span>
+                                </div>
+                                <div class="flex items-center gap-4 mb-2">
+                                    <span class="text-xs text-slate-500">₹45K</span>
+                                    <div class="flex-1 bg-slate-100 rounded-full h-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: 60%"></div>
+                                    </div>
+                                    <span class="text-xs text-slate-600">Base</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span class="text-xs text-slate-500">₹50K</span>
+                                    <div class="flex-1 bg-slate-100 rounded-full h-2">
+                                        <div class="bg-red-500 h-2 rounded-full" style="width: 30%"></div>
+                                    </div>
+                                    <span class="text-xs text-red-600 font-medium">-35% bookings</span>
+                                </div>
+                                <div class="mt-3 p-2 bg-emerald-50 rounded text-xs text-emerald-800">
+                                    <i class="fas fa-lightbulb mr-2"></i>Recommendation: Reduce to ₹42,500 to capture price-sensitive segment
+                                </div>
+                            </div>
+
+                            <div class="p-4 border border-slate-200 rounded-lg">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-semibold">Maldives Honeymoon</span>
+                                    <span class="text-blue-600 font-bold">Inelastic</span>
+                                </div>
+                                <div class="text-sm text-slate-600 mb-3">Current: ₹1,85,000 | Competitor: ₹1,75,000</div>
+                                <div class="flex items-center gap-4 mb-2">
+                                    <span class="text-xs text-slate-500">₹1.7L</span>
+                                    <div class="flex-1 bg-slate-100 rounded-full h-2">
+                                        <div class="bg-emerald-500 h-2 rounded-full" style="width: 70%"></div>
+                                    </div>
+                                    <span class="text-xs text-emerald-600 font-medium">+12% bookings</span>
+                                </div>
+                                <div class="flex items-center gap-4 mb-2">
+                                    <span class="text-xs text-slate-500">₹1.85L</span>
+                                    <div class="flex-1 bg-slate-100 rounded-full h-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: 60%"></div>
+                                    </div>
+                                    <span class="text-xs text-slate-600">Base</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span class="text-xs text-slate-500">₹2.0L</span>
+                                    <div class="flex-1 bg-slate-100 rounded-full h-2">
+                                        <div class="bg-red-500 h-2 rounded-full" style="width: 50%"></div>
+                                    </div>
+                                    <span class="text-xs text-red-600 font-medium">-8% bookings</span>
+                                </div>
+                                <div class="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-800">
+                                    <i class="fas fa-lightbulb mr-2"></i>Recommendation: Maintain premium pricing, focus on value-adds
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Customer Segment Preferences</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">Budget Travelers (&lt;₹25K)</span>
+                                    <span class="text-sm text-slate-600">28% of enquiries</span>
+                                </div>
+                                <div class="flex gap-2 mb-2">
+                                    <div class="flex-1 p-2 bg-emerald-100 rounded text-center text-xs">
+                                        <div class="font-bold text-emerald-800">Thailand</div>
+                                        <div class="text-emerald-600">High Conv.</div>
+                                    </div>
+                                    <div class="flex-1 p-2 bg-blue-100 rounded text-center text-xs">
+                                        <div class="font-bold text-blue-800">Vietnam</div>
+                                        <div class="text-blue-600">Growing</div>
+                                    </div>
+                                    <div class="flex-1 p-2 bg-slate-100 rounded text-center text-xs">
+                                        <div class="font-bold text-slate-800">Domestic</div>
+                                        <div class="text-slate-600">Stable</div>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-red-600">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>Price sensitivity: Very High
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">Mid-Range (₹25K-75K)</span>
+                                    <span class="text-sm text-slate-600">45% of enquiries</span>
+                                </div>
+                                <div class="flex gap-2 mb-2">
+                                    <div class="flex-1 p-2 bg-emerald-100 rounded text-center text-xs">
+                                        <div class="font-bold text-emerald-800">Dubai</div>
+                                        <div class="text-emerald-600">Top Choice</div>
+                                    </div>
+                                    <div class="flex-1 p-2 bg-blue-100 rounded text-center text-xs">
+                                        <div class="font-bold text-blue-800">Singapore</div>
+                                        <div class="text-blue-600">Popular</div>
+                                    </div>
+                                    <div class="flex-1 p-2 bg-purple-100 rounded text-center text-xs">
+                                        <div class="font-bold text-purple-800">Bali</div>
+                                        <div class="text-purple-600">Trending</div>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-yellow-600">
+                                    <i class="fas fa-info-circle mr-1"></i>Price sensitivity: Moderate
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">Luxury (&gt;₹75K)</span>
+                                    <span class="text-sm text-slate-600">27% of enquiries</span>
+                                </div>
+                                <div class="flex gap-2 mb-2">
+                                    <div class="flex-1 p-2 bg-emerald-100 rounded text-center text-xs">
+                                        <div class="font-bold text-emerald-800">Europe</div>
+                                        <div class="text-emerald-600">Premium</div>
+                                    </div>
+                                    <div class="flex-1 p-2 bg-blue-100 rounded text-center text-xs">
+                                        <div class="font-bold text-blue-800">Maldives</div>
+                                        <div class="text-blue-600">Honeymoon</div>
+                                    </div>
+                                    <div class="flex-1 p-2 bg-yellow-100 rounded text-center text-xs">
+                                        <div class="font-bold text-yellow-800">Switzerland</div>
+                                        <div class="text-yellow-700">Seasonal</div>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-emerald-600">
+                                    <i class="fas fa-check-circle mr-1"></i>Price sensitivity: Low (focus on experience)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="font-bold text-slate-900 mb-4">Product Performance Matrix</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-50 text-slate-600 uppercase text-xs">
+                                <tr>
+                                    <th class="px-4 py-3 text-left">Product</th>
+                                    <th class="px-4 py-3 text-left">Enquiries</th>
+                                    <th class="px-4 py-3 text-left">Conversion</th>
+                                    <th class="px-4 py-3 text-left">Avg Margin</th>
+                                    <th class="px-4 py-3 text-left">Competitor Price</th>
+                                    <th class="px-4 py-3 text-left">Our Price</th>
+                                    <th class="px-4 py-3 text-left">Gap</th>
+                                    <th class="px-4 py-3 text-left">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200">
+                                <tr class="table-row bg-red-50">
+                                    <td class="px-4 py-3 font-medium">Dubai 3N Economy</td>
+                                    <td class="px-4 py-3">156</td>
+                                    <td class="px-4 py-3 text-red-600">18%</td>
+                                    <td class="px-4 py-3">8%</td>
+                                    <td class="px-4 py-3">₹42,000</td>
+                                    <td class="px-4 py-3">₹45,000</td>
+                                    <td class="px-4 py-3 text-red-600">+7%</td>
+                                    <td class="px-4 py-3"><button class="text-xs bg-red-600 text-white px-2 py-1 rounded">Reduce Price</button></td>
+                                </tr>
+                                <tr class="table-row">
+                                    <td class="px-4 py-3 font-medium">Singapore Family</td>
+                                    <td class="px-4 py-3">124</td>
+                                    <td class="px-4 py-3 text-emerald-600">32%</td>
+                                    <td class="px-4 py-3">12%</td>
+                                    <td class="px-4 py-3">₹68,000</td>
+                                    <td class="px-4 py-3">₹65,000</td>
+                                    <td class="px-4 py-3 text-emerald-600">-4%</td>
+                                    <td class="px-4 py-3"><span class="text-xs text-emerald-600">Competitive</span></td>
+                                </tr>
+                                <tr class="table-row">
+                                    <td class="px-4 py-3 font-medium">Maldives Premium</td>
+                                    <td class="px-4 py-3">89</td>
+                                    <td class="px-4 py-3 text-emerald-600">28%</td>
+                                    <td class="px-4 py-3">18%</td>
+                                    <td class="px-4 py-3">₹1,75,000</td>
+                                    <td class="px-4 py-3">₹1,85,000</td>
+                                    <td class="px-4 py-3 text-orange-600">+6%</td>
+                                    <td class="px-4 py-3"><button class="text-xs bg-blue-600 text-white px-2 py-1 rounded">Add Value</button></td>
+                                </tr>
+                                <tr class="table-row bg-yellow-50">
+                                    <td class="px-4 py-3 font-medium">Europe 7N</td>
+                                    <td class="px-4 py-3">67</td>
+                                    <td class="px-4 py-3 text-yellow-600">15%</td>
+                                    <td class="px-4 py-3">15%</td>
+                                    <td class="px-4 py-3">₹1,95,000</td>
+                                    <td class="px-4 py-3">₹2,10,000</td>
+                                    <td class="px-4 py-3 text-red-600">+8%</td>
+                                    <td class="px-4 py-3"><button class="text-xs bg-yellow-600 text-white px-2 py-1 rounded">Review</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts View -->
+            <div id="product-intelligence-alerts" class="view-section">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Pricing Alerts</h3>
+                        <div class="space-y-3">
+                            <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-tag text-red-500 mt-1"></i>
+                                    <div class="flex-1">
+                                        <div class="font-semibold text-red-900">Price Discrepancy: Dubai Packages</div>
+                                        <div class="text-sm text-red-700">Our price 7% higher than market average. Losing 34% enquiries.</div>
+                                        <div class="text-xs text-red-600 mt-2">Impact: ₹8.5L potential loss/month</div>
+                                        <div class="mt-3 flex gap-2">
+                                            <button class="px-3 py-1 bg-red-600 text-white rounded text-sm">Adjust Price</button>
+                                            <button class="px-3 py-1 border border-slate-300 rounded text-sm">Negotiate Vendor</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-exclamation-triangle text-yellow-600 mt-1"></i>
+                                    <div class="flex-1">
+                                        <div class="font-semibold text-yellow-900">Inventory Shortage: Bali Villas</div>
+                                        <div class="text-sm text-yellow-700">Demand up 45% but only 3 properties contracted.</div>
+                                        <div class="text-xs text-yellow-700 mt-2">23 enquiries turned away this week</div>
+                                        <div class="mt-3 flex gap-2">
+                                            <button class="px-3 py-1 bg-yellow-600 text-white rounded text-sm">Find Suppliers</button>
+                                            <button class="px-3 py-1 border border-slate-300 rounded text-sm">Check Alternatives</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-chart-line text-blue-600 mt-1"></i>
+                                    <div class="flex-1">
+                                        <div class="font-semibold text-blue-900">Opportunity: Europe Summer</div>
+                                        <div class="text-sm text-blue-700">Early bookings for May-July showing 60% increase.</div>
+                                        <div class="text-xs text-blue-700 mt-2">Recommend: Block seats now for better rates</div>
+                                        <div class="mt-3 flex gap-2">
+                                            <button class="px-3 py-1 bg-blue-600 text-white rounded text-sm">Block Inventory</button>
+                                            <button class="px-3 py-1 border border-slate-300 rounded text-sm">Create Early Bird</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Competitive Intelligence</h3>
+                        <div class="space-y-3">
+                            <div class="p-4 border border-slate-200 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-semibold">MakeMyTrip Flash Sale</span>
+                                    <span class="urgent-badge px-2 py-1 rounded text-xs">Active</span>
+                                </div>
+                                <div class="text-sm text-slate-600 mb-2">30% off on Dubai packages - Dec 20-25</div>
+                                <div class="text-xs text-slate-500 mb-3">Our impact: 12% drop in enquiries</div>
+                                <div class="flex gap-2">
+                                    <button class="px-3 py-1 bg-emerald-600 text-white rounded text-sm">Match Offer</button>
+                                    <button class="px-3 py-1 border border-slate-300 rounded text-sm">Differentiate</button>
+                                </div>
+                            </div>
+
+                            <div class="p-4 border border-slate-200 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-semibold">Yatra New Launch</span>
+                                    <span class="info-badge px-2 py-1 rounded text-xs">New</span>
+                                </div>
+                                <div class="text-sm text-slate-600 mb-2">"Workation" packages for remote workers</div>
+                                <div class="text-xs text-slate-500 mb-3">Trending: 45% increase in such searches</div>
+                                <div class="flex gap-2">
+                                    <button class="px-3 py-1 bg-blue-600 text-white rounded text-sm">Create Similar</button>
+                                    <button class="px-3 py-1 border border-slate-300 rounded text-sm">Analyze</button>
+                                </div>
+                            </div>
+
+                            <div class="p-4 border border-slate-200 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-semibold">Booking.com Price Drop</span>
+                                    <span class="warning-badge px-2 py-1 rounded text-xs">Monitor</span>
+                                </div>
+                                <div class="text-sm text-slate-600 mb-2">International hotels rates reduced 15%</div>
+                                <div class="text-xs text-slate-500 mb-3">Our margin impact: -3%</div>
+                                <div class="flex gap-2">
+                                    <button class="px-3 py-1 bg-purple-600 text-white rounded text-sm">Renegotiate</button>
+                                    <button class="px-3 py-1 border border-slate-300 rounded text-sm">Hold</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Forecasts View -->
+            <div id="product-intelligence-forecasts" class="view-section">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="card p-6 bg-gradient-to-br from-emerald-50 to-white border-emerald-200">
+                        <h3 class="font-bold text-emerald-900 mb-2">Q1 2025 Demand Forecast</h3>
+                        <div class="text-3xl font-bold text-emerald-700 mb-2">+24%</div>
+                        <div class="text-sm text-emerald-600 mb-4">vs Q1 2024</div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Dubai</span>
+                                <span class="font-medium text-emerald-700">+35%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Thailand</span>
+                                <span class="font-medium text-emerald-700">+28%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Singapore</span>
+                                <span class="font-medium text-emerald-700">+18%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Europe</span>
+                                <span class="font-medium text-yellow-700">+8%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6 bg-gradient-to-br from-blue-50 to-white border-blue-200">
+                        <h3 class="font-bold text-blue-900 mb-2">Inventory Requirements</h3>
+                        <div class="text-3xl font-bold text-blue-700 mb-2">1,250</div>
+                        <div class="text-sm text-blue-600 mb-4">Room nights needed (Q1)</div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Dubai Hotels</span>
+                                <span class="font-medium">450 nights</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Bali Villas</span>
+                                <span class="font-medium">320 nights</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Thailand Resorts</span>
+                                <span class="font-medium">280 nights</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Others</span>
+                                <span class="font-medium">200 nights</span>
+                            </div>
+                        </div>
+                        <div class="mt-3 p-2 bg-blue-100 rounded text-xs text-blue-800">
+                            <i class="fas fa-info-circle mr-2"></i>Block by Jan 15 for best rates
+                        </div>
+                    </div>
+
+                    <div class="card p-6 bg-gradient-to-br from-purple-50 to-white border-purple-200">
+                        <h3 class="font-bold text-purple-900 mb-2">Revenue Opportunity</h3>
+                        <div class="text-3xl font-bold text-purple-700 mb-2">₹4.8Cr</div>
+                        <div class="text-sm text-purple-600 mb-4">If unmet demand captured</div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">New Products</span>
+                                <span class="font-medium">₹1.8Cr</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Price Optimization</span>
+                                <span class="font-medium">₹1.5Cr</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Better Conversion</span>
+                                <span class="font-medium">₹1.0Cr</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-600">Inventory Expansion</span>
+                                <span class="font-medium">₹0.5Cr</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="font-bold text-slate-900 mb-4">Product Roadmap Recommendations</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-slate-700 mb-3">Immediate (Next 30 Days)</h4>
+                            <div class="space-y-3">
+                                <div class="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
+                                    <div class="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</div>
+                                    <div>
+                                        <div class="font-semibold text-sm text-red-900">Reduce Dubai Package Price</div>
+                                        <div class="text-xs text-red-700">Match market rate, target 25% conversion improvement</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                                    <div class="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</div>
+                                    <div>
+                                        <div class="font-semibold text-sm text-orange-900">Onboard 2 Bali Villa Partners</div>
+                                        <div class="text-xs text-orange-700">Capture unmet demand of 32 enquiries/month</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                                    <div class="w-6 h-6 bg-yellow-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</div>
+                                    <div>
+                                        <div class="font-semibold text-sm text-yellow-900">Launch "Workation" Packages</div>
+                                        <div class="text-xs text-yellow-700">Remote work + leisure trend, 7-day stays</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="font-semibold text-slate-700 mb-3">Strategic (Next Quarter)</h4>
+                            <div class="space-y-3">
+                                <div class="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                    <div class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</div>
+                                    <div>
+                                        <div class="font-semibold text-sm text-blue-900">Develop Luxury Yacht Product</div>
+                                        <div class="text-xs text-blue-700">High demand, no competition in our portfolio</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                                    <div class="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</div>
+                                    <div>
+                                        <div class="font-semibold text-sm text-purple-900">Create Dynamic Pricing Engine</div>
+                                        <div class="text-xs text-purple-700">Real-time price adjustment based on demand</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                                    <div class="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</div>
+                                    <div>
+                                        <div class="font-semibold text-sm text-emerald-900">Expand Europe Inventory</div>
+                                        <div class="text-xs text-emerald-700">Early bird strategy for summer season</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Track current dashboard
+        let currentDashboard = 'localized-finance';
+
+        function switchDashboard(dashboard) {
+            // Hide all dashboards
+            document.querySelectorAll('.dashboard-section').forEach(section => {
+                section.classList.remove('active');
+                section.style.display = 'none';
+            });
+            
+            // Show selected dashboard
+            const selectedSection = document.getElementById(dashboard);
+            selectedSection.style.display = 'block';
+            setTimeout(() => {
+                selectedSection.classList.add('active');
+            }, 10);
+            
+            currentDashboard = dashboard;
+            
+            // Reset all views to overview for the new dashboard
+            resetViews(dashboard);
+            
+            // Reset nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-tab')[0].classList.add('active');
+        }
+
+        function resetViews(dashboard) {
+            // Hide all views for this dashboard
+            const views = document.querySelectorAll(`#${dashboard} .view-section`);
+            views.forEach(view => {
+                view.classList.remove('active');
+                view.style.display = 'none';
+            });
+            
+            // Show overview view by default
+            const overviewView = document.getElementById(`${dashboard}-overview`);
+            if (overviewView) {
+                overviewView.style.display = 'block';
+                setTimeout(() => {
+                    overviewView.classList.add('active');
+                }, 10);
+            }
+        }
+
+        function switchView(viewName, clickedTab) {
+            // Update tab buttons
+            if (clickedTab) {
+                document.querySelectorAll('.nav-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                clickedTab.classList.add('active');
+            }
+            
+            // Hide all views for current dashboard
+            const views = document.querySelectorAll(`#${currentDashboard} .view-section`);
+            views.forEach(view => {
+                view.classList.remove('active');
+                view.style.display = 'none';
+            });
+            
+            // Show selected view
+            const selectedView = document.getElementById(`${currentDashboard}-${viewName}`);
+            if (selectedView) {
+                selectedView.style.display = 'block';
+                setTimeout(() => {
+                    selectedView.classList.add('active');
+                }, 10);
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            switchDashboard('localized-finance');
+        });
+    </script>
+
+</body>
+</html>

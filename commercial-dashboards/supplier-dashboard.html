@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier Command Center - Strategic Sourcing & Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .metric-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+        }
+        .alert-pulse {
+            animation: pulse-red 2s infinite;
+        }
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+        .tab-active {
+            border-bottom: 3px solid #3b82f6;
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        .supplier-row:hover {
+            background-color: #f1f5f9;
+            transform: scale(1.01);
+            transition: all 0.2s ease;
+        }
+        .ai-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .committed-badge {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        .action-btn {
+            transition: all 0.2s ease;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        .news-ticker {
+            animation: scroll 20s linear infinite;
+        }
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-gradient-to-br from-blue-600 to-purple-600 text-white p-3 rounded-xl shadow-lg">
+                        <i class="fas fa-network-wired text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-900">Supplier Command Center</h1>
+                        <p class="text-sm text-slate-500">Strategic Sourcing & Market Intelligence</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-2 bg-red-50 px-4 py-2 rounded-lg border border-red-200 alert-pulse cursor-pointer" onclick="showAlerts()">
+                        <i class="fas fa-exclamation-triangle text-red-600"></i>
+                        <span class="text-sm font-semibold text-red-700">8 Critical Actions</span>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-purple-50 px-4 py-2 rounded-lg border border-purple-200 cursor-pointer" onclick="showAIInsights()">
+                        <i class="fas fa-robot text-purple-600"></i>
+                        <span class="text-sm font-semibold text-purple-700">3 AI Insights</span>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-amber-50 px-4 py-2 rounded-lg border border-amber-200 cursor-pointer" onclick="showCommittedStock()">
+                        <i class="fas fa-warehouse text-amber-600"></i>
+                        <span class="text-sm font-semibold text-amber-700">5 Stock Alerts</span>
+                    </div>
+                    <button class="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors">
+                        <i class="fas fa-download mr-2"></i>Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- AI-Powered News Ticker -->
+    <div class="bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 text-white py-3 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 flex items-center">
+            <span class="bg-red-500 text-xs font-bold px-2 py-1 rounded mr-3 animate-pulse">LIVE</span>
+            <span class="text-sm font-semibold mr-4">AI Market Intelligence:</span>
+            <div class="flex-1 overflow-hidden relative h-6">
+                <div class="absolute whitespace-nowrap news-ticker flex space-x-8 text-sm">
+                    <span class="flex items-center"><i class="fas fa-exclamation-circle text-amber-400 mr-2"></i>Thailand: Political protests in Bangkok - Monitor bookings</span>
+                    <span class="flex items-center"><i class="fas fa-percentage text-green-400 mr-2"></i>UAE: Dubai Hotel rates dropping 15% - Negotiate now</span>
+                    <span class="flex items-center"><i class="fas fa-plane text-blue-400 mr-2"></i>Air India: New direct flights to Phuket - Opportunity</span>
+                    <span class="flex items-center"><i class="fas fa-festival text-purple-400 mr-2"></i>Songkran Festival: Thailand peak season starting</span>
+                    <span class="flex items-center"><i class="fas fa-exclamation-triangle text-red-400 mr-2"></i>Maldives: Weather alert - Cyclone season approaching</span>
+                    <span class="flex items-center"><i class="fas fa-handshake text-green-400 mr-2"></i>Etihad: Special corporate rates available</span>
+                </div>
+            </div>
+            <button class="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition-colors ml-4">View All</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Executive KPIs -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <div class="metric-card bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                        <i class="fas fa-handshake text-blue-600"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-full">+8%</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">68%</h3>
+                <p class="text-xs text-slate-600 mt-1">Direct Contract Rate</p>
+                <div class="mt-2 text-xs text-slate-500">Target: 75%</div>
+            </div>
+
+            <div class="metric-card bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-purple-100 rounded-lg">
+                        <i class="fas fa-chart-line text-purple-600"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-full">+12%</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">₹52.4Cr</h3>
+                <p class="text-xs text-slate-600 mt-1">Supplier Revenue YTD</p>
+                <div class="mt-2 text-xs text-slate-500">Margin: 18.2%</div>
+            </div>
+
+            <div class="metric-card bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-amber-100 rounded-lg">
+                        <i class="fas fa-warehouse text-amber-600"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-red-600 bg-red-100 px-2 py-1 rounded-full">Action</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">64%</h3>
+                <p class="text-xs text-slate-600 mt-1">Committed Stock Sold</p>
+                <div class="mt-2 text-xs text-red-600 font-medium">Push remaining 36%</div>
+            </div>
+
+            <div class="metric-card bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-red-100 rounded-lg">
+                        <i class="fas fa-times-circle text-red-600"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-red-600 bg-red-100 px-2 py-1 rounded-full">-5%</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">₹14.2Cr</h3>
+                <p class="text-xs text-slate-600 mt-1">Lost to Competitors</p>
+                <div class="mt-2 text-xs text-slate-500">234 enquiries</div>
+            </div>
+
+            <div class="metric-card bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <i class="fas fa-trophy text-green-600"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-full">+15%</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">82%</h3>
+                <p class="text-xs text-slate-600 mt-1">Supplier NPS Score</p>
+                <div class="mt-2 text-xs text-slate-500">Top quartile</div>
+            </div>
+        </div>
+
+        <!-- Actionable Intelligence Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            
+            <!-- AI Market Intelligence -->
+            <div class="glass-panel rounded-2xl p-6 lg:col-span-1">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-slate-900 flex items-center">
+                        <i class="fas fa-brain text-purple-600 mr-2"></i>
+                        AI Market Intelligence
+                    </h3>
+                    <span class="ai-badge text-xs px-2 py-1 rounded-full">Live</span>
+                </div>
+                
+                <div class="space-y-4 max-h-96 overflow-y-auto">
+                    <!-- Critical Alert -->
+                    <div class="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded">CRITICAL</span>
+                            <span class="text-xs text-slate-500">2 min ago</span>
+                        </div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Thailand: Political Unrest</h4>
+                        <p class="text-xs text-slate-600 mb-3">Protests in Bangkok central district. 12 bookings affected.</p>
+                        <div class="flex space-x-2">
+                            <button class="bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg action-btn">Contact Guests</button>
+                            <button class="bg-white text-red-600 border border-red-200 text-xs px-3 py-1.5 rounded-lg">View Alternatives</button>
+                        </div>
+                    </div>
+
+                    <!-- Opportunity -->
+                    <div class="p-4 bg-green-50 border-l-4 border-green-500 rounded-r-xl">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">OPPORTUNITY</span>
+                            <span class="text-xs text-slate-500">15 min ago</span>
+                        </div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Dubai: Rate Drop Alert</h4>
+                        <p class="text-xs text-slate-600 mb-3">Atlantis Dubai reduced rates by 20% for March.</p>
+                        <div class="flex space-x-2">
+                            <button class="bg-green-600 text-white text-xs px-3 py-1.5 rounded-lg action-btn">Push to Sales</button>
+                            <button class="bg-white text-green-600 border border-green-200 text-xs px-3 py-1.5 rounded-lg">Hold Inventory</button>
+                        </div>
+                    </div>
+
+                    <!-- Seasonal -->
+                    <div class="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-xl">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded">SEASONAL</span>
+                            <span class="text-xs text-slate-500">1 hour ago</span>
+                        </div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Songkran Festival Peak</h4>
+                        <p class="text-xs text-slate-600 mb-3">Thailand bookings surging +45%. Inventory low.</p>
+                        <div class="flex space-x-2">
+                            <button class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg action-btn">Secure More Rooms</button>
+                        </div>
+                    </div>
+
+                    <!-- Supplier Alert -->
+                    <div class="p-4 bg-amber-50 border-l-4 border-amber-500 rounded-r-xl">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-1 rounded">SUPPLIER</span>
+                            <span class="text-xs text-slate-500">3 hours ago</span>
+                        </div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-1">Emirates: New Route</h4>
+                        <p class="text-xs text-slate-600 mb-3">Direct Mumbai-Phuket launches next month.</p>
+                        <div class="flex space-x-2">
+                            <button class="bg-amber-600 text-white text-xs px-3 py-1.5 rounded-lg action-btn">Create Package</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Committed Stock Performance -->
+            <div class="glass-panel rounded-2xl p-6 lg:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-slate-900 flex items-center">
+                        <i class="fas fa-warehouse text-amber-600 mr-2"></i>
+                        Committed Stock Performance
+                    </h3>
+                    <div class="flex space-x-2">
+                        <button class="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-medium">Push Committed First</button>
+                        <button class="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full">View All</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <!-- Critical: Underperforming Commitment -->
+                    <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-bold text-slate-900">Marriott Phuket</h4>
+                                <p class="text-xs text-slate-500">Committed: 500 room nights</p>
+                            </div>
+                            <span class="committed-badge text-xs px-2 py-1 rounded-full">COMMITTED</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-slate-600">Sold: 180 nights (36%)</span>
+                            <span class="text-sm font-bold text-red-600">64% Remaining</span>
+                        </div>
+                        
+                        <div class="w-full bg-white rounded-full h-3 mb-3">
+                            <div class="bg-gradient-to-r from-red-500 to-red-600 h-3 rounded-full" style="width: 36%"></div>
+                        </div>
+
+                        <div class="flex justify-between items-center text-xs mb-3">
+                            <span class="text-slate-600">Risk: <span class="text-red-600 font-bold">High</span></span>
+                            <span class="text-slate-600">Deadline: 15 days</span>
+                        </div>
+
+                        <div class="flex space-x-2">
+                            <button class="flex-1 bg-red-600 text-white text-xs py-2 rounded-lg action-btn font-medium">
+                                <i class="fas fa-bullhorn mr-1"></i> Push to Agents
+                            </button>
+                            <button class="flex-1 bg-white text-red-600 border border-red-200 text-xs py-2 rounded-lg font-medium">
+                                <i class="fas fa-tag mr-1"></i> Discount 15%
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Warning: Slow Moving -->
+                    <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-bold text-slate-900">Air Arabia Sharjah</h4>
+                                <p class="text-xs text-slate-500">Committed: 200 seats</p>
+                            </div>
+                            <span class="committed-badge text-xs px-2 py-1 rounded-full">COMMITTED</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-slate-600">Sold: 95 seats (48%)</span>
+                            <span class="text-sm font-bold text-amber-600">52% Remaining</span>
+                        </div>
+                        
+                        <div class="w-full bg-white rounded-full h-3 mb-3">
+                            <div class="bg-gradient-to-r from-amber-500 to-amber-600 h-3 rounded-full" style="width: 48%"></div>
+                        </div>
+
+                        <div class="flex justify-between items-center text-xs mb-3">
+                            <span class="text-slate-600">Risk: <span class="text-amber-600 font-bold">Medium</span></span>
+                            <span class="text-slate-600">Deadline: 30 days</span>
+                        </div>
+
+                        <div class="flex space-x-2">
+                            <button class="flex-1 bg-amber-600 text-white text-xs py-2 rounded-lg action-btn font-medium">
+                                <i class="fas fa-bullhorn mr-1"></i> Push to Agents
+                            </button>
+                            <button class="flex-1 bg-white text-amber-600 border border-amber-200 text-xs py-2 rounded-lg font-medium">
+                                Bundle Offer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comparison: Committed vs Non-Committed -->
+                <div class="bg-slate-50 rounded-xl p-4">
+                    <h4 class="font-bold text-slate-900 mb-3 text-sm">Performance: Committed vs Non-Committed</h4>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3 flex-1">
+                                <span class="text-sm font-medium w-24">Marriott Phuket</span>
+                                <div class="flex-1 bg-slate-200 rounded-full h-2">
+                                    <div class="bg-purple-600 h-2 rounded-full" style="width: 36%"></div>
+                                </div>
+                                <span class="text-xs text-slate-600 w-16">36% sold</span>
+                            </div>
+                            <span class="committed-badge text-xs px-2 py-0.5 rounded">COMMITTED</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3 flex-1">
+                                <span class="text-sm font-medium w-24">Hilton Phuket</span>
+                                <div class="flex-1 bg-slate-200 rounded-full h-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 78%"></div>
+                                </div>
+                                <span class="text-xs text-slate-600 w-16">78% sold</span>
+                            </div>
+                            <span class="bg-slate-200 text-slate-600 text-xs px-2 py-0.5 rounded">NON-COMMITTED</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3 flex-1">
+                                <span class="text-sm font-medium w-24">Hyatt Regency</span>
+                                <div class="flex-1 bg-slate-200 rounded-full h-2">
+                                    <div class="bg-purple-600 h-2 rounded-full" style="width: 42%"></div>
+                                </div>
+                                <span class="text-xs text-slate-600 w-16">42% sold</span>
+                            </div>
+                            <span class="committed-badge text-xs px-2 py-0.5 rounded">COMMITTED</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 p-3 bg-blue-100 rounded-lg flex items-center justify-between">
+                        <span class="text-sm text-blue-800 font-medium">Insight: Committed stock moving 40% slower than non-committed</span>
+                        <button class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg">View Strategy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Bar -->
+        <div class="bg-gradient-to-r from-slate-900 to-purple-900 rounded-2xl p-6 mb-8 text-white">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-xl font-bold mb-1">Recommended Actions</h3>
+                    <p class="text-slate-300 text-sm">Based on current market conditions and stock performance</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button class="bg-white/10 hover:bg-white/20 backdrop-blur px-4 py-2 rounded-lg text-sm transition-colors flex items-center">
+                        <i class="fas fa-file-contract mr-2"></i>
+                        Negotiate Marriott Commitment
+                    </button>
+                    <button class="bg-white/10 hover:bg-white/20 backdrop-blur px-4 py-2 rounded-lg text-sm transition-colors flex items-center">
+                        <i class="fas fa-plane mr-2"></i>
+                        Secure Qatar Airways Contract
+                    </button>
+                    <button class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-sm transition-colors flex items-center font-medium">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Address Thailand Cancellations
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="bg-white rounded-t-2xl border-b border-slate-200 px-6 pt-4">
+            <nav class="flex space-x-8 overflow-x-auto">
+                <button onclick="switchTab('performance')" id="tab-performance" class="tab-active pb-4 text-sm font-medium text-slate-900 hover:text-slate-700 transition-colors whitespace-nowrap">
+                    <i class="fas fa-trophy mr-2"></i>Top Performers
+                </button>
+                <button onclick="switchTab('intelligence')" id="tab-intelligence" class="pb-4 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors whitespace-nowrap">
+                    <i class="fas fa-brain mr-2"></i>AI Intelligence
+                </button>
+                <button onclick="switchTab('committed')" id="tab-committed" class="pb-4 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors whitespace-nowrap">
+                    <i class="fas fa-warehouse mr-2"></i>Committed Stock
+                </button>
+                <button onclick="switchTab('lost')" id="tab-lost" class="pb-4 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors whitespace-nowrap">
+                    <i class="fas fa-search-dollar mr-2"></i>Lost Business
+                </button>
+                <button onclick="switchTab('targets')" id="tab-targets" class="pb-4 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors whitespace-nowrap">
+                    <i class="fas fa-crosshairs mr-2"></i>Target Contracts
+                </button>
+                <button onclick="switchTab('destination')" id="tab-destination" class="pb-4 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors whitespace-nowrap">
+                    <i class="fas fa-globe mr-2"></i>By Destination
+                </button>
+            </nav>
+        </div>
+
+        <!-- Tab Content: Top Performers -->
+        <div id="content-performance" class="tab-content">
+            <div class="bg-white rounded-b-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Supplier Performance Leaderboard</h3>
+                        <p class="text-sm text-slate-500">Ranked by revenue contribution and reliability score</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <select class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                            <option>All Categories</option>
+                            <option>Airlines</option>
+                            <option>Hotels</option>
+                            <option>Transfers</option>
+                            <option>Tours</option>
+                        </select>
+                        <select class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                            <option>Last 30 Days</option>
+                            <option>Last Quarter</option>
+                            <option>YTD</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-4 font-semibold">Rank</th>
+                                <th class="px-6 py-4 font-semibold">Supplier</th>
+                                <th class="px-6 py-4 font-semibold">Category</th>
+                                <th class="px-6 py-4 font-semibold text-right">Revenue</th>
+                                <th class="px-6 py-4 font-semibold text-right">Margin</th>
+                                <th class="px-6 py-4 font-semibold text-center">Reliability</th>
+                                <th class="px-6 py-4 font-semibold text-center">Status</th>
+                                <th class="px-6 py-4 font-semibold text-center">Quick Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <tr class="supplier-row">
+                                <td class="px-6 py-4"><span class="bg-yellow-100 text-yellow-800 font-bold px-3 py-1 rounded-full text-sm">#1</span></td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-plane text-blue-600"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-slate-900">Emirates Airlines</p>
+                                            <p class="text-xs text-slate-500">Direct Contract • Since 2018</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4"><span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Airline</span></td>
+                                <td class="px-6 py-4 text-right font-bold text-slate-900">₹14.2Cr</td>
+                                <td class="px-6 py-4 text-right text-green-600 font-semibold">22%</td>
+                                <td class="px-6 py-4 text-center"><span class="text-green-600 font-bold">98%</span></td>
+                                <td class="px-6 py-4 text-center"><span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full font-medium">Preferred</span></td>
+                                <td class="px-6 py-4 text-center">
+                                    <button class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg action-btn">Renew Contract</button>
+                                </td>
+                            </tr>
+                            <tr class="supplier-row">
+                                <td class="px-6 py-4"><span class="bg-slate-200 text-slate-700 font-bold px-3 py-1 rounded-full text-sm">#2</span></td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-hotel text-purple-600"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-slate-900">Marriott International</p>
+                                            <p class="text-xs text-slate-500">Direct Contract • Committed Stock</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4"><span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">Hotel</span></td>
+                                <td class="px-6 py-4 text-right font-bold text-slate-900">₹11.8Cr</td>
+                                <td class="px-6 py-4 text-right text-green-600 font-semibold">18%</td>
+                                <td class="px-6 py-4 text-center"><span class="text-amber-600 font-bold">85%</span></td>
+                                <td class="px-6 py-4 text-center"><span class="bg-amber-100 text-amber-800 text-xs px-3 py-1 rounded-full font-medium">Review</span></td>
+                                <td class="px-6 py-4 text-center">
+                                    <button class="bg-amber-600 text-white text-xs px-3 py-1.5 rounded-lg action-btn">Renegotiate</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: AI Intelligence -->
+        <div id="content-intelligence" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4">Predictive Analytics</h3>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-purple-50 rounded-xl border border-purple-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-bold text-purple-900">Demand Forecast: Maldives</h4>
+                                <span class="ai-badge text-xs px-2 py-1 rounded">AI Generated</span>
+                            </div>
+                            <p class="text-sm text-slate-700 mb-3">Based on search trends and booking patterns, expect 35% demand surge in March.</p>
+                            <div class="flex space-x-2">
+                                <button class="bg-purple-600 text-white text-xs px-4 py-2 rounded-lg action-btn">Secure Inventory</button>
+                                <button class="bg-white text-purple-600 border border-purple-200 text-xs px-4 py-2 rounded-lg">View Details</button>
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-bold text-blue-900">Price Optimization</h4>
+                                <span class="ai-badge text-xs px-2 py-1 rounded">AI Generated</span>
+                            </div>
+                            <p class="text-sm text-slate-700 mb-3">Dubai hotels showing 12% price drop next week. Recommend holding inventory.</p>
+                            <div class="flex space-x-2">
+                                <button class="bg-blue-600 text-white text-xs px-4 py-2 rounded-lg action-btn">Hold Rates</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4">Risk Assessment</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-red-50 rounded-xl border border-red-200">
+                            <div>
+                                <h4 class="font-bold text-red-900">Thai Airways</h4>
+                                <p class="text-sm text-slate-600">Financial instability detected</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="bg-red-600 text-white text-xs px-3 py-1 rounded-full">High Risk</span>
+                                <p class="text-xs text-slate-500 mt-1">Reduce exposure</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-amber-50 rounded-xl border border-amber-200">
+                            <div>
+                                <h4 class="font-bold text-amber-900">Sri Lankan Airlines</h4>
+                                <p class="text-sm text-slate-600">Operational delays increasing</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="bg-amber-600 text-white text-xs px-3 py-1 rounded-full">Medium Risk</span>
+                                <p class="text-xs text-slate-500 mt-1">Monitor closely</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Committed Stock -->
+        <div id="content-committed" class="tab-content hidden">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-200">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900">Committed Inventory Management</h3>
+                            <p class="text-sm text-slate-500">Track performance and optimize sell-through</p>
+                        </div>
+                        <div class="flex space-x-3">
+                            <div class="text-right">
+                                <p class="text-2xl font-bold text-slate-900">₹24.5Cr</p>
+                                <p class="text-xs text-slate-500">Total Commitment Value</p>
+                            </div>
+                            <div class="text-right border-l pl-3">
+                                <p class="text-2xl font-bold text-amber-600">64%</p>
+                                <p class="text-xs text-slate-500">Sell-through Rate</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Critical Attention -->
+                        <div class="space-y-4">
+                            <h4 class="font-bold text-red-700 flex items-center">
+                                <i class="fas fa-exclamation-circle mr-2"></i>
+                                Critical Attention
+                            </h4>
+                            
+                            <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h5 class="font-bold text-slate-900">Marriott Phuket</h5>
+                                    <span class="bg-red-600 text-white text-xs px-2 py-1 rounded">Risk</span>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>500 nights committed</span>
+                                        <span class="font-bold text-red-600">36% sold</span>
+                                    </div>
+                                    <div class="w-full bg-white rounded-full h-2">
+                                        <div class="bg-red-500 h-2 rounded-full" style="width: 36%"></div>
+                                    </div>
+                                </div>
+                                <div class="space-y-2">
+                                    <button class="w-full bg-red-600 text-white text-xs py-2 rounded-lg action-btn">Push to Sales Team</button>
+                                    <button class="w-full bg-white text-red-600 border border-red-200 text-xs py-2 rounded-lg">Offer 20% Discount</button>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h5 class="font-bold text-slate-900">Air Arabia Sharjah</h5>
+                                    <span class="bg-red-600 text-white text-xs px-2 py-1 rounded">Risk</span>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>200 seats committed</span>
+                                        <span class="font-bold text-red-600">48% sold</span>
+                                    </div>
+                                    <div class="w-full bg-white rounded-full h-2">
+                                        <div class="bg-red-500 h-2 rounded-full" style="width: 48%"></div>
+                                    </div>
+                                </div>
+                                <div class="space-y-2">
+                                    <button class="w-full bg-red-600 text-white text-xs py-2 rounded-lg action-btn">Create Bundle Offer</button>
+                                    <button class="w-full bg-white text-red-600 border border-red-200 text-xs py-2 rounded-lg">Swap with Alternative</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- On Track -->
+                        <div class="space-y-4">
+                            <h4 class="font-bold text-green-700 flex items-center">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                On Track
+                            </h4>
+                            
+                            <div class="p-4 bg-green-50 border border-green-200 rounded-xl">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h5 class="font-bold text-slate-900">Emirates Business</h5>
+                                    <span class="bg-green-600 text-white text-xs px-2 py-1 rounded">Good</span>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>100 seats committed</span>
+                                        <span class="font-bold text-green-600">82% sold</span>
+                                    </div>
+                                    <div class="w-full bg-white rounded-full h-2">
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: 82%"></div>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-slate-600">Projected sell-out: 5 days</p>
+                            </div>
+
+                            <div class="p-4 bg-green-50 border border-green-200 rounded-xl">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h5 class="font-bold text-slate-900">Atlantis Dubai</h5>
+                                    <span class="bg-green-600 text-white text-xs px-2 py-1 rounded">Good</span>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>300 room nights</span>
+                                        <span class="font-bold text-green-600">76% sold</span>
+                                    </div>
+                                    <div class="w-full bg-white rounded-full h-2">
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: 76%"></div>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-slate-600">Projected sell-out: 12 days</p>
+                            </div>
+                        </div>
+
+                        <!-- Optimization Opportunities -->
+                        <div class="space-y-4">
+                            <h4 class="font-bold text-blue-700 flex items-center">
+                                <i class="fas fa-lightbulb mr-2"></i>
+                                Optimization
+                            </h4>
+                            
+                            <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                                <h5 class="font-bold text-slate-900 mb-2">Swap Opportunity</h5>
+                                <p class="text-sm text-slate-600 mb-3">Marriott Phuket (slow) → Hilton Phuket (high demand)</p>
+                                <button class="w-full bg-blue-600 text-white text-xs py-2 rounded-lg action-btn">Request Swap</button>
+                            </div>
+
+                            <div class="p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                                <h5 class="font-bold text-slate-900 mb-2">Dynamic Pricing</h5>
+                                <p class="text-sm text-slate-600 mb-3">AI suggests 15% discount on remaining Marriott inventory</p>
+                                <button class="w-full bg-purple-600 text-white text-xs py-2 rounded-lg action-btn">Apply Pricing</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Lost Business -->
+        <div id="content-lost" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4">Lost Business Analysis</h3>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-tag text-red-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-slate-900">Price Too High</p>
+                                        <p class="text-xs text-slate-500">Competitor offered better rate</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xl font-bold text-red-600">₹6.8Cr</p>
+                                    <p class="text-xs text-slate-500">156 enquiries</p>
+                                </div>
+                            </div>
+                            <button class="w-full bg-red-600 text-white text-sm py-2 rounded-lg action-btn">Review Pricing Strategy</button>
+                        </div>
+
+                        <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-times-circle text-amber-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-slate-900">Not Contracted</p>
+                                        <p class="text-xs text-slate-500">Supplier not in portfolio</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xl font-bold text-amber-600">₹4.2Cr</p>
+                                    <p class="text-xs text-slate-500">89 enquiries</p>
+                                </div>
+                            </div>
+                            <button class="w-full bg-amber-600 text-white text-sm py-2 rounded-lg action-btn">View Target List</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4">Competitive Intelligence</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 border border-slate-200 rounded-xl">
+                            <div>
+                                <p class="font-semibold text-slate-900">Singapore Airlines</p>
+                                <p class="text-xs text-slate-500">vs Our Rate</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-bold">+18% higher</span>
+                                <p class="text-xs text-slate-500 mt-1">Lost: ₹1.2Cr</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-4 border border-slate-200 rounded-xl">
+                            <div>
+                                <p class="font-semibold text-slate-900">MakeMyTrip Packages</p>
+                                <p class="text-xs text-slate-500">vs Our Dubai Offer</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-bold">+22% higher</span>
+                                <p class="text-xs text-slate-500 mt-1">Lost: ₹2.1Cr</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Target Contracts -->
+        <div id="content-targets" class="tab-content hidden">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-purple-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900">Priority Contracting Targets</h3>
+                            <p class="text-sm text-slate-600">Based on lost business analysis and market opportunity</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-2xl font-bold text-blue-600">₹18.5Cr</p>
+                            <p class="text-xs text-slate-600">Total Recoverable Revenue</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-4 font-semibold">Priority</th>
+                                <th class="px-6 py-4 font-semibold">Supplier</th>
+                                <th class="px-6 py-4 font-semibold">Category</th>
+                                <th class="px-6 py-4 font-semibold text-right">Lost Enquiries</th>
+                                <th class="px-6 py-4 font-semibold text-right">Est. Revenue</th>
+                                <th class="px-6 py-4 font-semibold">Current Source</th>
+                                <th class="px-6 py-4 font-semibold">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <tr class="supplier-row bg-red-50">
+                                <td class="px-6 py-4"><span class="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full">P1</span></td>
+                                <td class="px-6 py-4 font-bold text-slate-900">Qatar Airways</td>
+                                <td class="px-6 py-4"><span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Airline</span></td>
+                                <td class="px-6 py-4 text-right font-bold">234</td>
+                                <td class="px-6 py-4 text-right font-bold text-slate-900">₹4.2Cr</td>
+                                <td class="px-6 py-4"><span class="text-red-600 font-medium">Not Contracted</span></td>
+                                <td class="px-6 py-4">
+                                    <button class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm action-btn font-medium">Initiate Urgently</button>
+                                </td>
+                            </tr>
+                            <tr class="supplier-row bg-amber-50">
+                                <td class="px-6 py-4"><span class="bg-amber-600 text-white text-xs font-bold px-3 py-1 rounded-full">P2</span></td>
+                                <td class="px-6 py-4 font-bold text-slate-900">Four Seasons Maldives</td>
+                                <td class="px-6 py-4"><span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">Hotel</span></td>
+                                <td class="px-6 py-4 text-right font-bold">156</td>
+                                <td class="px-6 py-4 text-right font-bold text-slate-900">₹3.8Cr</td>
+                                <td class="px-6 py-4"><span class="text-amber-600 font-medium">Via Expedia (18%)</span></td>
+                                <td class="px-6 py-4">
+                                    <button class="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm action-btn font-medium">Negotiate Direct</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: By Destination -->
+        <div id="content-destination" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-slate-900 flex items-center">
+                            <span class="text-2xl mr-2">🇹🇭</span>
+                            Thailand
+                        </h3>
+                        <span class="bg-red-100 text-red-700 text-xs px-3 py-1 rounded-full font-bold">ALERT: Political Unrest</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="bg-slate-50 rounded-lg p-3 text-center">
+                            <p class="text-2xl font-bold text-blue-600">12</p>
+                            <p class="text-xs text-slate-600">Airlines (8 Direct)</p>
+                        </div>
+                        <div class="bg-slate-50 rounded-lg p-3 text-center">
+                            <p class="text-2xl font-bold text-purple-600">48</p>
+                            <p class="text-xs text-slate-600">Hotels (32 Direct)</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="p-3 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
+                            <p class="text-sm font-bold text-red-900">Immediate Action Required</p>
+                            <p class="text-xs text-slate-700 mt-1">12 bookings affected by protests. Contact guests for alternatives.</p>
+                            <button class="mt-2 bg-red-600 text-white text-xs px-3 py-1.5 rounded action-btn">Manage Cancellations</button>
+                        </div>
+                        <div class="p-3 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg">
+                            <p class="text-sm font-bold text-blue-900">Seasonal Opportunity</p>
+                            <p class="text-xs text-slate-700 mt-1">Songkran festival approaching. Secure additional inventory.</p>
+                            <button class="mt-2 bg-blue-600 text-white text-xs px-3 py-1.5 rounded action-btn">Secure Rooms</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-slate-900 flex items-center">
+                            <span class="text-2xl mr-2">🇦🇪</span>
+                            Dubai
+                        </h3>
+                        <span class="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full font-bold">OPPORTUNITY</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="bg-slate-50 rounded-lg p-3 text-center">
+                            <p class="text-2xl font-bold text-blue-600">8</p>
+                            <p class="text-xs text-slate-600">Airlines (6 Direct)</p>
+                        </div>
+                        <div class="bg-slate-50 rounded-lg p-3 text-center">
+                            <p class="text-2xl font-bold text-purple-600">32</p>
+                            <p class="text-xs text-slate-600">Hotels (14 Direct)</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="p-3 bg-green-50 border-l-4 border-green-500 rounded-r-lg">
+                            <p class="text-sm font-bold text-green-900">Rate Drop Alert</p>
+                            <p class="text-xs text-slate-700 mt-1">Atlantis Dubai reduced rates by 20%. Negotiate committed stock.</p>
+                            <button class="mt-2 bg-green-600 text-white text-xs px-3 py-1.5 rounded action-btn">Renegotiate Rates</button>
+                        </div>
+                        <div class="p-3 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg">
+                            <p class="text-sm font-bold text-amber-900">Contracting Gap</p>
+                            <p class="text-xs text-slate-700 mt-1">Only 44% hotels directly contracted. Potential savings: ₹2.1Cr</p>
+                            <button class="mt-2 bg-amber-600 text-white text-xs px-3 py-1.5 rounded action-btn">View Targets</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Tab Switching Logic
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+                tab.classList.remove('tab-active');
+                tab.classList.add('text-slate-500');
+            });
+            
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            
+            const activeTab = document.getElementById('tab-' + tabName);
+            activeTab.classList.add('tab-active');
+            activeTab.classList.remove('text-slate-500');
+        }
+
+        // Alert Functions
+        function showAlerts() {
+            switchTab('performance');
+            // Scroll to red flags
+        }
+
+        function showAIInsights() {
+            switchTab('intelligence');
+        }
+
+        function showCommittedStock() {
+            switchTab('committed');
+        }
+    </script>
+</body>
+</html>

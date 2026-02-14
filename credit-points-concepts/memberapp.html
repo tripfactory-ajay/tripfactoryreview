@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>ORN Travel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: #000;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: fixed;
+        }
+        
+        .font-display { font-family: 'Montserrat', sans-serif; }
+        
+        :root {
+            --orn-navy: #1e3a5f;
+            --orn-blue: #2563eb;
+            --orn-cyan: #06b6d4;
+            --orn-green: #22c55e;
+            --orn-yellow: #eab308;
+            --orn-red: #dc2626;
+        }
+        
+        /* App Container */
+        #app-container {
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Splash Screen */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease-out, visibility 0.8s;
+        }
+        
+        #splash-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .splash-logo {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .splash-text {
+            animation: fadeInUp 1s ease-out 0.5s both;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Main App Content */
+        .app-content {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: #ffffff;
+            padding-bottom: 90px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .app-content::-webkit-scrollbar { display: none; }
+        
+        /* Status Bar */
+        .status-bar {
+            height: 44px;
+            padding: 12px 24px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 15px;
+            font-weight: 600;
+            color: #000;
+            background: #ffffff;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            padding-top: max(12px, env(safe-area-inset-top));
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 84px;
+            background: #ffffff;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding-top: 12px;
+            z-index: 50;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #9ca3af;
+            transition: all 0.3s;
+            cursor: pointer;
+            padding: 4px 12px;
+            border: none;
+            background: none;
+            font-family: inherit;
+        }
+        
+        .nav-item.active { color: var(--orn-navy); }
+        .nav-item i { font-size: 24px; }
+        .nav-item span { font-size: 11px; font-weight: 600; }
+        
+        /* Pages */
+        .page {
+            display: none;
+            width: 100%;
+            min-height: 100%;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        .page.active { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ORN Logo Bars */
+        .orn-bars {
+            display: flex;
+            gap: 3px;
+            align-items: flex-end;
+            height: 32px;
+        }
+        
+        .orn-bar {
+            width: 6px;
+            border-radius: 3px;
+        }
+        
+        .orn-bar:nth-child(1) { height: 32px; background: var(--orn-navy); }
+        .orn-bar:nth-child(2) { height: 26px; background: var(--orn-blue); }
+        .orn-bar:nth-child(3) { height: 32px; background: var(--orn-cyan); }
+        .orn-bar:nth-child(4) { height: 26px; background: var(--orn-green); }
+        .orn-bar:nth-child(5) { height: 32px; background: var(--orn-yellow); }
+        .orn-bar:nth-child(6) { height: 26px; background: var(--orn-red); }
+        
+        /* Cards */
+        .card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .card-navy {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+            color: white;
+            border-radius: 20px;
+        }
+        
+        .interactive-btn {
+            transition: transform 0.1s;
+            cursor: pointer;
+        }
+        
+        .interactive-btn:active { transform: scale(0.96); }
+        
+        .text-orn-navy { color: #1e3a5f; }
+        .bg-orn-navy { background-color: #1e3a5f; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* Loading spinner */
+        .loading-bar {
+            width: 120px;
+            height: 3px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            margin-top: 30px;
+            overflow: hidden;
+        }
+        
+        .loading-progress {
+            height: 100%;
+            background: #1e3a5f;
+            border-radius: 3px;
+            animation: loading 2s ease-in-out;
+            width: 100%;
+        }
+        
+        @keyframes loading {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+        <div class="splash-logo">
+            <div class="orn-bars" style="height: 60px; margin-bottom: 20px;">
+                <div class="orn-bar" style="height: 60px; width: 12px; border-radius: 6px;"></div>
+                <div class="orn-bar" style="height: 48px; width: 12px; border-radius: 6px;"></div>
+                <div class="orn-bar" style="height: 60px; width: 12px; border-radius: 6px;"></div>
+                <div class="orn-bar" style="height: 48px; width: 12px; border-radius: 6px;"></div>
+                <div class="orn-bar" style="height: 60px; width: 12px; border-radius: 6px;"></div>
+                <div class="orn-bar" style="height: 48px; width: 12px; border-radius: 6px;"></div>
+            </div>
+        </div>
+        <h1 class="text-4xl font-black text-black font-display tracking-tight splash-text">ORN</h1>
+        <p class="text-gray-500 text-sm mt-2 splash-text" style="animation-delay: 0.7s;">Member Exclusive Program</p>
+        <div class="loading-bar splash-text" style="animation-delay: 0.3s;">
+            <div class="loading-progress"></div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app-container">
+        <div class="app-content" id="app">
+            
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <span id="clock">9:41</span>
+                <div class="flex gap-2 items-center">
+                    <i class="fas fa-signal text-xs"></i>
+                    <i class="fas fa-wifi text-xs"></i>
+                    <i class="fas fa-battery-full text-xs"></i>
+                </div>
+            </div>
+
+            <!-- SCREEN 1: LOGIN -->
+            <div id="page-login" class="page active">
+                <div class="flex flex-col items-center justify-center min-h-[calc(100vh-140px)] px-8 pb-20">
+                    <div class="mb-8 text-center">
+                        <div class="flex justify-center mb-4">
+                            <div class="orn-bars">
+                                <div class="orn-bar"></div>
+                                <div class="orn-bar"></div>
+                                <div class="orn-bar"></div>
+                                <div class="orn-bar"></div>
+                                <div class="orn-bar"></div>
+                                <div class="orn-bar"></div>
+                            </div>
+                        </div>
+                        <h1 class="text-5xl font-black text-black mb-2 font-display tracking-tight">ORN</h1>
+                        <p class="text-gray-600 font-semibold text-sm">Member Exclusive Program</p>
+                    </div>
+
+                    <div class="w-full space-y-4">
+                        <div class="card p-4">
+                            <label class="text-xs text-gray-500 uppercase tracking-wider font-bold block mb-1">Member ID</label>
+                            <input type="text" value="AMA-2024-VG-001" class="w-full bg-transparent text-gray-900 text-lg font-semibold outline-none" readonly>
+                        </div>
+                        
+                        <div class="card p-4">
+                            <label class="text-xs text-gray-500 uppercase tracking-wider font-bold block mb-1">Password</label>
+                            <input type="password" value="••••••••" class="w-full bg-transparent text-gray-900 text-lg outline-none" readonly>
+                        </div>
+
+                        <button onclick="navigateTo('home')" class="interactive-btn w-full bg-orn-navy text-white font-bold py-4 rounded-2xl shadow-lg text-lg mt-6">
+                            Access My Account
+                        </button>
+
+                        <div class="text-center mt-6 space-y-3">
+                            <a href="#" class="text-orn-navy text-sm font-bold block">Forgot Password?</a>
+                            <div class="pt-4 border-t border-gray-200">
+                                <p class="text-xs text-gray-700 font-bold">Australian Medical Association</p>
+                                <p class="text-[10px] text-gray-500 mt-1">Exclusive Partner Program Member</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-12 flex justify-center gap-6">
+                        <div class="text-center">
+                            <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-1 mx-auto">
+                                <i class="fas fa-shield-alt text-orn-navy"></i>
+                            </div>
+                            <p class="text-[9px] text-gray-600 font-bold">ISO 27001</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-1 mx-auto">
+                                <i class="fas fa-globe text-orn-navy"></i>
+                            </div>
+                            <p class="text-[9px] text-gray-600 font-bold">Global</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-1 mx-auto">
+                                <i class="fas fa-headset text-orn-navy"></i>
+                            </div>
+                            <p class="text-[9px] text-gray-600 font-bold">24/7 Support</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 2: HOME -->
+            <div id="page-home" class="page">
+                <div class="px-6 pt-2 pb-4 flex justify-between items-center bg-white">
+                    <div class="flex items-center gap-3">
+                        <div class="orn-bars" style="height: 24px;">
+                            <div class="orn-bar" style="height: 24px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 20px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 24px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 20px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 24px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 20px; width: 5px;"></div>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Welcome back,</p>
+                            <p class="text-gray-900 font-bold text-sm">Vinay Gupta</p>
+                        </div>
+                    </div>
+                    <button onclick="navigateTo('notifications')" class="interactive-btn w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center relative">
+                        <i class="fas fa-bell text-gray-600"></i>
+                        <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                    </button>
+                </div>
+
+                <div class="px-6 mb-6">
+                    <div class="card-navy p-6 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                        
+                        <div class="relative z-10">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <p class="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">Available Balance</p>
+                                    <h2 class="text-4xl font-bold text-white font-display">1,250</h2>
+                                    <p class="text-white font-bold text-lg">ORN Credits</p>
+                                    <p class="text-blue-200 text-xs mt-1">= A$ 1,250 AUD</p>
+                                </div>
+                                <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur">
+                                    <i class="fas fa-wallet text-white text-xl"></i>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 pt-4 border-t border-white/20">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-blue-200 text-xs">Lifetime Credits Earned</span>
+                                    <span class="text-white font-bold text-sm">4,850</span>
+                                </div>
+                                <div class="h-2 bg-white/20 rounded-full overflow-hidden">
+                                    <div class="h-full bg-white w-3/4 rounded-full"></div>
+                                </div>
+                                <p class="text-white text-xs mt-2 font-medium">Gold Member • 1,150 to Platinum</p>
+                            </div>
+
+                            <div class="flex gap-3 mt-6">
+                                <button onclick="navigateTo('offers')" class="interactive-btn flex-1 bg-white text-orn-navy py-3 rounded-xl font-bold text-sm shadow-lg">
+                                    Book Travel
+                                </button>
+                                <button onclick="navigateTo('history')" class="interactive-btn flex-1 bg-white/10 text-white border border-white/20 py-3 rounded-xl font-bold text-sm backdrop-blur">
+                                    History
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Family Pool Preview -->
+                <div class="px-6 mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-gray-900 font-bold text-lg">Family Pool</h3>
+                        <button onclick="navigateTo('family')" class="text-orn-navy text-xs font-bold">Manage →</button>
+                    </div>
+                    <div class="card p-4 border-2 border-blue-100 bg-blue-50/30">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <div class="flex -space-x-2">
+                                    <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold text-gray-600 border-2 border-white">V</div>
+                                    <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold text-gray-600 border-2 border-white">P</div>
+                                    <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold text-gray-600 border-2 border-white">A</div>
+                                </div>
+                                <span class="text-sm text-gray-600">3 members</span>
+                            </div>
+                            <span class="text-orn-navy font-bold">3,450 <span class="text-xs font-normal">credits</span></span>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>Combined family balance</span>
+                            <span class="text-green-600 font-semibold">+150 this week</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 mb-6">
+                    <div class="grid grid-cols-4 gap-3">
+                        <button onclick="navigateTo('offers')" class="interactive-btn flex flex-col items-center gap-2">
+                            <div class="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-orn-navy border border-blue-100">
+                                <i class="fas fa-plane text-lg"></i>
+                            </div>
+                            <span class="text-[11px] text-gray-700 font-bold">Flights</span>
+                        </button>
+                        <button onclick="navigateTo('offers')" class="interactive-btn flex flex-col items-center gap-2">
+                            <div class="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-orn-navy border border-blue-100">
+                                <i class="fas fa-hotel text-lg"></i>
+                            </div>
+                            <span class="text-[11px] text-gray-700 font-bold">Hotels</span>
+                        </button>
+                        <button onclick="navigateTo('offers')" class="interactive-btn flex flex-col items-center gap-2">
+                            <div class="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-orn-navy border border-blue-100">
+                                <i class="fas fa-umbrella-beach text-lg"></i>
+                            </div>
+                            <span class="text-[11px] text-gray-700 font-bold">Packages</span>
+                        </button>
+                        <button onclick="navigateTo('refer')" class="interactive-btn flex flex-col items-center gap-2">
+                            <div class="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center text-green-600 border border-green-100 relative">
+                                <i class="fas fa-gift text-lg"></i>
+                                <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[8px] flex items-center justify-center font-bold">NEW</span>
+                            </div>
+                            <span class="text-[11px] text-gray-700 font-bold">Refer</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="px-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-gray-900 font-bold text-lg">Exclusive Offers</h3>
+                        <button onclick="navigateTo('offers')" class="text-orn-navy text-xs font-bold">View All →</button>
+                    </div>
+                    
+                    <div class="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+                        <div class="min-w-[260px] card overflow-hidden border-2 border-blue-100">
+                            <div class="h-32 bg-gray-200 relative">
+                                <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=400&h=300&fit=crop" class="w-full h-full object-cover" alt="Bali">
+                                <div class="absolute top-3 right-3 bg-orn-navy text-white text-[10px] font-bold px-3 py-1 rounded-full">
+                                    10% CASHBACK
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="text-gray-900 font-bold mb-1 text-sm">Bali Luxury Escape</h4>
+                                <p class="text-gray-500 text-xs mb-3">7 nights • Private Villa</p>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-orn-navy font-bold text-lg">450</span>
+                                        <span class="text-gray-500 text-xs"> Credits</span>
+                                    </div>
+                                    <button onclick="navigateTo('offers')" class="interactive-btn w-8 h-8 rounded-full bg-orn-navy/10 text-orn-navy flex items-center justify-center">
+                                        <i class="fas fa-arrow-right text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="min-w-[260px] card overflow-hidden border-2 border-blue-100">
+                            <div class="h-32 bg-gray-200 relative">
+                                <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=400&h=300&fit=crop" class="w-full h-full object-cover" alt="Japan">
+                                <div class="absolute top-3 right-3 bg-orn-navy text-white text-[10px] font-bold px-3 py-1 rounded-full">
+                                    15% OFF
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="text-gray-900 font-bold mb-1 text-sm">Japan Discovery</h4>
+                                <p class="text-gray-500 text-xs mb-3">10 days • Guided Tour</p>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-orn-navy font-bold text-lg">890</span>
+                                        <span class="text-gray-500 text-xs"> Credits</span>
+                                    </div>
+                                    <button onclick="navigateTo('offers')" class="interactive-btn w-8 h-8 rounded-full bg-orn-navy/10 text-orn-navy flex items-center justify-center">
+                                        <i class="fas fa-arrow-right text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 pb-24">
+                    <h3 class="text-gray-900 font-bold text-lg mb-4">Recent Activity</h3>
+                    <div class="space-y-3">
+                        <div class="card p-4 flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-green-600 flex-shrink-0">
+                                <i class="fas fa-plus text-sm"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-gray-900 text-sm font-bold truncate">Credits Earned</p>
+                                <p class="text-gray-500 text-xs truncate">Cashback • Marriott Sydney</p>
+                            </div>
+                            <span class="text-green-600 font-bold text-sm flex-shrink-0">+45</span>
+                        </div>
+                        
+                        <div class="card p-4 flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                                <i class="fas fa-plane-departure text-sm"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-gray-900 text-sm font-bold truncate">Trip Completed</p>
+                                <p class="text-gray-500 text-xs truncate">Melbourne to Bali • 4 pax</p>
+                            </div>
+                            <span class="text-gray-400 text-xs flex-shrink-0">2d ago</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 3: FAMILY -->
+            <div id="page-family" class="page">
+                <div class="px-6 pt-2 pb-4 flex items-center gap-3">
+                    <button onclick="navigateTo('home')" class="interactive-btn w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <h2 class="text-xl font-bold text-gray-900 font-display">Family Pool</h2>
+                </div>
+
+                <div class="px-6 mb-6">
+                    <div class="card-navy p-6 text-center relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent"></div>
+                        <div class="relative z-10">
+                            <div class="flex justify-center mb-4">
+                                <div class="flex -space-x-4">
+                                    <div class="w-16 h-16 rounded-full border-4 border-white bg-gray-300 flex items-center justify-center text-xl font-bold text-gray-600">V</div>
+                                    <div class="w-16 h-16 rounded-full border-4 border-white bg-gray-300 flex items-center justify-center text-xl font-bold text-gray-600">P</div>
+                                    <div class="w-16 h-16 rounded-full border-4 border-white bg-gray-300 flex items-center justify-center text-xl font-bold text-gray-600">A</div>
+                                </div>
+                            </div>
+                            <h3 class="text-2xl font-bold text-white mb-1">Gupta Family</h3>
+                            <p class="text-blue-200 text-sm mb-4">3 Active Members</p>
+                            
+                            <div class="bg-white/10 rounded-2xl p-4 backdrop-blur">
+                                <p class="text-blue-200 text-xs uppercase tracking-wider mb-1">Combined Balance</p>
+                                <h2 class="text-4xl font-bold text-white font-display">3,450</h2>
+                                <p class="text-white font-semibold">ORN Credits</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-gray-900 font-bold text-lg">Family Members</h3>
+                        <button class="interactive-btn text-orn-navy text-sm font-bold flex items-center gap-1">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-3 pb-24">
+                        <div class="card p-4 flex items-center gap-4 border-2 border-orn-navy">
+                            <div class="relative">
+                                <div class="w-14 h-14 rounded-full bg-gray-300 flex items-center justify-center text-xl font-bold text-gray-600">V</div>
+                                <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-orn-navy rounded-full flex items-center justify-center text-white text-xs">
+                                    <i class="fas fa-crown text-[10px]"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="text-gray-900 font-bold">Vinay Gupta</p>
+                                        <p class="text-gray-500 text-xs">Primary Member • Gold</p>
+                                    </div>
+                                    <span class="text-orn-navy font-bold">1,250</span>
+                                </div>
+                                <div class="mt-2 flex gap-2">
+                                    <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-semibold">Admin</span>
+                                    <span class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-semibold">Active</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-4 flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-full bg-gray-300 flex items-center justify-center text-2xl font-bold text-gray-600">P</div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="text-gray-900 font-bold">Priya Gupta</p>
+                                        <p class="text-gray-500 text-xs">Spouse • Silver</p>
+                                    </div>
+                                    <span class="text-orn-navy font-bold">1,100</span>
+                                </div>
+                                <div class="mt-2 flex gap-2">
+                                    <span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-1 rounded-full font-semibold">Member</span>
+                                    <span class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-semibold">Active</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-4 flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-full bg-gray-300 flex items-center justify-center text-2xl font-bold text-gray-600">A</div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="text-gray-900 font-bold">Arjun Gupta</p>
+                                        <p class="text-gray-500 text-xs">Son • Bronze</p>
+                                    </div>
+                                    <span class="text-orn-navy font-bold">1,100</span>
+                                </div>
+                                <div class="mt-2 flex gap-2">
+                                    <span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-1 rounded-full font-semibold">Member</span>
+                                    <span class="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full font-semibold">Pending</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 4: REFER -->
+            <div id="page-refer" class="page">
+                <div class="px-6 pt-2 pb-4 flex items-center gap-3">
+                    <button onclick="navigateTo('home')" class="interactive-btn w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <h2 class="text-xl font-bold text-gray-900 font-display">Refer & Earn</h2>
+                </div>
+
+                <div class="px-6 mb-6">
+                    <div class="card-navy p-6 text-center relative overflow-hidden">
+                        <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-white/10 flex items-center justify-center">
+                            <i class="fas fa-gift text-4xl text-white"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white mb-2">Earn 500 Credits</h3>
+                        <p class="text-blue-200 text-sm mb-4">For every friend who joins and books</p>
+                        
+                        <div class="bg-white/10 rounded-xl p-4 backdrop-blur mb-4">
+                            <p class="text-white text-xs mb-2">Your Referral Code</p>
+                            <div class="flex items-center justify-center gap-2">
+                                <span class="text-2xl font-bold text-white tracking-widest">VINAY500</span>
+                                <button class="interactive-btn w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white">
+                                    <i class="fas fa-copy text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button class="interactive-btn w-full bg-white text-orn-navy py-3 rounded-xl font-bold text-sm shadow-lg">
+                            Share Invite Link
+                        </button>
+                    </div>
+                </div>
+
+                <div class="px-6 mb-6">
+                    <h3 class="text-gray-900 font-bold mb-4">How It Works</h3>
+                    <div class="space-y-4">
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full bg-orn-navy text-white flex items-center justify-center font-bold flex-shrink-0">1</div>
+                            <div>
+                                <p class="text-gray-900 font-bold text-sm">Share Your Code</p>
+                                <p class="text-gray-500 text-xs">Send VINAY500 to friends and family</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full bg-orn-navy text-white flex items-center justify-center font-bold flex-shrink-0">2</div>
+                            <div>
+                                <p class="text-gray-900 font-bold text-sm">They Join & Book</p>
+                                <p class="text-gray-500 text-xs">Friend signs up and makes first booking</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full bg-orn-navy text-white flex items-center justify-center font-bold flex-shrink-0">3</div>
+                            <div>
+                                <p class="text-gray-900 font-bold text-sm">You Both Earn</p>
+                                <p class="text-gray-500 text-xs">500 credits each after their trip</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 pb-24">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-gray-900 font-bold text-lg">Your Referrals</h3>
+                        <span class="text-orn-navy text-sm font-bold">3 Successful</span>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="card p-4 flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-gray-900 text-sm font-bold">Rahul Sharma</p>
+                                <p class="text-gray-500 text-xs">Joined 2 weeks ago • Trip completed</p>
+                            </div>
+                            <span class="text-green-600 font-bold text-sm">+500</span>
+                        </div>
+                        
+                        <div class="card p-4 flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-gray-900 text-sm font-bold">Meera Patel</p>
+                                <p class="text-gray-500 text-xs">Joined 1 month ago • Trip completed</p>
+                            </div>
+                            <span class="text-green-600 font-bold text-sm">+500</span>
+                        </div>
+
+                        <div class="card p-4 flex items-center gap-4 opacity-60">
+                            <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-gray-900 text-sm font-bold">John Smith</p>
+                                <p class="text-gray-500 text-xs">Joined 3 days ago • Pending trip</p>
+                            </div>
+                            <span class="text-yellow-600 font-bold text-sm">Pending</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 5: CREDITS -->
+            <div id="page-credits" class="page">
+                <div class="px-6 pt-2 pb-4">
+                    <h2 class="text-2xl font-bold text-gray-900 font-display">ORN Credits</h2>
+                    <p class="text-orn-navy text-sm font-bold mt-1">1 Credit = 1 AUD</p>
+                </div>
+
+                <div class="px-6 mb-6">
+                    <div class="card-navy p-8 text-center relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent"></div>
+                        
+                        <div class="relative z-10">
+                            <p class="text-blue-200 text-xs font-bold uppercase tracking-wider mb-2">Total Available</p>
+                            <h1 class="text-5xl font-bold text-white font-display mb-1">1,250</h1>
+                            <p class="text-white font-bold text-xl mb-1">ORN Credits</p>
+                            <p class="text-blue-200 text-sm mb-6">Equivalent to A$ 1,250 AUD</p>
+                            
+                            <div class="flex gap-3 justify-center">
+                                <button class="interactive-btn bg-white text-orn-navy px-8 py-3 rounded-xl font-bold text-sm shadow-lg">
+                                    Redeem Now
+                                </button>
+                                <button class="interactive-btn bg-white/10 text-white border border-white/20 px-8 py-3 rounded-xl font-bold text-sm backdrop-blur">
+                                    Transfer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 pb-24">
+                    <h3 class="text-gray-900 font-bold mb-4 text-sm uppercase tracking-wider">Credit Breakdown</h3>
+                    <div class="space-y-3">
+                        <div class="card p-4 flex justify-between items-center border-l-4 border-orn-navy">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-orn-navy">
+                                    <i class="fas fa-gift text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-gray-900 text-sm font-bold">Joining Bonus</p>
+                                    <p class="text-gray-500 text-xs">Welcome credit • AMA Program</p>
+                                </div>
+                            </div>
+                            <span class="text-orn-navy font-bold text-lg">1,000</span>
+                        </div>
+                        
+                        <div class="card p-4 flex justify-between items-center border-l-4 border-green-500">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center text-green-600">
+                                    <i class="fas fa-percentage text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-gray-900 text-sm font-bold">Travel Cashback</p>
+                                    <p class="text-gray-500 text-xs">Earned from 3 trips</p>
+                                </div>
+                            </div>
+                            <span class="text-green-600 font-bold text-lg">250</span>
+                        </div>
+
+                        <div class="card p-4 flex justify-between items-center border-l-4 border-red-400 opacity-60">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center text-red-500">
+                                    <i class="fas fa-minus text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-gray-900 text-sm font-bold">Credits Used</p>
+                                    <p class="text-gray-500 text-xs">Bali trip discount</p>
+                                </div>
+                            </div>
+                            <span class="text-red-500 font-bold text-lg">-200</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 6: OFFERS -->
+            <div id="page-offers" class="page">
+                <div class="px-6 pt-2 pb-4">
+                    <h2 class="text-2xl font-bold text-gray-900 font-display">Travel Offers</h2>
+                    <p class="text-gray-500 text-sm">Exclusive deals for Vinay</p>
+                </div>
+
+                <div class="px-6 mb-6">
+                    <div class="relative rounded-3xl overflow-hidden h-64 border-2 border-orn-navy/20 shadow-lg">
+                        <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=400&fit=crop" class="w-full h-full object-cover" alt="Maldives">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                        <div class="absolute top-4 left-4">
+                            <span class="bg-orn-navy text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Featured</span>
+                        </div>
+                        <div class="absolute bottom-0 left-0 right-0 p-6">
+                            <h3 class="text-xl font-bold text-white font-display mb-1">Maldives Overwater Villa</h3>
+                            <p class="text-gray-200 text-xs mb-3">7 nights • All Inclusive • Seaplane</p>
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl font-bold text-white">3,200</span>
+                                <span class="text-gray-300 text-sm font-semibold">Credits</span>
+                                <span class="text-gray-400 line-through text-sm">4,500</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 mb-6">
+                    <div class="flex gap-2 overflow-x-auto no-scrollbar">
+                        <button class="interactive-btn px-5 py-2 bg-orn-navy text-white rounded-full text-xs font-bold whitespace-nowrap">ALL OFFERS</button>
+                        <button class="interactive-btn px-5 py-2 bg-gray-100 text-gray-600 rounded-full text-xs font-bold whitespace-nowrap">FLASH SALES</button>
+                        <button class="interactive-btn px-5 py-2 bg-gray-100 text-gray-600 rounded-full text-xs font-bold whitespace-nowrap">FAMILY</button>
+                    </div>
+                </div>
+
+                <div class="px-6 space-y-4 pb-24">
+                    <div class="card overflow-hidden flex">
+                        <div class="w-28 h-28 relative flex-shrink-0">
+                            <img src="https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=200&h=200&fit=crop" class="w-full h-full object-cover" alt="Venice">
+                        </div>
+                        <div class="flex-1 p-4 flex flex-col justify-center">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="text-gray-900 font-bold text-sm">Venice & Rome Explorer</h4>
+                                <span class="bg-orn-navy/10 text-orn-navy text-[10px] font-bold px-2 py-1 rounded">10% BACK</span>
+                            </div>
+                            <p class="text-gray-500 text-xs mb-3">9 days • Small Group Tour</p>
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <span class="text-orn-navy font-bold">2,890</span>
+                                    <span class="text-gray-500 text-xs"> Credits</span>
+                                </div>
+                                <button class="interactive-btn text-orn-navy text-xs font-bold">View →</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card overflow-hidden flex">
+                        <div class="w-28 h-28 relative flex-shrink-0">
+                            <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&h=200&fit=crop" class="w-full h-full object-cover" alt="Swiss">
+                        </div>
+                        <div class="flex-1 p-4 flex flex-col justify-center">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="text-gray-900 font-bold text-sm">Swiss Alps Ski Package</h4>
+                                <span class="bg-orn-navy/10 text-orn-navy text-[10px] font-bold px-2 py-1 rounded">15% OFF</span>
+                            </div>
+                            <p class="text-gray-500 text-xs mb-3">6 days • Equipment Included</p>
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <span class="text-orn-navy font-bold">1,950</span>
+                                    <span class="text-gray-500 text-xs"> Credits</span>
+                                </div>
+                                <button class="interactive-btn text-orn-navy text-xs font-bold">View →</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card overflow-hidden flex">
+                        <div class="w-28 h-28 relative flex-shrink-0">
+                            <img src="https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?w=200&h=200&fit=crop" class="w-full h-full object-cover" alt="Thailand">
+                        </div>
+                        <div class="flex-1 p-4 flex flex-col justify-center">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="text-gray-900 font-bold text-sm">Thailand Island Hopper</h4>
+                                <span class="bg-orn-navy/10 text-orn-navy text-[10px] font-bold px-2 py-1 rounded">FREE NIGHTS</span>
+                            </div>
+                            <p class="text-gray-500 text-xs mb-3">12 days • Multi-City Adventure</p>
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <span class="text-orn-navy font-bold">1,450</span>
+                                    <span class="text-gray-500 text-xs"> Credits</span>
+                                </div>
+                                <button class="interactive-btn text-orn-navy text-xs font-bold">View →</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 7: HISTORY -->
+            <div id="page-history" class="page">
+                <div class="px-6 pt-2 pb-4 flex items-center gap-3">
+                    <button onclick="navigateTo('home')" class="interactive-btn w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <h2 class="text-xl font-bold text-gray-900 font-display">Trip History</h2>
+                </div>
+
+                <div class="px-6 mb-6">
+                    <div class="flex gap-2 overflow-x-auto no-scrollbar">
+                        <button class="interactive-btn px-5 py-2 bg-orn-navy text-white rounded-full text-xs font-bold whitespace-nowrap">ALL TRIPS</button>
+                        <button class="interactive-btn px-5 py-2 bg-gray-100 text-gray-600 rounded-full text-xs font-bold whitespace-nowrap">UPCOMING</button>
+                        <button class="interactive-btn px-5 py-2 bg-gray-100 text-gray-600 rounded-full text-xs font-bold whitespace-nowrap">COMPLETED</button>
+                    </div>
+                </div>
+
+                <div class="px-6 space-y-4 pb-24">
+                    <div class="card overflow-hidden border-2 border-orn-navy">
+                        <div class="bg-orn-navy text-white px-4 py-2 flex justify-between items-center">
+                            <span class="text-xs font-bold uppercase tracking-wider">Upcoming Trip</span>
+                            <span class="text-xs bg-white/20 px-2 py-1 rounded">In 5 days</span>
+                        </div>
+                        <div class="p-4">
+                            <div class="flex gap-4 mb-4">
+                                <div class="w-20 h-20 rounded-xl bg-gray-200 overflow-hidden flex-shrink-0">
+                                    <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=200&h=200&fit=crop" class="w-full h-full object-cover" alt="Bali">
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-gray-900 font-bold mb-1">Bali Family Vacation</h3>
+                                    <p class="text-gray-500 text-xs mb-2">7 nights • 4 travelers</p>
+                                    <div class="flex items-center gap-2 text-xs text-gray-600">
+                                        <i class="fas fa-calendar"></i>
+                                        <span>Mar 15 - Mar 22, 2024</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="border-t border-gray-100 pt-4 space-y-2">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">Booking Ref</span>
+                                    <span class="text-gray-900 font-mono font-bold">ORN-78432-BALI</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">Credits Used</span>
+                                    <span class="text-orn-navy font-bold">2,450</span>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2 mt-4">
+                                <button class="interactive-btn flex-1 bg-orn-navy text-white py-2 rounded-lg text-xs font-bold">
+                                    View E-Ticket
+                                </button>
+                                <button class="interactive-btn flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-xs font-bold">
+                                    Modify
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card overflow-hidden opacity-75">
+                        <div class="p-4">
+                            <div class="flex gap-4 mb-4">
+                                <div class="w-20 h-20 rounded-xl bg-gray-200 overflow-hidden flex-shrink-0">
+                                    <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=200&h=200&fit=crop" class="w-full h-full object-cover grayscale" alt="Japan">
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-start">
+                                        <h3 class="text-gray-900 font-bold mb-1">Japan Discovery</h3>
+                                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold">Completed</span>
+                                    </div>
+                                    <p class="text-gray-500 text-xs mb-2">10 days • 2 travelers</p>
+                                    <div class="flex items-center gap-2 text-xs text-gray-600">
+                                        <i class="fas fa-calendar"></i>
+                                        <span>Jan 10 - Jan 20, 2024</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="border-t border-gray-100 pt-4">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="text-xs text-gray-500">Cashback Earned</p>
+                                        <p class="text-green-600 font-bold">+180 Credits</p>
+                                    </div>
+                                    <button class="interactive-btn text-orn-navy text-xs font-bold">View Details →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card overflow-hidden opacity-75">
+                        <div class="p-4">
+                            <div class="flex gap-4 mb-4">
+                                <div class="w-20 h-20 rounded-xl bg-gray-200 overflow-hidden flex-shrink-0">
+                                    <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200&h=200&fit=crop" class="w-full h-full object-cover grayscale" alt="Maldives">
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-start">
+                                        <h3 class="text-gray-900 font-bold mb-1">Maldives Anniversary</h3>
+                                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold">Completed</span>
+                                    </div>
+                                    <p class="text-gray-500 text-xs mb-2">5 nights • 2 travelers</p>
+                                    <div class="flex items-center gap-2 text-xs text-gray-600">
+                                        <i class="fas fa-calendar"></i>
+                                        <span>Dec 20 - Dec 25, 2023</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="border-t border-gray-100 pt-4">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="text-xs text-gray-500">Cashback Earned</p>
+                                        <p class="text-green-600 font-bold">+320 Credits</p>
+                                    </div>
+                                    <button class="interactive-btn text-orn-navy text-xs font-bold">View Details →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 8: NOTIFICATIONS -->
+            <div id="page-notifications" class="page">
+                <div class="px-6 pt-2 pb-4 flex items-center gap-3">
+                    <button onclick="navigateTo('home')" class="interactive-btn w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <h2 class="text-xl font-bold text-gray-900 font-display">Notifications</h2>
+                </div>
+
+                <div class="px-6 mb-4">
+                    <div class="flex gap-2">
+                        <button class="interactive-btn flex-1 bg-orn-navy text-white py-2 rounded-lg text-xs font-bold">All</button>
+                        <button class="interactive-btn flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg text-xs font-bold">Offers</button>
+                        <button class="interactive-btn flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg text-xs font-bold">Trips</button>
+                    </div>
+                </div>
+
+                <div class="px-6 space-y-3 pb-24">
+                    <div class="card p-4 border-l-4 border-orn-navy bg-blue-50/30">
+                        <div class="flex gap-3">
+                            <div class="w-10 h-10 rounded-full bg-orn-navy flex items-center justify-center text-white flex-shrink-0">
+                                <i class="fas fa-gift text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start mb-1">
+                                    <h4 class="text-gray-900 font-bold text-sm">Referral Successful!</h4>
+                                    <span class="text-[10px] text-gray-400">2h ago</span>
+                                </div>
+                                <p class="text-gray-600 text-xs">Rahul Sharma completed their first trip. You've earned 500 credits!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-4 border-l-4 border-blue-500">
+                        <div class="flex gap-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                                <i class="fas fa-plane text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start mb-1">
+                                    <h4 class="text-gray-900 font-bold text-sm">Trip Reminder</h4>
+                                    <span class="text-[10px] text-gray-400">5h ago</span>
+                                </div>
+                                <p class="text-gray-600 text-xs">Your Bali trip is in 5 days. Check-in opens 24 hours before departure.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-4 border-l-4 border-green-500">
+                        <div class="flex gap-3">
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 flex-shrink-0">
+                                <i class="fas fa-coins text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start mb-1">
+                                    <h4 class="text-gray-900 font-bold text-sm">Credits Credited</h4>
+                                    <span class="text-[10px] text-gray-400">1d ago</span>
+                                </div>
+                                <p class="text-gray-600 text-xs">45 credits earned from your Marriott Sydney booking.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-4 border-l-4 border-yellow-500 opacity-60">
+                        <div class="flex gap-3">
+                            <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 flex-shrink-0">
+                                <i class="fas fa-star text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start mb-1">
+                                    <h4 class="text-gray-900 font-bold text-sm">Rate Your Trip</h4>
+                                    <span class="text-[10px] text-gray-400">3d ago</span>
+                                </div>
+                                <p class="text-gray-600 text-xs">How was your Japan Discovery trip? Share your feedback.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-4 border-l-4 border-purple-500">
+                        <div class="flex gap-3">
+                            <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 flex-shrink-0">
+                                <i class="fas fa-tag text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start mb-1">
+                                    <h4 class="text-gray-900 font-bold text-sm">Flash Sale Alert</h4>
+                                    <span class="text-[10px] text-gray-400">2d ago</span>
+                                </div>
+                                <p class="text-gray-600 text-xs">50% off Maldives packages this weekend only! Limited spots.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 9: SUPPORT -->
+            <div id="page-support" class="page">
+                <div class="px-6 pt-2 pb-4 flex items-center gap-3">
+                    <button onclick="navigateTo('profile')" class="interactive-btn w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <h2 class="text-xl font-bold text-gray-900 font-display">Help & Support</h2>
+                </div>
+
+                <div class="px-6 mb-6">
+                    <div class="card-navy p-6 text-center">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-white/10 flex items-center justify-center">
+                            <i class="fas fa-headset text-3xl text-white"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">24/7 Global Support</h3>
+                        <p class="text-blue-200 text-sm mb-4">We're here to help you anytime, anywhere</p>
+                        
+                        <div class="flex gap-3">
+                            <button class="interactive-btn flex-1 bg-white text-orn-navy py-3 rounded-xl font-bold text-sm">
+                                <i class="fas fa-phone mr-2"></i>Call
+                            </button>
+                            <button class="interactive-btn flex-1 bg-white/10 text-white border border-white/20 py-3 rounded-xl font-bold text-sm">
+                                <i class="fas fa-comments mr-2"></i>Chat
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 mb-6">
+                    <h3 class="text-gray-900 font-bold mb-4">Quick Help</h3>
+                    <div class="space-y-3">
+                        <button class="interactive-btn w-full card p-4 flex items-center justify-between text-left">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-orn-navy">
+                                    <i class="fas fa-question-circle text-sm"></i>
+                                </div>
+                                <span class="text-gray-900 text-sm font-bold">FAQs</span>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                        </button>
+
+                        <button class="interactive-btn w-full card p-4 flex items-center justify-between text-left">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center text-green-600">
+                                    <i class="fas fa-shield-alt text-sm"></i>
+                                </div>
+                                <span class="text-gray-900 text-sm font-bold">Travel Insurance</span>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                        </button>
+
+                        <button class="interactive-btn w-full card p-4 flex items-center justify-between text-left">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
+                                    <i class="fas fa-edit text-sm"></i>
+                                </div>
+                                <span class="text-gray-900 text-sm font-bold">Modify Booking</span>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                        </button>
+
+                        <button class="interactive-btn w-full card p-4 flex items-center justify-between text-left">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center text-yellow-600">
+                                    <i class="fas fa-exclamation-triangle text-sm"></i>
+                                </div>
+                                <span class="text-gray-900 text-sm font-bold">Emergency Assistance</span>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="px-6 pb-24">
+                    <div class="card p-4 bg-gray-50 border-gray-200">
+                        <h4 class="text-gray-900 font-bold text-sm mb-3">Contact Information</h4>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex items-center gap-3 text-gray-600">
+                                <i class="fas fa-phone text-orn-navy w-5"></i>
+                                <span>1800-ORN-HELP (1800-676-4357)</span>
+                            </div>
+                            <div class="flex items-center gap-3 text-gray-600">
+                                <i class="fas fa-envelope text-orn-navy w-5"></i>
+                                <span>support@ornholidays.com</span>
+                            </div>
+                            <div class="flex items-center gap-3 text-gray-600">
+                                <i class="fas fa-globe text-orn-navy w-5"></i>
+                                <span>www.ornholidays.com/support</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 10: PROFILE -->
+            <div id="page-profile" class="page">
+                <div class="px-6 pt-2 pb-4">
+                    <h2 class="text-2xl font-bold text-gray-900 font-display">My Profile</h2>
+                </div>
+
+                <div class="px-6 mb-6">
+                    <div class="card-navy p-6 text-center relative overflow-hidden">
+                        <div class="w-24 h-24 mx-auto mb-4 rounded-full p-1 bg-white">
+                            <div class="w-full h-full rounded-full bg-gray-200 overflow-hidden">
+                                <div class="w-full h-full bg-gray-300 flex items-center justify-center text-3xl font-bold text-gray-600">V</div>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-1">Vinay Gupta</h3>
+                        <p class="text-blue-200 text-sm mb-4">Member since March 2023</p>
+                        
+                        <div class="inline-flex items-center gap-2 bg-yellow-500/20 border border-yellow-400/30 px-4 py-2 rounded-full">
+                            <i class="fas fa-crown text-yellow-400"></i>
+                            <span class="text-yellow-300 font-bold text-sm">Gold Member</span>
+                        </div>
+
+                        <div class="mt-6 pt-6 border-t border-white/20">
+                            <div class="flex justify-between text-xs mb-2">
+                                <span class="text-blue-200">Progress to Platinum</span>
+                                <span class="text-white font-bold">1,150 Credits needed</span>
+                            </div>
+                            <div class="h-2 bg-white/20 rounded-full overflow-hidden">
+                                <div class="h-full bg-yellow-400 w-3/4 rounded-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 mb-6">
+                    <h3 class="text-gray-900 font-bold mb-4 text-sm uppercase tracking-wider">Membership Details</h3>
+                    <div class="card overflow-hidden">
+                        <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                            <span class="text-gray-500 text-sm">Member ID</span>
+                            <span class="text-gray-900 font-mono text-sm font-bold">ORN-2023-78432</span>
+                        </div>
+                        <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                            <span class="text-gray-500 text-sm">Association</span>
+                            <span class="text-gray-900 text-sm font-bold text-right">Australian Medical<br>Association</span>
+                        </div>
+                        <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                            <span class="text-gray-500 text-sm">Credit Value</span>
+                            <span class="text-orn-navy font-bold text-sm">1 AUD = 1 Credit</span>
+                        </div>
+                        <div class="p-4 flex justify-between items-center">
+                            <span class="text-gray-500 text-sm">Account Status</span>
+                            <span class="inline-flex items-center gap-1 text-green-600 font-bold text-sm">
+                                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                Active
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 space-y-3 pb-24">
+                    <h3 class="text-gray-900 font-bold mb-2 text-sm uppercase tracking-wider">Settings</h3>
+                    
+                    <button class="interactive-btn w-full card p-4 flex items-center justify-between text-left">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-orn-navy">
+                                <i class="fas fa-bell text-sm"></i>
+                            </div>
+                            <span class="text-gray-900 text-sm font-bold">Notifications</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                    </button>
+
+                    <button class="interactive-btn w-full card p-4 flex items-center justify-between text-left">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
+                                <i class="fas fa-lock text-sm"></i>
+                            </div>
+                            <span class="text-gray-900 text-sm font-bold">Security</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                    </button>
+
+                    <button onclick="navigateTo('support')" class="interactive-btn w-full card p-4 flex items-center justify-between text-left">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center text-green-600">
+                                <i class="fas fa-headset text-sm"></i>
+                            </div>
+                            <span class="text-gray-900 text-sm font-bold">24/7 Support</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                    </button>
+
+                    <button onclick="navigateTo('login')" class="interactive-btn w-full card p-4 flex items-center justify-between text-left border-red-200 bg-red-50">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
+                                <i class="fas fa-sign-out-alt text-sm"></i>
+                            </div>
+                            <span class="text-red-600 text-sm font-bold">Sign Out</span>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="mt-8 text-center pb-6">
+                    <div class="flex justify-center items-center gap-2 mb-2">
+                        <div class="orn-bars" style="height: 20px;">
+                            <div class="orn-bar" style="height: 20px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 16px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 20px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 16px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 20px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 16px; width: 5px;"></div>
+                        </div>
+                        <span class="text-black font-black font-display text-xl">ORN</span>
+                    </div>
+                    <p class="text-xs text-gray-600 font-bold">Part of HCL Group</p>
+                    <p class="text-[10px] text-gray-400 mt-1">ISO 27001:2022 Certified • Global Travel Infrastructure</p>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation -->
+            <div class="bottom-nav">
+                <button class="nav-item active" onclick="navigateTo('home')" data-page="home">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </button>
+                <button class="nav-item" onclick="navigateTo('credits')" data-page="credits">
+                    <i class="fas fa-wallet"></i>
+                    <span>Credits</span>
+                </button>
+                <button class="nav-item" onclick="navigateTo('offers')" data-page="offers">
+                    <i class="fas fa-compass"></i>
+                    <span>Explore</span>
+                </button>
+                <button class="nav-item" onclick="navigateTo('profile')" data-page="profile">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Splash screen fade out
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('splash-screen').classList.add('fade-out');
+            }, 2500);
+        });
+
+        // Clock update
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Navigation
+        function navigateTo(pageName) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            const targetPage = document.getElementById('page-' + pageName);
+            if (targetPage) {
+                targetPage.classList.add('active');
+            }
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.page === pageName) {
+                    item.classList.add('active');
+                }
+            });
+            
+            const appContent = document.querySelector('.app-content');
+            if (appContent) {
+                appContent.scrollTop = 0;
+            }
+        }
+
+        // Touch feedback
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('button, .interactive-btn').forEach(btn => {
+                btn.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.96)';
+                });
+                btn.addEventListener('touchend', function() {
+                    this.style.transform = '';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

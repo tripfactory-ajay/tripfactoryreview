@@ -1,0 +1,2313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory - Agent Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+        }
+        
+        /* SLOWED DOWN TICKER - 60 seconds for full cycle */
+        .ticker-wrap {
+            width: 100%;
+            overflow: hidden;
+            background: linear-gradient(90deg, #dc2626 0%, #ef4444 50%, #dc2626 100%);
+            color: white;
+            padding: 12px 0;
+            position: relative;
+            border-bottom: 3px solid #fbbf24;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .ticker {
+            display: inline-flex;
+            white-space: nowrap;
+            animation: ticker 60s linear infinite; /* Slowed from 25s to 60s */
+            will-change: transform;
+        }
+        
+        .ticker:hover {
+            animation-play-state: paused;
+        }
+        
+        @keyframes ticker {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        
+        .ticker-item {
+            display: inline-flex;
+            align-items: center;
+            padding: 0 3rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .ticker-item i {
+            margin-right: 8px;
+            color: #fbbf24;
+            animation: pulse 2s ease-in-out infinite; /* Slowed pulse */
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        
+        /* ALIGNED PORTAL BUTTONS - Fixed sizing */
+        .portal-btn {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            min-width: 220px; /* Fixed minimum width */
+            height: 72px; /* Fixed height */
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0 20px;
+        }
+        
+        .portal-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px -10px rgba(30, 64, 175, 0.5);
+        }
+        
+        .portal-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .portal-btn:hover::before {
+            left: 100%;
+        }
+        
+        .portal-btn.nexus {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        }
+        
+        .portal-btn.nexus:hover {
+            box-shadow: 0 20px 40px -10px rgba(5, 150, 105, 0.5);
+        }
+        
+        /* Portal button content alignment */
+        .portal-icon-box {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+        
+        .portal-text {
+            text-align: left;
+            flex: 1;
+        }
+        
+        .portal-label {
+            font-size: 0.7rem;
+            opacity: 0.9;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1;
+        }
+        
+        .portal-name {
+            font-size: 1.1rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-top: 2px;
+        }
+        
+        .portal-arrow {
+            margin-left: 8px;
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+        
+        /* Offer of the Month Box */
+        .offer-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%);
+            border: 3px solid #f59e0b;
+            position: relative;
+            overflow: hidden;
+            animation: glow 3s ease-in-out infinite;
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(245, 158, 11, 0.6); }
+        }
+        
+        .offer-badge {
+            position: absolute;
+            top: -10px;
+            right: -30px;
+            background: #dc2626;
+            color: white;
+            padding: 20px 40px 5px;
+            transform: rotate(45deg);
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        
+        .countdown-timer {
+            background: rgba(220, 38, 38, 0.1);
+            border: 2px dashed #dc2626;
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .timer-digit {
+            background: #dc2626;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 1.5rem;
+            display: inline-block;
+            margin: 0 2px;
+        }
+        
+        /* Glass Panel */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Destination Cards */
+        .destination-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .destination-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .destination-card.active {
+            border: 3px solid #f59e0b;
+            transform: scale(1.05);
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.3), 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        
+        /* Trippy AI Container */
+        .trippy-container {
+            position: relative;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            border-radius: 24px;
+            overflow: hidden;
+        }
+        
+        .trippy-orb {
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle at 30% 30%, #60a5fa, #1e40af);
+            border-radius: 50%;
+            position: relative;
+            animation: orb-pulse 3s ease-in-out infinite;
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
+        }
+        
+        @keyframes orb-pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
+            50% { transform: scale(1.1); box-shadow: 0 0 60px rgba(59, 130, 246, 0.8); }
+        }
+        
+        /* Wave Chat Interface */
+        .wave-chat {
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .chat-bubble {
+            position: relative;
+            animation: float-in 0.5s ease-out;
+        }
+        
+        @keyframes float-in {
+            from { opacity: 0; transform: translateY(20px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        
+        .user-bubble {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-radius: 20px 20px 4px 20px;
+        }
+        
+        .ai-bubble {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px 20px 20px 4px;
+            color: #1e293b;
+        }
+        
+        /* Visa Processing Timeline */
+        .visa-timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .visa-timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #10b981, #3b82f6);
+        }
+        
+        .visa-step {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .visa-step::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #3b82f6;
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px #3b82f6;
+        }
+        
+        .visa-step.completed::before {
+            background: #10b981;
+            box-shadow: 0 0 0 3px #10b981;
+        }
+        
+        /* Quick Action Chips */
+        .action-chip {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .action-chip:hover {
+            transform: translateX(8px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Compact Manager Card */
+        .manager-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            position: relative;
+        }
+        
+        /* Tab Animations */
+        .tab-btn {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: #f59e0b;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        
+        .tab-btn.active::after {
+            width: 80%;
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+        }
+        
+        /* Content Transitions */
+        .content-panel {
+            animation: fade-up 0.5s ease-out;
+        }
+        
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Price Tag Animation */
+        .price-tag {
+            animation: price-pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes price-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        /* Status Indicators */
+        .status-dot {
+            animation: status-blink 2s ease-in-out infinite;
+        }
+        
+        @keyframes status-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Media Selection */
+        .media-item {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .media-item:hover {
+            transform: scale(1.05);
+            z-index: 10;
+        }
+        
+        .media-item.selected {
+            border: 3px solid #f59e0b;
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.3);
+        }
+        
+        /* Stats Cards */
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Quick Links Bar */
+        .quick-link {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            height: 40px; /* Fixed height to match alignment */
+            display: flex;
+            align-items: center;
+        }
+        
+        .quick-link:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255,255,255,0.5);
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.2);
+        }
+        
+        /* Notification Badge */
+        .notif-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 12px;
+            border: 2px solid white;
+            animation: bounce 2s infinite;
+            z-index: 10;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        /* Portal bar layout improvements */
+        .portal-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .portal-divider {
+            width: 1px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            margin: 0 8px;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- SLOWED DOWN TICKER -->
+    <div class="ticker-wrap">
+        <div class="ticker" id="ticker">
+            <!-- Original Items -->
+            <span class="ticker-item"><i class="fas fa-fire"></i>🔥 FLASH SALE: Turkey 7N/8D @ ₹65,000 - Limited seats!</span>
+            <span class="ticker-item"><i class="fas fa-percentage"></i>Special Agent Commission: Maldives bookings get 12% this week</span>
+            <span class="ticker-item"><i class="fas fa-plane"></i>NEW: Direct flights to Tbilisi starting March - Early bird offers open</span>
+            <span class="ticker-item"><i class="fas fa-hotel"></i>Europe Summer 2024: Free hotel upgrades for bookings before Feb 28</span>
+            <span class="ticker-item"><i class="fas fa-users"></i>Group Booking Bonus: Every 10th pax free on Thailand packages</span>
+            <span class="ticker-item"><i class="fas fa-gift"></i>Referral Reward: Win iPhone 15 for top agent this quarter</span>
+            <span class="ticker-item"><i class="fas fa-clock"></i>Limited Time: Dubai packages at 2023 prices - Book by Friday!</span>
+            <span class="ticker-item"><i class="fas fa-star"></i>Singapore Family Offer: Kids stay & eat free at selected resorts</span>
+            <span class="ticker-item"><i class="fas fa-tags"></i>Early Bird: Book Europe 6 months ahead & save 20%</span>
+            <span class="ticker-item"><i class="fas fa-percentage"></i>Agent Bonus: Extra 5% commission on all Bali bookings this month</span>
+            <span class="ticker-item"><i class="fas fa-plane-departure"></i>New Route Launch: Mumbai to Baku direct flights - Special inaugural fares</span>
+            <span class="ticker-item"><i class="fas fa-hotel"></i>Luxury Flash Sale: 5-star properties in Thailand at 3-star prices</span>
+            <!-- Duplicated Items for Seamless Loop -->
+            <span class="ticker-item"><i class="fas fa-fire"></i>🔥 FLASH SALE: Turkey 7N/8D @ ₹65,000 - Limited seats!</span>
+            <span class="ticker-item"><i class="fas fa-percentage"></i>Special Agent Commission: Maldives bookings get 12% this week</span>
+            <span class="ticker-item"><i class="fas fa-plane"></i>NEW: Direct flights to Tbilisi starting March - Early bird offers open</span>
+            <span class="ticker-item"><i class="fas fa-hotel"></i>Europe Summer 2024: Free hotel upgrades for bookings before Feb 28</span>
+            <span class="ticker-item"><i class="fas fa-users"></i>Group Booking Bonus: Every 10th pax free on Thailand packages</span>
+            <span class="ticker-item"><i class="fas fa-gift"></i>Referral Reward: Win iPhone 15 for top agent this quarter</span>
+            <span class="ticker-item"><i class="fas fa-clock"></i>Limited Time: Dubai packages at 2023 prices - Book by Friday!</span>
+            <span class="ticker-item"><i class="fas fa-star"></i>Singapore Family Offer: Kids stay & eat free at selected resorts</span>
+            <span class="ticker-item"><i class="fas fa-tags"></i>Early Bird: Book Europe 6 months ahead & save 20%</span>
+            <span class="ticker-item"><i class="fas fa-percentage"></i>Agent Bonus: Extra 5% commission on all Bali bookings this month</span>
+            <span class="ticker-item"><i class="fas fa-plane-departure"></i>New Route Launch: Mumbai to Baku direct flights - Special inaugural fares</span>
+            <span class="ticker-item"><i class="fas fa-hotel"></i>Luxury Flash Sale: 5-star properties in Thailand at 3-star prices</span>
+        </div>
+    </div>
+
+    <!-- Portal Access Bar - ALIGNED BUTTONS -->
+    <div class="bg-slate-900 text-white py-4 px-6 shadow-lg">
+        <div class="max-w-[1920px] mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-rocket text-amber-400 text-xl"></i>
+                <span class="font-bold text-lg">Quick Access Portals</span>
+            </div>
+            
+            <div class="portal-bar">
+                <!-- TripFactory Portal -->
+                <button onclick="window.open('https://tripfactory.com/agent-portal', '_blank')" class="portal-btn rounded-xl text-white font-bold shadow-lg">
+                    <div class="portal-icon-box">
+                        <i class="fas fa-plane text-lg"></i>
+                    </div>
+                    <div class="portal-text">
+                        <div class="portal-label">Main Portal</div>
+                        <div class="portal-name">TripFactory</div>
+                    </div>
+                    <i class="fas fa-external-link-alt portal-arrow"></i>
+                    <span class="notif-badge">3</span>
+                </button>
+                
+                <!-- Nexus DMC Portal - Same size -->
+                <button onclick="window.open('https://nexusdmc.com/booking-engine', '_blank')" class="portal-btn nexus rounded-xl text-white font-bold shadow-lg">
+                    <div class="portal-icon-box">
+                        <i class="fas fa-globe text-lg"></i>
+                    </div>
+                    <div class="portal-text">
+                        <div class="portal-label">Booking Engine</div>
+                        <div class="portal-name">Nexus DMC</div>
+                    </div>
+                    <i class="fas fa-external-link-alt portal-arrow"></i>
+                </button>
+                
+                <!-- Divider -->
+                <div class="portal-divider"></div>
+                
+                <!-- Quick Links - Aligned height -->
+                <div class="flex gap-2">
+                    <button class="quick-link px-4 bg-slate-800 rounded-lg text-sm font-semibold hover:bg-slate-700 flex items-center gap-2">
+                        <i class="fas fa-calculator text-amber-400"></i>
+                        <span class="hidden lg:inline">Quote Tool</span>
+                    </button>
+                    <button class="quick-link px-4 bg-slate-800 rounded-lg text-sm font-semibold hover:bg-slate-700 flex items-center gap-2">
+                        <i class="fas fa-file-invoice text-green-400"></i>
+                        <span class="hidden lg:inline">Invoices</span>
+                    </button>
+                    <button class="quick-link px-4 bg-slate-800 rounded-lg text-sm font-semibold hover:bg-slate-700 flex items-center gap-2">
+                        <i class="fas fa-headset text-blue-400"></i>
+                        <span class="hidden lg:inline">Support</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-lg sticky top-0 z-50 border-b-4 border-blue-900">
+        <div class="px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="bg-blue-900 text-white px-4 py-2 rounded-xl font-bold text-2xl tracking-tight">
+                        <i class="fas fa-plane-departure mr-2 text-amber-400"></i>TripFactory
+                    </div>
+                    <div class="hidden md:block">
+                        <h1 class="text-2xl font-bold text-blue-900">Knowledge Factory</h1>
+                        <p class="text-sm text-slate-500">Agent Command Center</p>
+                    </div>
+                </div>
+                
+                <div class="manager-card rounded-lg px-4 py-2 shadow-md flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-900 rounded-full flex items-center justify-center text-white">
+                        <i class="fas fa-headset text-sm"></i>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div>
+                            <div class="text-xs font-bold text-blue-900 uppercase">Sales Manager</div>
+                            <div class="font-bold text-slate-900 text-sm">Rahul Sharma</div>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs border-l border-amber-400 pl-3">
+                            <a href="tel:+919876543210" class="flex items-center gap-1 text-blue-700 hover:text-blue-900 font-semibold">
+                                <i class="fas fa-phone"></i> +91 98765 43210
+                            </a>
+                            <a href="mailto:rahul.sharma@tripfactory.com" class="flex items-center gap-1 text-blue-700 hover:text-blue-900 font-semibold">
+                                <i class="fas fa-envelope"></i> Email
+                            </a>
+                        </div>
+                        <button onclick="window.open('https://wa.me/919876543210', '_blank')" class="px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition flex items-center gap-1 text-xs font-semibold">
+                            <i class="fab fa-whatsapp"></i> Chat
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden lg:block">
+                        <div class="font-bold text-slate-900 text-sm">Welcome, Vikram</div>
+                        <div class="text-xs text-slate-500">Elite Agent • Delhi</div>
+                    </div>
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full flex items-center justify-center text-white border-2 border-amber-400 shadow-lg">
+                        <i class="fas fa-user text-sm"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="p-6 max-w-[1920px] mx-auto space-y-6">
+
+        <!-- Top Section: Offer of the Month + Quick Stats -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Offer of the Month -->
+            <div class="lg:col-span-2 offer-box rounded-3xl p-6 shadow-2xl relative">
+                <div class="offer-badge">Offer of the Month</div>
+                
+                <div class="flex flex-col md:flex-row gap-6 items-center">
+                    <div class="w-full md:w-1/3">
+                        <div class="aspect-video rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white shadow-xl relative overflow-hidden">
+                            <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=600')] bg-cover bg-center opacity-50"></div>
+                            <div class="relative z-10 text-center p-4">
+                                <div class="text-5xl mb-2">🇹🇷</div>
+                                <div class="text-2xl font-bold">Turkey</div>
+                                <div class="text-sm opacity-90">7N/8D Package</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 space-y-4">
+                        <div>
+                            <h2 class="text-3xl font-bold text-slate-900 mb-2">Magical Turkey Experience</h2>
+                            <p class="text-slate-700 font-medium">Istanbul • Cappadocia • Pamukkale • Antalya</p>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-3">
+                            <span class="px-4 py-2 bg-white rounded-full text-sm font-bold text-blue-900 shadow-sm">
+                                <i class="fas fa-plane mr-2"></i>Flights Included
+                            </span>
+                            <span class="px-4 py-2 bg-white rounded-full text-sm font-bold text-blue-900 shadow-sm">
+                                <i class="fas fa-hotel mr-2"></i>5-Star Hotels
+                            </span>
+                            <span class="px-4 py-2 bg-white rounded-full text-sm font-bold text-blue-900 shadow-sm">
+                                <i class="fas fa-utensils mr-2"></i>All Meals
+                            </span>
+                            <span class="px-4 py-2 bg-red-100 text-red-700 rounded-full text-sm font-bold border-2 border-red-300">
+                                <i class="fas fa-percentage mr-2"></i>Save ₹25,000
+                            </span>
+                        </div>
+                        
+                        <div class="flex items-end gap-4">
+                            <div>
+                                <div class="text-sm text-slate-600 font-semibold">Special Agent Price</div>
+                                <div class="text-4xl font-black text-slate-900">₹65,000</div>
+                                <div class="text-sm text-slate-500 line-through">₹90,000</div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm text-red-600 font-bold mb-2">⏰ Offer Ends In:</div>
+                                <div class="countdown-timer inline-flex gap-1">
+                                    <span class="timer-digit" id="days">05</span>
+                                    <span class="text-2xl font-bold text-red-600">:</span>
+                                    <span class="timer-digit" id="hours">12</span>
+                                    <span class="text-2xl font-bold text-red-600">:</span>
+                                    <span class="timer-digit" id="minutes">45</span>
+                                    <span class="text-2xl font-bold text-red-600">:</span>
+                                    <span class="timer-digit" id="seconds">30</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-3">
+                            <button onclick="window.open('https://tripfactory.com/book-turkey-offer', '_blank')" class="flex-1 py-3 bg-blue-900 text-white rounded-xl font-bold hover:bg-blue-800 transition shadow-lg flex items-center justify-center gap-2">
+                                <i class="fas fa-book-open"></i>Book Now
+                            </button>
+                            <button onclick="shareOffer()" class="px-6 py-3 bg-white text-blue-900 rounded-xl font-bold hover:bg-slate-50 transition shadow-lg border-2 border-blue-900">
+                                <i class="fas fa-share-alt"></i>
+                            </button>
+                            <button onclick="downloadOfferPDF()" class="px-6 py-3 bg-white text-blue-900 rounded-xl font-bold hover:bg-slate-50 transition shadow-lg border-2 border-blue-900">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mini Quick Stats -->
+            <div class="space-y-4">
+                <div class="glass-panel rounded-2xl p-5 border-l-4 border-blue-600 shadow-lg">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase">Your Monthly Target</p>
+                            <h3 class="text-3xl font-bold text-slate-900 mt-1">78%</h3>
+                            <p class="text-xs text-green-600 font-semibold mt-1">₹68.5L / ₹88L</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+                            <i class="fas fa-bullseye text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 h-3 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full" style="width: 78%"></div>
+                    </div>
+                </div>
+                
+                <div class="glass-panel rounded-2xl p-5 border-l-4 border-amber-500 shadow-lg">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase">Active Hot Leads</p>
+                            <h3 class="text-3xl font-bold text-slate-900 mt-1">12</h3>
+                            <p class="text-xs text-amber-600 font-semibold mt-1">5 require immediate action</p>
+                        </div>
+                        <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600">
+                            <i class="fas fa-fire text-xl"></i>
+                        </div>
+                    </div>
+                    <button class="mt-3 w-full py-2 bg-amber-500 text-white rounded-lg text-sm font-bold hover:bg-amber-600 transition">
+                        View Hot Leads →
+                    </button>
+                </div>
+                
+                <div class="glass-panel rounded-2xl p-5 border-l-4 border-green-600 shadow-lg">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase">Commission Earned</p>
+                            <h3 class="text-3xl font-bold text-slate-900 mt-1">₹8.2L</h3>
+                            <p class="text-xs text-green-600 font-semibold mt-1">+23% vs last month</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600">
+                            <i class="fas fa-rupee-sign text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Destination Selector -->
+        <section class="glass-panel rounded-2xl p-6 shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fas fa-map-marked-alt text-amber-500"></i>
+                        Select Destination
+                    </h2>
+                    <p class="text-sm text-slate-500 mt-1">Choose a destination to view customized information and resources</p>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" placeholder="Search destinations..." 
+                           class="px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-400 w-64">
+                    <button class="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" id="destination-grid">
+                <div class="destination-card bg-white rounded-xl p-4 shadow-lg text-center active" 
+                     onclick="selectDestination('turkey', this)" data-destination="turkey">
+                    <div class="text-4xl mb-2">🇹🇷</div>
+                    <div class="font-bold text-slate-900">Turkey</div>
+                    <div class="text-xs text-slate-500 mt-1">67 agents active</div>
+                    <div class="mt-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full inline-block font-semibold">
+                        <i class="fas fa-fire mr-1"></i>Hot
+                    </div>
+                </div>
+                
+                <div class="destination-card bg-white rounded-xl p-4 shadow-lg text-center" 
+                     onclick="selectDestination('maldives', this)" data-destination="maldives">
+                    <div class="text-4xl mb-2">🇲🇻</div>
+                    <div class="font-bold text-slate-900">Maldives</div>
+                    <div class="text-xs text-slate-500 mt-1">89 agents active</div>
+                    <div class="mt-2 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full inline-block font-semibold">
+                        <i class="fas fa-water mr-1"></i>Popular
+                    </div>
+                </div>
+                
+                <div class="destination-card bg-white rounded-xl p-4 shadow-lg text-center" 
+                     onclick="selectDestination('thailand', this)" data-destination="thailand">
+                    <div class="text-4xl mb-2">🇹🇭</div>
+                    <div class="font-bold text-slate-900">Thailand</div>
+                    <div class="text-xs text-slate-500 mt-1">45 agents active</div>
+                    <div class="mt-2 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full inline-block font-semibold">
+                        <i class="fas fa-umbrella-beach mr-1"></i>Value
+                    </div>
+                </div>
+                
+                <div class="destination-card bg-white rounded-xl p-4 shadow-lg text-center" 
+                     onclick="selectDestination('europe', this)" data-destination="europe">
+                    <div class="text-4xl mb-2">🇪🇺</div>
+                    <div class="font-bold text-slate-900">Europe</div>
+                    <div class="text-xs text-slate-500 mt-1">34 agents active</div>
+                    <div class="mt-2 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full inline-block font-semibold">
+                        <i class="fas fa-crown mr-1"></i>Premium
+                    </div>
+                </div>
+                
+                <div class="destination-card bg-white rounded-xl p-4 shadow-lg text-center" 
+                     onclick="selectDestination('dubai', this)" data-destination="dubai">
+                    <div class="text-4xl mb-2">🇦🇪</div>
+                    <div class="font-bold text-slate-900">Dubai</div>
+                    <div class="text-xs text-slate-500 mt-1">78 agents active</div>
+                    <div class="mt-2 px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full inline-block font-semibold">
+                        <i class="fas fa-chart-line mr-1"></i>Trending
+                    </div>
+                </div>
+                
+                <div class="destination-card bg-white rounded-xl p-4 shadow-lg text-center" 
+                     onclick="selectDestination('singapore', this)" data-destination="singapore">
+                    <div class="text-4xl mb-2">🇸🇬</div>
+                    <div class="font-bold text-slate-900">Singapore</div>
+                    <div class="text-xs text-slate-500 mt-1">52 agents active</div>
+                    <div class="mt-2 px-2 py-1 bg-emerald-100 text-emerald-700 text-xs rounded-full inline-block font-semibold">
+                        <i class="fas fa-leaf mr-1"></i>Family
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Dashboard Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left Column: Destination Intelligence (2 cols) -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Navigation Tabs -->
+                <div class="glass-panel rounded-xl p-2 flex gap-2 overflow-x-auto">
+                    <button onclick="switchTab('facts')" id="tab-facts" class="tab-btn active px-6 py-3 rounded-lg text-sm font-semibold transition flex items-center gap-2 whitespace-nowrap">
+                        <i class="fas fa-info-circle"></i>Key Facts & Visa
+                    </button>
+                    <button onclick="switchTab('resorts')" id="tab-resorts" class="tab-btn px-6 py-3 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100 transition flex items-center gap-2 whitespace-nowrap">
+                        <i class="fas fa-hotel"></i>Resorts & Cities
+                    </button>
+                    <button onclick="switchTab('media')" id="tab-media" class="tab-btn px-6 py-3 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100 transition flex items-center gap-2 whitespace-nowrap">
+                        <i class="fas fa-images"></i>Media Bank
+                    </button>
+                    <button onclick="switchTab('creator')" id="tab-creator" class="tab-btn px-6 py-3 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100 transition flex items-center gap-2 whitespace-nowrap">
+                        <i class="fas fa-magic"></i>Content Creator
+                    </button>
+                </div>
+
+                <!-- TAB 1: KEY FACTS & VISA -->
+                <div id="content-facts" class="content-panel space-y-4">
+                    <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="text-2xl font-bold text-slate-900 flex items-center gap-2" id="facts-title">
+                                    <i class="fas fa-lightbulb text-amber-500"></i>
+                                    Turkey - Essential Information
+                                </h3>
+                                <p class="text-sm text-slate-500 mt-1">Last updated: Today, 9:00 AM</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200 transition font-semibold">
+                                    <i class="fas fa-download mr-1"></i>Download PDF
+                                </button>
+                                <button class="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200 transition font-semibold">
+                                    <i class="fas fa-share-alt mr-1"></i>Share
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Flight Info -->
+                            <div class="bg-white rounded-xl p-5 shadow-md border-l-4 border-blue-500 hover:shadow-lg transition">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 flex-shrink-0">
+                                        <i class="fas fa-plane text-xl"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-slate-900 mb-2 flex items-center gap-2">
+                                            Flight Information
+                                            <span class="status-dot w-2 h-2 bg-green-500 rounded-full"></span>
+                                        </h4>
+                                        <div class="space-y-2 text-sm" id="flight-info">
+                                            <div class="flex justify-between">
+                                                <span class="text-slate-600">From Delhi:</span>
+                                                <span class="font-semibold">Direct & Via Istanbul</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-slate-600">Flying Time:</span>
+                                                <span class="font-semibold">6h 30m (Direct)</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-slate-600">Airlines:</span>
+                                                <span class="font-semibold">Turkish, IndiGo, Air India</span>
+                                            </div>
+                                            <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+                                                <span class="text-slate-600">Starting Price:</span>
+                                                <span class="font-bold text-green-600 text-lg price-tag">₹45,000</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Visa Info -->
+                            <div class="bg-white rounded-xl p-5 shadow-md border-l-4 border-green-500">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 flex-shrink-0">
+                                        <i class="fas fa-passport text-xl"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-slate-900 mb-2">Visa Processing</h4>
+                                        <div class="bg-green-50 rounded-lg p-3 mb-3">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="px-2 py-1 bg-green-500 text-white text-xs rounded-full font-bold" id="visa-type">e-Visa</span>
+                                                <span class="text-sm font-semibold text-green-800" id="visa-processing">24-48 Hours</span>
+                                            </div>
+                                            <p class="text-xs text-green-700" id="visa-fee">Single & Multiple entry options available - $60 USD</p>
+                                        </div>
+                                        
+                                        <div class="visa-timeline text-xs">
+                                            <div class="visa-step completed">
+                                                <div class="font-semibold text-slate-700">Document Upload</div>
+                                                <div class="text-slate-500">Passport, Photo, Tickets</div>
+                                            </div>
+                                            <div class="visa-step completed">
+                                                <div class="font-semibold text-slate-700">Application Review</div>
+                                                <div class="text-slate-500">4-6 hours</div>
+                                            </div>
+                                            <div class="visa-step">
+                                                <div class="font-semibold text-slate-700">Payment & Submit</div>
+                                                <div class="text-slate-500" id="visa-payment">$60 USD fee</div>
+                                            </div>
+                                            <div class="visa-step">
+                                                <div class="font-semibold text-slate-700">e-Visa Delivery</div>
+                                                <div class="text-slate-500" id="visa-delivery">Email within 24-48h</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <button class="mt-3 w-full py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition">
+                                            <i class="fas fa-external-link-alt mr-1"></i>Apply for e-Visa
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Weather -->
+                            <div class="bg-white rounded-xl p-5 shadow-md border-l-4 border-amber-500 hover:shadow-lg transition">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 flex-shrink-0">
+                                        <i class="fas fa-sun text-xl"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-slate-900 mb-2">Weather & Best Time</h4>
+                                        <div class="space-y-2 text-sm">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-slate-600">Current <span id="weather-location">(Istanbul)</span>:</span>
+                                                <span class="font-bold text-amber-600 text-lg" id="weather-current">18°C ☀️</span>
+                                            </div>
+                                            <div class="mt-3">
+                                                <div class="text-xs font-semibold text-slate-700 mb-2">Best Seasons to Visit:</div>
+                                                <div class="space-y-2" id="weather-seasons">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-16 text-xs font-semibold text-green-700">Apr-Jun</div>
+                                                        <div class="flex-1 h-2 bg-green-200 rounded-full overflow-hidden">
+                                                            <div class="h-full bg-green-500 rounded-full" style="width: 90%"></div>
+                                                        </div>
+                                                        <span class="text-xs text-green-700 font-semibold">Perfect</span>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-16 text-xs font-semibold text-orange-700">Jul-Aug</div>
+                                                        <div class="flex-1 h-2 bg-orange-200 rounded-full overflow-hidden">
+                                                            <div class="h-full bg-orange-500 rounded-full" style="width: 60%"></div>
+                                                        </div>
+                                                        <span class="text-xs text-orange-700 font-semibold">Hot</span>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-16 text-xs font-semibold text-blue-700">Sep-Nov</div>
+                                                        <div class="flex-1 h-2 bg-blue-200 rounded-full overflow-hidden">
+                                                            <div class="h-full bg-blue-500 rounded-full" style="width: 85%"></div>
+                                                        </div>
+                                                        <span class="text-xs text-blue-700 font-semibold">Great</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dos & Don'ts -->
+                            <div class="bg-white rounded-xl p-5 shadow-md border-l-4 border-red-500 hover:shadow-lg transition">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-600 flex-shrink-0">
+                                        <i class="fas fa-exclamation-triangle text-xl"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-slate-900 mb-2">Travel Tips</h4>
+                                        <div class="grid grid-cols-2 gap-3 text-xs" id="travel-tips">
+                                            <div class="bg-green-50 rounded-lg p-3">
+                                                <div class="font-semibold text-green-700 mb-2 flex items-center gap-1">
+                                                    <i class="fas fa-check-circle"></i> Do's
+                                                </div>
+                                                <ul class="space-y-1 text-slate-600">
+                                                    <li>• Dress modestly at mosques</li>
+                                                    <li>• Try local Turkish tea</li>
+                                                    <li>• Bargain at bazaars (40-50%)</li>
+                                                    <li>• Carry cash for small shops</li>
+                                                    <li>• Tip 10-15% at restaurants</li>
+                                                </ul>
+                                            </div>
+                                            <div class="bg-red-50 rounded-lg p-3">
+                                                <div class="font-semibold text-red-700 mb-2 flex items-center gap-1">
+                                                    <i class="fas fa-times-circle"></i> Don'ts
+                                                </div>
+                                                <ul class="space-y-1 text-slate-600">
+                                                    <li>• Drink tap water</li>
+                                                    <li>• Show PDA in rural areas</li>
+                                                    <li>• Photograph military sites</li>
+                                                    <li>• Skip travel insurance</li>
+                                                    <li>• Exchange at airport (poor rates)</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Stats Row -->
+                        <div class="grid grid-cols-4 gap-4 mt-6">
+                            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 text-center border border-blue-200">
+                                <div class="text-2xl font-bold text-blue-900" id="stat-price">₹85K</div>
+                                <div class="text-xs text-blue-600 font-medium">Starting Price</div>
+                            </div>
+                            <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 text-center border border-purple-200">
+                                <div class="text-2xl font-bold text-purple-900" id="stat-days">5-7</div>
+                                <div class="text-xs text-purple-600 font-medium">Recommended Days</div>
+                            </div>
+                            <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 text-center border border-amber-200">
+                                <div class="text-2xl font-bold text-amber-900" id="stat-rating">4.8★</div>
+                                <div class="text-xs text-amber-600 font-medium">Agent Rating</div>
+                            </div>
+                            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 text-center border border-green-200">
+                                <div class="text-2xl font-bold text-green-900">94%</div>
+                                <div class="text-xs text-green-600 font-medium">Satisfaction</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: RESORTS & CITIES -->
+                <div id="content-resorts" class="content-panel space-y-4 hidden">
+                    <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="text-2xl font-bold text-slate-900" id="resorts-title">Popular Resorts & Cities</h3>
+                                <p class="text-sm text-slate-500 mt-1">Handpicked accommodations for your clients</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="px-4 py-2 bg-white text-slate-700 rounded-lg text-sm border border-slate-200 hover:bg-slate-50 font-semibold">
+                                    <i class="fas fa-filter mr-1"></i>Filter
+                                </button>
+                                <button class="px-4 py-2 bg-blue-900 text-white rounded-lg text-sm hover:bg-blue-800 font-semibold">
+                                    <i class="fas fa-map mr-1"></i>View Map
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="resorts-grid">
+                            <!-- Dynamic content loaded via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: MEDIA BANK -->
+                <div id="content-media" class="content-panel space-y-4 hidden">
+                    <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="text-2xl font-bold text-slate-900">Media Bank</h3>
+                                <p class="text-sm text-slate-500 mt-1">Download high-quality images and videos for your marketing</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200 font-semibold">
+                                    <i class="fas fa-images mr-1"></i>Images
+                                </button>
+                                <button class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm hover:bg-slate-200 font-semibold">
+                                    <i class="fas fa-video mr-1"></i>Videos
+                                </button>
+                                <button class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm hover:bg-slate-200 font-semibold">
+                                    <i class="fas fa-vr-cardboard mr-1"></i>360° Tours
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="media-grid">
+                            <!-- Dynamic media content -->
+                        </div>
+
+                        <div id="media-actions" class="hidden bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-blue-900 rounded-full flex items-center justify-center text-white">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <span class="text-sm font-semibold text-slate-700"><span id="selected-count">0</span> items selected</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 font-semibold">
+                                        <i class="fas fa-download mr-1"></i>Download
+                                    </button>
+                                    <button class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 font-semibold">
+                                        <i class="fab fa-whatsapp mr-1"></i>Share
+                                    </button>
+                                    <button class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 font-semibold">
+                                        <i class="fas fa-magic mr-1"></i>Create Post
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: CONTENT CREATOR -->
+                <div id="content-creator" class="content-panel space-y-4 hidden">
+                    <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                                    <i class="fas fa-wand-magic-sparkles text-purple-500"></i>
+                                    AI Content Creator
+                                </h3>
+                                <p class="text-sm text-slate-500 mt-1">Generate marketing content in seconds</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full text-xs font-bold">
+                                    <i class="fas fa-bolt mr-1"></i>AI Powered
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Content Type</label>
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <button class="p-3 bg-blue-50 border-2 border-blue-200 rounded-xl text-center hover:bg-blue-100 transition active">
+                                            <i class="fas fa-image text-blue-600 text-xl mb-1"></i>
+                                            <div class="text-xs font-semibold text-blue-700">Social Post</div>
+                                        </button>
+                                        <button class="p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-center hover:bg-slate-100 transition">
+                                            <i class="fas fa-envelope text-slate-600 text-xl mb-1"></i>
+                                            <div class="text-xs font-semibold text-slate-700">Email</div>
+                                        </button>
+                                        <button class="p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-center hover:bg-slate-100 transition">
+                                            <i class="fas fa-file-alt text-slate-600 text-xl mb-1"></i>
+                                            <div class="text-xs font-semibold text-slate-700">Itinerary</div>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Theme</label>
+                                    <div class="grid grid-cols-4 gap-2">
+                                        <div class="aspect-square bg-gradient-to-br from-orange-400 to-pink-500 rounded-lg cursor-pointer hover:scale-105 transition border-2 border-white shadow-md"></div>
+                                        <div class="aspect-square bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg cursor-pointer hover:scale-105 transition border-2 border-white shadow-md"></div>
+                                        <div class="aspect-square bg-gradient-to-br from-green-400 to-cyan-500 rounded-lg cursor-pointer hover:scale-105 transition border-2 border-white shadow-md"></div>
+                                        <div class="aspect-square bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg cursor-pointer hover:scale-105 transition border-2 border-white shadow-md"></div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Your Message</label>
+                                    <textarea class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-400 h-32 resize-none" placeholder="Describe what you want to promote..."></textarea>
+                                </div>
+
+                                <div class="flex gap-2">
+                                    <button class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold hover:shadow-lg transition">
+                                        <i class="fas fa-magic mr-2"></i>Generate with AI
+                                    </button>
+                                    <button class="px-4 py-3 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-100 rounded-xl p-4">
+                                <div class="text-sm font-semibold text-slate-700 mb-3">Preview</div>
+                                
+                                <div class="bg-white rounded-xl overflow-hidden shadow-lg max-w-sm mx-auto">
+                                    <div class="p-3 flex items-center gap-2 border-b">
+                                        <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-orange-500 rounded-full"></div>
+                                        <div class="flex-1">
+                                            <div class="text-sm font-semibold">tripfactory_delhi</div>
+                                            <div class="text-xs text-slate-500">Istanbul, Turkey</div>
+                                        </div>
+                                        <i class="fas fa-ellipsis-h text-slate-400"></i>
+                                    </div>
+                                    <div class="aspect-square bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white">
+                                        <div class="text-center p-6">
+                                            <i class="fas fa-mosque text-6xl mb-2"></i>
+                                            <div class="text-2xl font-bold">Discover Turkey</div>
+                                            <div class="text-sm mt-1">From ₹85,000 per person</div>
+                                            <div class="mt-3 px-4 py-1 bg-white/20 rounded-full text-xs inline-block">7 Nights / 8 Days</div>
+                                        </div>
+                                    </div>
+                                    <div class="p-3">
+                                        <div class="flex gap-4 mb-2">
+                                            <i class="far fa-heart text-xl"></i>
+                                            <i class="far fa-comment text-xl"></i>
+                                            <i class="far fa-paper-plane text-xl"></i>
+                                        </div>
+                                        <div class="text-sm">
+                                            <span class="font-semibold">tripfactory_delhi</span>
+                                            ✨ Experience the magic of Turkey! Historic Istanbul, surreal Cappadocia balloons, and turquoise coasts await. Book now!
+                                            <span class="text-blue-600">#Turkey #Travel #Istanbul #TripFactory</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 flex gap-2 justify-center">
+                                    <button class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 font-semibold">
+                                        <i class="fab fa-whatsapp mr-1"></i>Share
+                                    </button>
+                                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 font-semibold">
+                                        <i class="fab fa-facebook mr-1"></i>Post
+                                    </button>
+                                    <button class="px-4 py-2 bg-pink-600 text-white rounded-lg text-sm hover:bg-pink-700 font-semibold">
+                                        <i class="fab fa-instagram mr-1"></i>Post
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Trippy AI Assistant -->
+            <div class="space-y-6">
+                <div class="trippy-container rounded-3xl p-6 shadow-2xl text-white">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="trippy-orb flex items-center justify-center">
+                            <i class="fas fa-robot text-2xl text-white relative z-10"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold">Trippy AI</h3>
+                            <p class="text-blue-100 text-sm">Your Intelligent Travel Assistant</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                                <span class="text-xs text-green-300 font-semibold">Online & Ready</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="text-xs font-semibold text-blue-200 mb-2 uppercase tracking-wider">Select Language</div>
+                        <div class="flex gap-2">
+                            <button class="language-selector active px-4 py-1.5 rounded-full text-xs font-bold bg-white text-blue-900" onclick="setLanguage('en', this)">English</button>
+                            <button class="language-selector px-4 py-1.5 rounded-full text-xs font-bold bg-white/20 text-white hover:bg-white/30" onclick="setLanguage('hi', this)">हिंदी</button>
+                            <button class="language-selector px-4 py-1.5 rounded-full text-xs font-bold bg-white/20 text-white hover:bg-white/30" onclick="setLanguage('ta', this)">தமிழ்</button>
+                            <button class="language-selector px-4 py-1.5 rounded-full text-xs font-bold bg-white/20 text-white hover:bg-white/30" onclick="setLanguage('te', this)">తెలుగు</button>
+                        </div>
+                    </div>
+
+                    <div class="wave-chat p-4 mb-4">
+                        <div class="h-80 overflow-y-auto space-y-4 pr-2" id="chat-messages">
+                            <div class="chat-bubble flex gap-3">
+                                <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-robot text-sm"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="ai-bubble p-3 shadow-lg">
+                                        <p class="text-sm font-medium">Hello! I'm Trippy, your AI assistant for Turkey. I can help you with:</p>
+                                        <div class="mt-2 grid grid-cols-2 gap-2 text-xs">
+                                            <div class="flex items-center gap-1 text-slate-600">
+                                                <i class="fas fa-check text-green-500"></i> Pricing & Availability
+                                            </div>
+                                            <div class="flex items-center gap-1 text-slate-600">
+                                                <i class="fas fa-check text-green-500"></i> Itinerary Planning
+                                            </div>
+                                            <div class="flex items-center gap-1 text-slate-600">
+                                                <i class="fas fa-check text-green-500"></i> Objection Handling
+                                            </div>
+                                            <div class="flex items-center gap-1 text-slate-600">
+                                                <i class="fas fa-check text-green-500"></i> Local Insights
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-xs text-blue-200 mt-1 ml-1">Just now</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="text-xs font-semibold text-blue-200 mb-2 uppercase tracking-wider">Quick Actions</div>
+                        <div class="space-y-2">
+                            <button class="action-chip w-full text-left px-4 py-3 bg-white/10 rounded-xl flex items-center gap-3 hover:bg-white/20 transition" onclick="askTrippy('What is the best time to visit Turkey?')">
+                                <div class="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-calendar-alt text-white text-sm"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-sm font-semibold">Best Time to Visit?</div>
+                                    <div class="text-xs text-blue-200">Seasonal recommendations</div>
+                                </div>
+                                <i class="fas fa-chevron-right text-blue-300"></i>
+                            </button>
+                            
+                            <button class="action-chip w-full text-left px-4 py-3 bg-white/10 rounded-xl flex items-center gap-3 hover:bg-white/20 transition" onclick="askTrippy('How to handle price objections?')">
+                                <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-hand-holding-usd text-white text-sm"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-sm font-semibold">Price Objection Handling</div>
+                                    <div class="text-xs text-blue-200">Proven response templates</div>
+                                </div>
+                                <i class="fas fa-chevron-right text-blue-300"></i>
+                            </button>
+                            
+                            <button class="action-chip w-full text-left px-4 py-3 bg-white/10 rounded-xl flex items-center gap-3 hover:bg-white/20 transition" onclick="askTrippy('Compare Turkey vs Dubai')">
+                                <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-balance-scale text-white text-sm"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-sm font-semibold">Compare Destinations</div>
+                                    <div class="text-xs text-blue-200">Turkey vs Dubai analysis</div>
+                                </div>
+                                <i class="fas fa-chevron-right text-blue-300"></i>
+                            </button>
+                            
+                            <button class="action-chip w-full text-left px-4 py-3 bg-white/10 rounded-xl flex items-center gap-3 hover:bg-white/20 transition" onclick="askTrippy('Generate a 7 day itinerary')">
+                                <div class="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-route text-white text-sm"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-sm font-semibold">Generate Itinerary</div>
+                                    <div class="text-xs text-blue-200">AI-powered day-by-day plan</div>
+                                </div>
+                                <i class="fas fa-chevron-right text-blue-300"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="relative">
+                        <input type="text" id="trippy-input" placeholder="Ask Trippy anything..." 
+                               class="w-full px-4 py-3 pr-12 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-200 focus:outline-none focus:bg-white/20 transition"
+                               onkeypress="if(event.key==='Enter') sendToTrippy()">
+                        <button onclick="sendToTrippy()" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center text-white hover:bg-amber-600 transition">
+                            <i class="fas fa-paper-plane text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                    <h4 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <i class="fas fa-toolbox text-amber-500"></i>
+                        Quick Tools
+                    </h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button class="p-3 bg-white rounded-xl border border-slate-200 hover:border-amber-400 hover:shadow-md transition text-left group">
+                            <i class="fas fa-calculator text-amber-500 mb-2 group-hover:scale-110 transition-transform block"></i>
+                            <div class="text-xs font-semibold text-slate-700">Price Calculator</div>
+                        </button>
+                        <button class="p-3 bg-white rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-md transition text-left group">
+                            <i class="fas fa-file-invoice text-blue-500 mb-2 group-hover:scale-110 transition-transform block"></i>
+                            <div class="text-xs font-semibold text-slate-700">Generate Quote</div>
+                        </button>
+                        <button class="p-3 bg-white rounded-xl border border-slate-200 hover:border-green-400 hover:shadow-md transition text-left group">
+                            <i class="fas fa-file-contract text-green-500 mb-2 group-hover:scale-110 transition-transform block"></i>
+                            <div class="text-xs font-semibold text-slate-700">Compare Quotes</div>
+                        </button>
+                        <button class="p-3 bg-white rounded-xl border border-slate-200 hover:border-purple-400 hover:shadow-md transition text-left group">
+                            <i class="fas fa-headset text-purple-500 mb-2 group-hover:scale-110 transition-transform block"></i>
+                            <div class="text-xs font-semibold text-slate-700">Live Support</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Stats Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="stat-card glass-panel rounded-xl p-5 border-l-4 border-blue-600">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 uppercase">Bookings to Date</p>
+                        <h3 class="text-3xl font-bold text-slate-900 mt-1">156</h3>
+                        <p class="text-xs text-green-600 font-semibold mt-1 flex items-center gap-1">
+                            <i class="fas fa-arrow-up"></i> +12% vs last month
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+                        <i class="fas fa-suitcase text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card glass-panel rounded-xl p-5 border-l-4 border-amber-500">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 uppercase">Current Enquiries</p>
+                        <h3 class="text-3xl font-bold text-slate-900 mt-1">43</h3>
+                        <p class="text-xs text-amber-600 font-semibold mt-1 flex items-center gap-1">
+                            <i class="fas fa-clock"></i> 8 hot leads
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600">
+                        <i class="fas fa-comments text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card glass-panel rounded-xl p-5 border-l-4 border-green-600">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 uppercase">Revenue This Month</p>
+                        <h3 class="text-3xl font-bold text-slate-900 mt-1">₹68.5L</h3>
+                        <p class="text-xs text-green-600 font-semibold mt-1 flex items-center gap-1">
+                            <i class="fas fa-arrow-up"></i> +23% vs last month
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600">
+                        <i class="fas fa-rupee-sign text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card glass-panel rounded-xl p-5 border-l-4 border-purple-600">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 uppercase">Conversion Rate</p>
+                        <h3 class="text-3xl font-bold text-slate-900 mt-1">72%</h3>
+                        <p class="text-xs text-purple-600 font-semibold mt-1 flex items-center gap-1">
+                            <i class="fas fa-trophy"></i> Top 5% agent
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600">
+                        <i class="fas fa-chart-line text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Destination Data (same as before)
+        const destinationData = {
+            turkey: {
+                name: 'Turkey',
+                flag: '🇹🇷',
+                flights: {
+                    from: 'Delhi',
+                    via: 'Direct & Via Istanbul',
+                    time: '6h 30m (Direct)',
+                    airlines: 'Turkish, IndiGo, Air India',
+                    price: '₹45,000'
+                },
+                visa: {
+                    type: 'e-Visa',
+                    processing: '24-48 Hours',
+                    fee: '$60 USD',
+                    requirements: 'Single & Multiple entry options available'
+                },
+                weather: {
+                    current: '18°C ☀️',
+                    location: 'Istanbul',
+                    seasons: [
+                        { name: 'Apr-Jun', rating: 90, label: 'Perfect', color: 'green' },
+                        { name: 'Jul-Aug', rating: 60, label: 'Hot', color: 'orange' },
+                        { name: 'Sep-Nov', rating: 85, label: 'Great', color: 'blue' }
+                    ]
+                },
+                stats: {
+                    price: '₹85K',
+                    days: '5-7',
+                    rating: '4.8★'
+                },
+                tips: {
+                    dos: [
+                        'Dress modestly at mosques',
+                        'Try local Turkish tea',
+                        'Bargain at bazaars (40-50%)',
+                        'Carry cash for small shops',
+                        'Tip 10-15% at restaurants'
+                    ],
+                    donts: [
+                        'Drink tap water',
+                        'Show PDA in rural areas',
+                        'Photograph military sites',
+                        'Skip travel insurance',
+                        'Exchange at airport (poor rates)'
+                    ]
+                },
+                resorts: [
+                    {
+                        name: 'Istanbul',
+                        type: 'City',
+                        price: '₹12K/night',
+                        icon: 'fa-mosque',
+                        color: 'from-blue-400 to-purple-500',
+                        tags: ['Hagia Sophia', 'Grand Bazaar'],
+                        badge: 'Must Visit'
+                    },
+                    {
+                        name: 'Cappadocia',
+                        type: 'Adventure',
+                        price: '₹15K/night',
+                        icon: 'fa-hot-air-balloon',
+                        color: 'from-orange-400 to-pink-500',
+                        tags: ['Cave Hotels', 'Balloon Rides'],
+                        badge: 'Hot Air Balloons'
+                    },
+                    {
+                        name: 'Antalya',
+                        type: 'Beach',
+                        price: '₹8K/night',
+                        icon: 'fa-umbrella-beach',
+                        color: 'from-cyan-400 to-blue-500',
+                        tags: ['Turquoise Coast', 'All-inclusive'],
+                        badge: null
+                    },
+                    {
+                        name: 'Pamukkale',
+                        type: 'Natural Wonder',
+                        price: 'Day trip',
+                        icon: 'fa-water',
+                        color: 'from-white to-blue-100',
+                        tags: ['Thermal Pools', 'UNESCO'],
+                        badge: null
+                    }
+                ],
+                media: [
+                    { src: 'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=400', label: 'Istanbul' },
+                    { src: 'https://images.unsplash.com/photo-1527838832700-5059252407fa?w=400', label: 'Cappadocia' },
+                    { src: 'https://images.unsplash.com/photo-1570158268183-d296b2892211?w=400', label: 'Balloons' },
+                    { src: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=400', label: 'Cuisine' },
+                    { src: 'https://images.unsplash.com/photo-1589561454226-796a8aa89b05?w=400', label: 'Antalya' },
+                    { src: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=400', label: 'Bazaar' },
+                    { src: 'https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=400', label: 'Blue Mosque' },
+                    { isVideo: true, label: 'Turkey Highlights' }
+                ]
+            },
+            maldives: {
+                name: 'Maldives',
+                flag: '🇲🇻',
+                flights: {
+                    from: 'Delhi/Mumbai',
+                    via: 'Direct & Via Colombo',
+                    time: '4h 30m (Direct)',
+                    airlines: 'Air India, IndiGo, SriLankan',
+                    price: '₹35,000'
+                },
+                visa: {
+                    type: 'Free on Arrival',
+                    processing: 'Instant',
+                    fee: 'Free (30 days)',
+                    requirements: 'No pre-application needed for Indian passport holders'
+                },
+                weather: {
+                    current: '29°C 🌤️',
+                    location: 'Malé',
+                    seasons: [
+                        { name: 'Nov-Apr', rating: 95, label: 'Perfect', color: 'green' },
+                        { name: 'May-Jul', rating: 70, label: 'Good', color: 'blue' },
+                        { name: 'Aug-Oct', rating: 50, label: 'Rainy', color: 'orange' }
+                    ]
+                },
+                stats: {
+                    price: '₹1.2L',
+                    days: '4-6',
+                    rating: '4.9★'
+                },
+                tips: {
+                    dos: [
+                        'Respect local customs on inhabited islands',
+                        'Bring reef-safe sunscreen',
+                        'Book seaplane transfers early',
+                        'Try underwater restaurant dining',
+                        'Carry USD in small denominations'
+                    ],
+                    donts: [
+                        'Bring alcohol to local islands',
+                        'Touch or step on coral',
+                        'Forget waterproof camera',
+                        'Skip travel insurance',
+                        'Ignore resort dress codes'
+                    ]
+                },
+                resorts: [
+                    {
+                        name: 'Malé Atoll',
+                        type: 'City/Transit',
+                        price: '₹8K/night',
+                        icon: 'fa-city',
+                        color: 'from-blue-400 to-blue-600',
+                        tags: ['Local Culture', 'Markets'],
+                        badge: 'Gateway'
+                    },
+                    {
+                        name: 'Baa Atoll',
+                        type: 'Luxury',
+                        price: '₹45K/night',
+                        icon: 'fa-star',
+                        color: 'from-cyan-400 to-blue-500',
+                        tags: ['Overwater Villas', 'Diving'],
+                        badge: 'UNESCO Biosphere'
+                    },
+                    {
+                        name: 'Ari Atoll',
+                        type: 'Premium',
+                        price: '₹35K/night',
+                        icon: 'fa-fish',
+                        color: 'from-teal-400 to-cyan-500',
+                        tags: ['Whale Sharks', 'Snorkeling'],
+                        badge: 'Best Diving'
+                    },
+                    {
+                        name: 'Vaadhoo Island',
+                        type: 'Experience',
+                        price: '₹25K/night',
+                        icon: 'fa-moon',
+                        color: 'from-indigo-400 to-purple-500',
+                        tags: ['Sea of Stars', 'Bioluminescence'],
+                        badge: 'Magical'
+                    }
+                ],
+                media: [
+                    { src: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=400', label: 'Overwater Villa' },
+                    { src: 'https://images.unsplash.com/photo-1573843981267-be1999ff37cd?w=400', label: 'Lagoon' },
+                    { src: 'https://images.unsplash.com/photo-1540206351-d6465b3ac5c1?w=400', label: 'Sunset' },
+                    { src: 'https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=400', label: 'Marine Life' },
+                    { src: 'https://images.unsplash.com/photo-1589979481223-deb893043163?w=400', label: 'Resort Pool' },
+                    { src: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400', label: 'Spa' },
+                    { src: 'https://images.unsplash.com/photo-1544144433-d50aff500b91?w=400', label: 'Aerial View' },
+                    { isVideo: true, label: 'Maldives Magic' }
+                ]
+            },
+            thailand: {
+                name: 'Thailand',
+                flag: '🇹🇭',
+                flights: {
+                    from: 'Delhi/Mumbai/Chennai',
+                    via: 'Direct',
+                    time: '4h 15m (Direct)',
+                    airlines: 'Thai Airways, IndiGo, Air India',
+                    price: '₹25,000'
+                },
+                visa: {
+                    type: 'Visa on Arrival + e-Visa',
+                    processing: '3-5 Days (e-Visa)',
+                    fee: '₹4,600 (e-Visa) / ฿2,000 (VoA)',
+                    requirements: 'Passport, Photo, Return tickets, Funds proof'
+                },
+                weather: {
+                    current: '32°C ☀️',
+                    location: 'Bangkok',
+                    seasons: [
+                        { name: 'Nov-Feb', rating: 90, label: 'Cool', color: 'green' },
+                        { name: 'Mar-Jun', rating: 75, label: 'Hot', color: 'orange' },
+                        { name: 'Jul-Oct', rating: 60, label: 'Rainy', color: 'blue' }
+                    ]
+                },
+                stats: {
+                    price: '₹45K',
+                    days: '5-7',
+                    rating: '4.7★'
+                },
+                tips: {
+                    dos: [
+                        'Respect the Royal Family',
+                        'Remove shoes at temples',
+                        'Try street food (its safe!)',
+                        'Learn basic Thai phrases',
+                        'Carry cash (many places dont take cards)'
+                    ],
+                    donts: [
+                        'Disrespect Buddha images',
+                        'Touch someones head',
+                        'Point feet at people/temples',
+                        'Discuss the monarchy',
+                        'Get into unlicensed taxis'
+                    ]
+                },
+                resorts: [
+                    {
+                        name: 'Bangkok',
+                        type: 'City',
+                        price: '₹4K/night',
+                        icon: 'fa-city',
+                        color: 'from-purple-400 to-pink-500',
+                        tags: ['Temples', 'Street Food', 'Shopping'],
+                        badge: 'Must Visit'
+                    },
+                    {
+                        name: 'Phuket',
+                        type: 'Beach',
+                        price: '₹6K/night',
+                        icon: 'fa-umbrella-beach',
+                        color: 'from-blue-400 to-cyan-500',
+                        tags: ['Nightlife', 'Island Hopping'],
+                        badge: 'Popular'
+                    },
+                    {
+                        name: 'Chiang Mai',
+                        type: 'Culture',
+                        price: '₹3K/night',
+                        icon: 'fa-temple',
+                        color: 'from-orange-400 to-amber-500',
+                        tags: ['Elephant Sanctuaries', 'Mountains'],
+                        badge: 'Cultural Hub'
+                    },
+                    {
+                        name: 'Krabi',
+                        type: 'Adventure',
+                        price: '₹5K/night',
+                        icon: 'fa-mountain',
+                        color: 'from-green-400 to-teal-500',
+                        tags: ['Rock Climbing', 'Phi Phi Islands'],
+                        badge: 'Adventure'
+                    }
+                ],
+                media: [
+                    { src: 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?w=400', label: 'Bangkok' },
+                    { src: 'https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?w=400', label: 'Phuket' },
+                    { src: 'https://images.unsplash.com/photo-1598935898639-33d885d54861?w=400', label: 'Temple' },
+                    { src: 'https://images.unsplash.com/photo-1553603227-2358aabe821e?w=400', label: 'Street Food' },
+                    { src: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=400', label: 'Beach' },
+                    { src: 'https://images.unsplash.com/photo-1528181304800-259b08848526?w=400', label: 'Chiang Mai' },
+                    { src: 'https://images.unsplash.com/photo-1506665531195-3566af2b4dfa?w=400', label: 'Island' },
+                    { isVideo: true, label: 'Thailand Highlights' }
+                ]
+            },
+            europe: {
+                name: 'Europe',
+                flag: '🇪🇺',
+                flights: {
+                    from: 'Delhi/Mumbai',
+                    via: 'Direct',
+                    time: '8-10h (Direct)',
+                    airlines: 'Lufthansa, Air India, Emirates',
+                    price: '₹55,000'
+                },
+                visa: {
+                    type: 'Schengen Visa',
+                    processing: '15-20 Days',
+                    fee: '€80 + VFS Charges',
+                    requirements: 'Bank statements, ITR, Travel insurance, Hotel bookings'
+                },
+                weather: {
+                    current: '12°C 🌤️',
+                    location: 'Paris',
+                    seasons: [
+                        { name: 'Apr-Jun', rating: 90, label: 'Perfect', color: 'green' },
+                        { name: 'Jul-Aug', rating: 80, label: 'Busy', color: 'orange' },
+                        { name: 'Sep-Oct', rating: 85, label: 'Great', color: 'blue' }
+                    ]
+                },
+                stats: {
+                    price: '₹2.5L',
+                    days: '10-14',
+                    rating: '4.9★'
+                },
+                tips: {
+                    dos: [
+                        'Validate train tickets before boarding',
+                        'Carry universal adapter',
+                        'Book skip-the-line tickets',
+                        'Get Eurail pass for multi-country',
+                        'Try local cuisines in each country'
+                    ],
+                    donts: [
+                        'Forget to validate transport tickets',
+                        'Skip travel insurance (mandatory)',
+                        'Overpack (trains have limited space)',
+                        'Ignore pickpockets in tourist areas',
+                        'Rush - plan rest days'
+                    ]
+                },
+                resorts: [
+                    {
+                        name: 'Paris',
+                        type: 'Romance',
+                        price: '₹15K/night',
+                        icon: 'fa-landmark',
+                        color: 'from-pink-400 to-rose-500',
+                        tags: ['Eiffel Tower', 'Louvre', 'Cafes'],
+                        badge: 'City of Love'
+                    },
+                    {
+                        name: 'Switzerland',
+                        type: 'Scenic',
+                        price: '₹20K/night',
+                        icon: 'fa-mountain',
+                        color: 'from-green-400 to-cyan-500',
+                        tags: ['Alps', 'Trains', 'Lakes'],
+                        badge: 'Premium'
+                    },
+                    {
+                        name: 'Italy',
+                        type: 'Culture',
+                        price: '₹12K/night',
+                        icon: 'fa-monument',
+                        color: 'from-amber-400 to-orange-500',
+                        tags: ['Rome', 'Venice', 'Food'],
+                        badge: 'History'
+                    },
+                    {
+                        name: 'Amsterdam',
+                        type: 'Experience',
+                        price: '₹14K/night',
+                        icon: 'fa-bicycle',
+                        color: 'from-orange-400 to-red-500',
+                        tags: ['Canals', 'Museums', 'Nightlife'],
+                        badge: 'Vibrant'
+                    }
+                ],
+                media: [
+                    { src: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400', label: 'Paris' },
+                    { src: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?w=400', label: 'Switzerland' },
+                    { src: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=400', label: 'Rome' },
+                    { src: 'https://images.unsplash.com/photo-1512470876302-972faa2aa9a2?w=400', label: 'Amsterdam' },
+                    { src: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=400', label: 'London' },
+                    { src: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=400', label: 'Barcelona' },
+                    { src: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=400', label: 'Venice' },
+                    { isVideo: true, label: 'Europe Tour' }
+                ]
+            },
+            dubai: {
+                name: 'Dubai',
+                flag: '🇦🇪',
+                flights: {
+                    from: 'Delhi/Mumbai/Chennai',
+                    via: 'Direct',
+                    time: '3h 30m (Direct)',
+                    airlines: 'Emirates, IndiGo, Air India',
+                    price: '₹28,000'
+                },
+                visa: {
+                    type: 'e-Visa',
+                    processing: '3-5 Days',
+                    fee: '₹6,500 approx',
+                    requirements: 'Passport, Photo, PAN/Aadhaar sometimes required'
+                },
+                weather: {
+                    current: '35°C ☀️',
+                    location: 'Dubai',
+                    seasons: [
+                        { name: 'Nov-Mar', rating: 95, label: 'Perfect', color: 'green' },
+                        { name: 'Apr-May', rating: 70, label: 'Warm', color: 'orange' },
+                        { name: 'Jun-Sep', rating: 40, label: 'Hot', color: 'red' }
+                    ]
+                },
+                stats: {
+                    price: '₹75K',
+                    days: '4-5',
+                    rating: '4.8★'
+                },
+                tips: {
+                    dos: [
+                        'Respect Ramadan rules if visiting then',
+                        'Dress modestly in public areas',
+                        'Book Burj Khalifa tickets in advance',
+                        'Try desert safari experience',
+                        'Use Dubai Metro (clean & efficient)'
+                    ],
+                    donts: [
+                        'Public displays of affection',
+                        'Drink alcohol in public (except licensed venues)',
+                        'Photograph locals without permission',
+                        'Eat/drink on Metro',
+                        'Cross roads without using zebra crossing'
+                    ]
+                },
+                resorts: [
+                    {
+                        name: 'Downtown Dubai',
+                        type: 'Luxury',
+                        price: '₹25K/night',
+                        icon: 'fa-building',
+                        color: 'from-amber-400 to-yellow-500',
+                        tags: ['Burj Khalifa', 'Dubai Mall'],
+                        badge: 'Iconic'
+                    },
+                    {
+                        name: 'Palm Jumeirah',
+                        type: 'Premium',
+                        price: '₹35K/night',
+                        icon: 'fa-water',
+                        color: 'from-cyan-400 to-blue-500',
+                        tags: ['Atlantis', 'Beach Clubs'],
+                        badge: 'Exclusive'
+                    },
+                    {
+                        name: 'Dubai Marina',
+                        type: 'Modern',
+                        price: '₹15K/night',
+                        icon: 'fa-ship',
+                        color: 'from-blue-400 to-indigo-500',
+                        tags: ['Yacht Tours', 'Nightlife'],
+                        badge: 'Trending'
+                    },
+                    {
+                        name: 'Desert Resorts',
+                        type: 'Experience',
+                        price: '₹20K/night',
+                        icon: 'fa-sun',
+                        color: 'from-orange-400 to-amber-500',
+                        tags: ['Al Maha', 'Dune Bashing'],
+                        badge: 'Unique'
+                    }
+                ],
+                media: [
+                    { src: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400', label: 'Burj Khalifa' },
+                    { src: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?w=400', label: 'Dubai Marina' },
+                    { src: 'https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?w=400', label: 'Desert' },
+                    { src: 'https://images.unsplash.com/photo-1546412414-e1885259563a?w=400', label: 'Palm' },
+                    { src: 'https://images.unsplash.com/photo-1526498460520-4c246339dccb?w=400', label: 'Gold Souk' },
+                    { src: 'https://images.unsplash.com/photo-1569949381669-ecf31ae8e613?w=400', label: 'Atlantis' },
+                    { src: 'https://images.unsplash.com/photo-1489516408517-0c0a15662682?w=400', label: 'Skyline' },
+                    { isVideo: true, label: 'Dubai Luxury' }
+                ]
+            },
+            singapore: {
+                name: 'Singapore',
+                flag: '🇸🇬',
+                flights: {
+                    from: 'Delhi/Mumbai/Chennai',
+                    via: 'Direct',
+                    time: '5h 30m (Direct)',
+                    airlines: 'Singapore Airlines, IndiGo, Air India',
+                    price: '₹32,000'
+                },
+                visa: {
+                    type: 'e-Visa',
+                    processing: '3-5 Days',
+                    fee: '₹2,000 approx',
+                    requirements: 'Passport, Photo, Hotel bookings, ITR sometimes'
+                },
+                weather: {
+                    current: '31°C 🌦️',
+                    location: 'Singapore',
+                    seasons: [
+                        { name: 'Feb-Apr', rating: 90, label: 'Great', color: 'green' },
+                        { name: 'May-Jul', rating: 75, label: 'Warm', color: 'orange' },
+                        { name: 'Aug-Oct', rating: 70, label: 'Rainy', color: 'blue' }
+                    ]
+                },
+                stats: {
+                    price: '₹65K',
+                    days: '4-5',
+                    rating: '4.8★'
+                },
+                tips: {
+                    dos: [
+                        'Get Singapore Tourist Pass for transport',
+                        'Try hawker center food (its UNESCO listed!)',
+                        'Book Gardens by the Bay in advance',
+                        'Carry umbrella (sudden rain)',
+                        'Use Grab app for taxis'
+                    ],
+                    donts: [
+                        'Chew gum (illegal)',
+                        'Litter (heavy fines)',
+                        'Smoke in public areas',
+                        'Eat/drink on MRT',
+                        'Jaywalk (strict enforcement)'
+                    ]
+                },
+                resorts: [
+                    {
+                        name: 'Marina Bay',
+                        type: 'Luxury',
+                        price: '₹30K/night',
+                        icon: 'fa-hotel',
+                        color: 'from-purple-400 to-pink-500',
+                        tags: ['Marina Bay Sands', 'Gardens'],
+                        badge: 'Iconic'
+                    },
+                    {
+                        name: 'Sentosa Island',
+                        type: 'Resort',
+                        price: '₹20K/night',
+                        icon: 'fa-island-tropical',
+                        color: 'from-cyan-400 to-blue-500',
+                        tags: ['Universal Studios', 'Beaches'],
+                        badge: 'Family Fun'
+                    },
+                    {
+                        name: 'Orchard Road',
+                        type: 'Shopping',
+                        price: '₹18K/night',
+                        icon: 'fa-shopping-bag',
+                        color: 'from-red-400 to-pink-500',
+                        tags: ['Luxury Malls', 'Food'],
+                        badge: 'Shopper Paradise'
+                    },
+                    {
+                        name: 'Clarke Quay',
+                        type: 'Nightlife',
+                        price: '₹15K/night',
+                        icon: 'fa-cocktail',
+                        color: 'from-indigo-400 to-purple-500',
+                        tags: ['Riverside Dining', 'Bars'],
+                        badge: 'Vibrant'
+                    }
+                ],
+                media: [
+                    { src: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=400', label: 'Marina Bay' },
+                    { src: 'https://images.unsplash.com/photo-1565967511849-76a60a516170?w=400', label: 'Gardens' },
+                    { src: 'https://images.unsplash.com/photo-1555911841-4a8debc83a0d?w=400', label: 'Sentosa' },
+                    { src: 'https://images.unsplash.com/photo-1533632359083-018577724325?w=400', label: 'Food' },
+                    { src: 'https://images.unsplash.com/photo-1506351421178-63b52a2d2562?w=400', label: 'Skyline' },
+                    { src: 'https://images.unsplash.com/photo-1605218427368-35b0f996d0e6?w=400', label: 'Chinatown' },
+                    { src: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=400', label: 'Night View' },
+                    { isVideo: true, label: 'Singapore Guide' }
+                ]
+            }
+        };
+
+        let currentDestination = 'turkey';
+        let selectedMedia = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDestinationContent('turkey');
+            startOfferTimer();
+        });
+
+        // Offer Countdown Timer
+        function startOfferTimer() {
+            const deadline = new Date();
+            deadline.setDate(deadline.getDate() + 5);
+            
+            function updateTimer() {
+                const now = new Date().getTime();
+                const distance = deadline - now;
+                
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                
+                document.getElementById('days').textContent = String(days).padStart(2, '0');
+                document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+                document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+                document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+            }
+            
+            setInterval(updateTimer, 1000);
+            updateTimer();
+        }
+
+        // Share Offer
+        function shareOffer() {
+            const offerText = "🔥 SPECIAL OFFER: Turkey 7N/8D @ ₹65,000 (Save ₹25,000)! Includes flights, 5-star hotels & all meals. Limited time only! Contact me to book.";
+            if (navigator.share) {
+                navigator.share({
+                    title: 'TripFactory Turkey Offer',
+                    text: offerText
+                });
+            } else {
+                navigator.clipboard.writeText(offerText);
+                alert('Offer details copied to clipboard!');
+            }
+        }
+
+        // Download Offer PDF
+        function downloadOfferPDF() {
+            alert('Generating PDF... Download will start shortly.');
+        }
+
+        // Destination Selection
+        function selectDestination(dest, element) {
+            currentDestination = dest;
+            
+            document.querySelectorAll('.destination-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            element.classList.add('active');
+            
+            updateDestinationContent(dest);
+            addTrippyMessage(`I've switched to ${destinationData[dest].name} mode. Ask me anything about this destination!`);
+        }
+
+        function updateDestinationContent(dest) {
+            const data = destinationData[dest];
+            
+            document.getElementById('facts-title').innerHTML = `<i class="fas fa-lightbulb text-amber-500 mr-2"></i>${data.name} - Essential Information`;
+            document.getElementById('resorts-title').textContent = `Popular Resorts & Cities in ${data.name}`;
+            
+            const flightInfo = document.getElementById('flight-info');
+            flightInfo.innerHTML = `
+                <div class="flex justify-between">
+                    <span class="text-slate-600">From ${data.flights.from}:</span>
+                    <span class="font-semibold">${data.flights.via}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-600">Flying Time:</span>
+                    <span class="font-semibold">${data.flights.time}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-600">Airlines:</span>
+                    <span class="font-semibold">${data.flights.airlines}</span>
+                </div>
+                <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+                    <span class="text-slate-600">Starting Price:</span>
+                    <span class="font-bold text-green-600 text-lg price-tag">${data.flights.price}</span>
+                </div>
+            `;
+            
+            document.getElementById('visa-type').textContent = data.visa.type;
+            document.getElementById('visa-processing').textContent = data.visa.processing;
+            document.getElementById('visa-fee').textContent = `${data.visa.requirements} - ${data.visa.fee}`;
+            document.getElementById('visa-payment').textContent = data.visa.fee;
+            
+            document.getElementById('weather-location').textContent = `(${data.weather.location})`;
+            document.getElementById('weather-current').textContent = data.weather.current;
+            
+            const seasonsContainer = document.getElementById('weather-seasons');
+            seasonsContainer.innerHTML = data.weather.seasons.map(season => `
+                <div class="flex items-center gap-2">
+                    <div class="w-16 text-xs font-semibold text-${season.color}-700">${season.name}</div>
+                    <div class="flex-1 h-2 bg-${season.color}-200 rounded-full overflow-hidden">
+                        <div class="h-full bg-${season.color}-500 rounded-full" style="width: ${season.rating}%"></div>
+                    </div>
+                    <span class="text-xs text-${season.color}-700 font-semibold">${season.label}</span>
+                </div>
+            `).join('');
+            
+            document.getElementById('stat-price').textContent = data.stats.price;
+            document.getElementById('stat-days').textContent = data.stats.days;
+            document.getElementById('stat-rating').textContent = data.stats.rating;
+            
+            const tipsContainer = document.getElementById('travel-tips');
+            tipsContainer.innerHTML = `
+                <div class="bg-green-50 rounded-lg p-3">
+                    <div class="font-semibold text-green-700 mb-2 flex items-center gap-1">
+                        <i class="fas fa-check-circle"></i> Do's
+                    </div>
+                    <ul class="space-y-1 text-slate-600">
+                        ${data.tips.dos.map(tip => `<li>• ${tip}</li>`).join('')}
+                    </ul>
+                </div>
+                <div class="bg-red-50 rounded-lg p-3">
+                    <div class="font-semibold text-red-700 mb-2 flex items-center gap-1">
+                        <i class="fas fa-times-circle"></i> Don'ts
+                    </div>
+                    <ul class="space-y-1 text-slate-600">
+                        ${data.tips.donts.map(tip => `<li>• ${tip}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+            
+            const resortsGrid = document.getElementById('resorts-grid');
+            resortsGrid.innerHTML = data.resorts.map(resort => `
+                <div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition cursor-pointer group">
+                    <div class="h-48 bg-gradient-to-br ${resort.color} relative flex items-center justify-center">
+                        <i class="fas ${resort.icon} text-white text-6xl opacity-50"></i>
+                        ${resort.badge ? `
+                            <div class="absolute top-4 right-4 px-3 py-1 bg-white/90 rounded-full text-xs font-bold text-slate-800">
+                                ${resort.badge}
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-lg text-slate-900">${resort.name}</h4>
+                            <span class="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded">${resort.type}</span>
+                        </div>
+                        <div class="flex gap-2 mb-3">
+                            ${resort.tags.map(tag => `<span class="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded">${tag}</span>`).join('')}
+                        </div>
+                        <div class="flex justify-between items-center pt-3 border-t border-slate-100">
+                            <span class="text-sm font-bold text-slate-900">${resort.price}</span>
+                            <button class="text-blue-600 text-sm font-semibold hover:underline">View Details →</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            const mediaGrid = document.getElementById('media-grid');
+            mediaGrid.innerHTML = data.media.map(item => `
+                <div class="media-item relative rounded-xl overflow-hidden aspect-square bg-slate-200 group ${item.isVideo ? 'cursor-pointer' : ''}" onclick="${item.isVideo ? '' : 'selectMedia(this)'}">
+                    ${item.isVideo ? `
+                        <div class="absolute inset-0 bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center">
+                            <i class="fas fa-play-circle text-white text-5xl"></i>
+                        </div>
+                    ` : `
+                        <img src="${item.src}" alt="${item.label}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                            <i class="fas fa-check-circle text-white text-3xl"></i>
+                        </div>
+                    `}
+                    <div class="absolute bottom-2 left-2 right-2">
+                        <span class="px-2 py-1 bg-black/50 text-white text-xs rounded">${item.label}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Tab Switching
+        function switchTab(tabName) {
+            const tabs = ['facts', 'resorts', 'media', 'creator'];
+            tabs.forEach(t => {
+                document.getElementById('content-' + t).classList.add('hidden');
+                document.getElementById('tab-' + t).classList.remove('active');
+                document.getElementById('tab-' + t).classList.add('text-slate-700');
+            });
+            
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            document.getElementById('tab-' + tabName).classList.add('active');
+            document.getElementById('tab-' + tabName).classList.remove('text-slate-700');
+        }
+
+        // Media Selection
+        function selectMedia(element) {
+            element.classList.toggle('selected');
+            
+            if(element.classList.contains('selected')) {
+                selectedMedia.push(element);
+            } else {
+                selectedMedia = selectedMedia.filter(item => item !== element);
+            }
+            
+            updateMediaActions();
+        }
+
+        function updateMediaActions() {
+            const actionsDiv = document.getElementById('media-actions');
+            const countSpan = document.getElementById('selected-count');
+            
+            if(selectedMedia.length > 0) {
+                actionsDiv.classList.remove('hidden');
+                countSpan.textContent = selectedMedia.length;
+            } else {
+                actionsDiv.classList.add('hidden');
+            }
+        }
+
+        // Trippy AI Functions
+        function setLanguage(lang, element) {
+            document.querySelectorAll('.language-selector').forEach(btn => {
+                btn.classList.remove('active', 'bg-white', 'text-blue-900');
+                btn.classList.add('bg-white/20', 'text-white');
+            });
+            element.classList.remove('bg-white/20', 'text-white');
+            element.classList.add('active', 'bg-white', 'text-blue-900');
+            
+            addTrippyMessage(`Language switched to ${lang.toUpperCase()}. I'll respond in your preferred language now.`);
+        }
+
+        function askTrippy(question) {
+            addUserMessage(question);
+            
+            setTimeout(() => {
+                const responses = {
+                    'What is the best time to visit Turkey?': 'The best time to visit Turkey is during spring (April to June) or autumn (September to November). The weather is pleasant, crowds are manageable, and prices are reasonable. Summer (July-August) is hot and crowded, while winter can be cold especially in Cappadocia.',
+                    'How to handle price objections?': 'Here are 3 proven responses:\n\n1. "I understand budget is important. Let me show you the value - this includes flights, 5-star hotels, all transfers, and guided tours. Booking separately would cost 30% more."\n\n2. "We offer EMI options at 0% interest. Would that help?"\n\n3. "This is our peak season rate. If you can travel 2 weeks earlier/later, I can offer 15% off."',
+                    'Compare Turkey vs Dubai': 'Turkey offers more cultural diversity and history at better value (₹85K vs ₹75K for similar packages). Dubai has better luxury infrastructure and shopping. Turkey is ideal for history/culture lovers, Dubai for luxury/modern experiences. Turkey has more varied landscapes (beaches, mountains, cities).',
+                    'Generate a 7 day itinerary': 'Here is a suggested 7-day Turkey itinerary:\n\nDay 1-2: Istanbul (Hagia Sophia, Blue Mosque, Bosphorus cruise)\nDay 3: Istanbul (Grand Bazaar, Spice Market, Galata Tower)\nDay 4: Fly to Cappadocia, afternoon ATV tour\nDay 5: Hot air balloon sunrise, underground city tour\nDay 6: Fly to Antalya, beach relaxation\nDay 7: Departure\n\nWould you like me to customize this further?'
+                };
+                
+                const response = responses[question] || `I found information about "${question}" for ${destinationData[currentDestination].name}. Let me provide you with the latest details...`;
+                addTrippyMessage(response);
+            }, 1000);
+        }
+
+        function sendToTrippy() {
+            const input = document.getElementById('trippy-input');
+            const message = input.value.trim();
+            
+            if(message) {
+                addUserMessage(message);
+                input.value = '';
+                
+                setTimeout(() => {
+                    addTrippyMessage(`I've analyzed your question about "${message}" for ${destinationData[currentDestination].name}. Here's what I found... [AI would generate contextual response based on destination data]`);
+                }, 1500);
+            }
+        }
+
+        function addUserMessage(text) {
+            const chatContainer = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-bubble flex gap-3 flex-row-reverse';
+            messageDiv.innerHTML = `
+                <div class="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-user text-white text-sm"></i>
+                </div>
+                <div class="flex-1 flex flex-col items-end">
+                    <div class="user-bubble p-3 shadow-lg text-white max-w-[80%]">
+                        <p class="text-sm">${text}</p>
+                    </div>
+                    <div class="text-xs text-blue-200 mt-1 mr-1">You</div>
+                </div>
+            `;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function addTrippyMessage(text) {
+            const chatContainer = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-bubble flex gap-3';
+            messageDiv.innerHTML = `
+                <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-robot text-white text-sm"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="ai-bubble p-3 shadow-lg max-w-[90%]">
+                        <p class="text-sm text-slate-700">${text.replace(/\n/g, '<br>')}</p>
+                    </div>
+                    <div class="text-xs text-blue-200 mt-1 ml-1">Trippy • Just now</div>
+                </div>
+            `;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    </script>
+</body>
+</html>

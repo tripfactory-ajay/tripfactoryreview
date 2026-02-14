@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory India - Agent Command Centre</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --tf-navy: #0f2744;
+            --tf-navy-light: #1a3a5c;
+            --tf-magenta: #e91e63;
+            --tf-cyan: #00bcd4;
+            --tf-orange: #ff9800;
+            --tf-green: #4caf50;
+            --tf-purple: #9c27b0;
+            --tf-teal: #009688;
+            --tf-amber: #ffc107;
+            --tf-blue: #2196f3;
+            --tf-red: #f44336;
+            --india-saffron: #ff9932;
+            --india-green: #138808;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Poppins', sans-serif;
+            background: #f5f7fa;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--tf-navy) 0%, var(--tf-navy-light) 100%);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(15, 39, 68, 0.4);
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 80px;
+            z-index: 1000;
+        }
+
+        .logo-main {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-main span {
+            color: var(--tf-cyan);
+        }
+
+        .logo-sub {
+            font-size: 0.9rem;
+            color: var(--india-saffron);
+            margin-left: 0.5rem;
+            font-weight: 600;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            background: white;
+            border-bottom: 2px solid #e8ecf1;
+            padding: 0 2rem;
+            gap: 0.5rem;
+        }
+
+        .tab-btn {
+            padding: 1rem 1.5rem;
+            border: none;
+            background: transparent;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #5a6c7d;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn:hover {
+            color: var(--tf-navy);
+            background: #f8fafc;
+        }
+
+        .tab-btn.active {
+            color: var(--tf-magenta);
+            border-bottom-color: var(--tf-magenta);
+            background: #fce4ec;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.25rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(15, 39, 68, 0.08);
+            border-left: 4px solid var(--tf-cyan);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card.saffron { border-left-color: var(--india-saffron); }
+        .stat-card.green { border-left-color: var(--india-green); }
+        .stat-card.warning { border-left-color: var(--tf-amber); }
+        .stat-card.danger { border-left-color: var(--tf-red); }
+        .stat-card.success { border-left-color: var(--tf-green); }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #5a6c7d;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--tf-navy);
+        }
+
+        .stat-change {
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+
+        .stat-change.positive { color: var(--tf-green); }
+        .stat-change.negative { color: var(--tf-red); }
+
+        .stat-icon {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 2rem;
+            opacity: 0.1;
+            color: var(--tf-navy);
+        }
+
+        /* Two Column Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .dashboard-grid.full {
+            grid-template-columns: 1fr;
+        }
+
+        /* Panel Styling */
+        .panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(15, 39, 68, 0.08);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 1rem 1.25rem;
+            background: linear-gradient(135deg, var(--tf-navy), var(--tf-navy-light));
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-small {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--tf-magenta);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #d81b60;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .btn-success {
+            background: var(--tf-green);
+            color: white;
+        }
+
+        /* India Heatmap */
+        .heatmap-container {
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .heatmap-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .heatmap-stat {
+            text-align: center;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 10px;
+            border: 2px solid #e8ecf1;
+        }
+
+        .heatmap-stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--tf-navy);
+        }
+
+        .heatmap-stat-label {
+            font-size: 0.85rem;
+            color: #5a6c7d;
+            margin-top: 0.25rem;
+        }
+
+        .india-map {
+            width: 100%;
+            height: 500px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #e8ecf1;
+        }
+
+        .map-region {
+            position: absolute;
+            padding: 0.75rem 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .map-region:hover {
+            transform: scale(1.05);
+            border-color: var(--tf-magenta);
+            z-index: 10;
+        }
+
+        .map-region.high { border-left: 4px solid var(--tf-green); }
+        .map-region.medium { border-left: 4px solid var(--tf-amber); }
+        .map-region.low { border-left: 4px solid var(--tf-red); }
+
+        .region-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--tf-navy);
+            margin-bottom: 0.25rem;
+        }
+
+        .region-agents {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--tf-magenta);
+        }
+
+        .region-revenue {
+            font-size: 0.8rem;
+            color: #5a6c7d;
+        }
+
+        /* Position regions on map */
+        .region-north { top: 15%; left: 35%; }
+        .region-west { top: 40%; left: 20%; }
+        .region-south { top: 65%; left: 35%; }
+        .region-east { top: 35%; left: 65%; }
+        .region-central { top: 40%; left: 45%; }
+        .region-northeast { top: 25%; left: 75%; }
+
+        /* Segments Grid */
+        .segments-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            padding: 1.25rem;
+        }
+
+        .segment-card {
+            padding: 1rem;
+            border-radius: 10px;
+            border: 2px solid #e8ecf1;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .segment-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .segment-card.active { background: #e8f5e9; border-color: var(--tf-green); }
+        .segment-card.waking { background: #fff3e0; border-color: var(--tf-amber); }
+        .segment-card.sleeping { background: #ffebee; border-color: var(--tf-red); }
+        .segment-card.dead { background: #f5f5f5; border-color: #9e9e9e; }
+
+        .segment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .segment-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--tf-navy);
+        }
+
+        .segment-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-active { background: var(--tf-green); color: white; }
+        .badge-waking { background: var(--tf-amber); color: #333; }
+        .badge-sleeping { background: var(--tf-red); color: white; }
+        .badge-dead { background: #9e9e9e; color: white; }
+
+        .segment-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .segment-stat {
+            text-align: center;
+        }
+
+        .segment-stat-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--tf-navy);
+        }
+
+        .segment-stat-label {
+            font-size: 0.7rem;
+            color: #5a6c7d;
+        }
+
+        .segment-action {
+            width: 100%;
+            padding: 0.6rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        /* Tiers List */
+        .tiers-list {
+            padding: 1.25rem;
+        }
+
+        .tier-row {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-radius: 10px;
+            border: 2px solid #e8ecf1;
+            transition: all 0.3s ease;
+        }
+
+        .tier-row:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .tier-row.platinum { background: linear-gradient(135deg, #e8eaf6, #c5cae9); border-color: #3f51b5; }
+        .tier-row.gold { background: linear-gradient(135deg, #fff8e1, #ffecb3); border-color: #ffc107; }
+        .tier-row.silver { background: linear-gradient(135deg, #eceff1, #cfd8dc); border-color: #607d8b; }
+        .tier-row.bronze { background: linear-gradient(135deg, #fbe9e7, #ffccbc); border-color: #ff5722; }
+
+        .tier-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin-right: 1rem;
+        }
+
+        .tier-icon.platinum { background: #3f51b5; color: white; }
+        .tier-icon.gold { background: #ffc107; color: #333; }
+        .tier-icon.silver { background: #607d8b; color: white; }
+        .tier-icon.bronze { background: #ff5722; color: white; }
+
+        .tier-info { flex: 1; }
+        .tier-name { font-weight: 600; font-size: 1rem; color: var(--tf-navy); margin-bottom: 0.25rem; }
+        .tier-details { font-size: 0.8rem; color: #5a6c7d; }
+
+        .tier-stats { text-align: right; margin-right: 1rem; }
+        .tier-count { font-size: 1.5rem; font-weight: 700; color: var(--tf-navy); }
+        .tier-revenue { font-size: 0.8rem; color: #5a6c7d; }
+        .tier-commission { font-size: 0.9rem; font-weight: 600; color: var(--tf-green); }
+
+        /* Agent Table */
+        .agent-table-container { padding: 1.25rem; }
+        
+        .table-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-input {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-input:focus { outline: none; border-color: var(--tf-cyan); }
+
+        .agent-table { width: 100%; border-collapse: collapse; }
+        .agent-table th {
+            text-align: left;
+            padding: 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #5a6c7d;
+            text-transform: uppercase;
+            border-bottom: 2px solid #e8ecf1;
+        }
+        .agent-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+        }
+        .agent-table tr:hover { background: #f8fafc; }
+
+        .agent-name { font-weight: 600; color: var(--tf-navy); }
+        .agent-location { font-size: 0.8rem; color: #5a6c7d; }
+
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .trend-indicator { display: flex; align-items: center; gap: 0.25rem; }
+        .trend-up { color: var(--tf-green); }
+        .trend-down { color: var(--tf-red); }
+        .trend-flat { color: #9e9e9e; }
+
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-right: 0.25rem;
+        }
+
+        .action-btn.email { background: #e3f2fd; color: var(--tf-blue); }
+        .action-btn.call { background: #e8f5e9; color: var(--tf-green); }
+        .action-btn.offer { background: #fce4ec; color: var(--tf-magenta); }
+        .action-btn.whatsapp { background: #e8f5e9; color: var(--tf-green); }
+
+        /* Campaign Panel */
+        .campaign-list { padding: 1.25rem; }
+        .campaign-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background: #f8fafc;
+            border-radius: 10px;
+            border-left: 4px solid var(--tf-cyan);
+        }
+        .campaign-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--tf-cyan);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+        }
+        .campaign-info { flex: 1; }
+        .campaign-name { font-weight: 600; color: var(--tf-navy); margin-bottom: 0.25rem; }
+        .campaign-stats { font-size: 0.85rem; color: #5a6c7d; }
+        .campaign-status {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-running { background: #e8f5e9; color: var(--tf-green); }
+        .status-scheduled { background: #fff3e0; color: var(--tf-amber); }
+
+        /* Quick Actions Bar */
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .action-card {
+            flex: 1;
+            min-width: 200px;
+            padding: 1rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .action-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--tf-cyan);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .action-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .action-icon.pink { background: #fce4ec; color: var(--tf-magenta); }
+        .action-icon.blue { background: #e3f2fd; color: var(--tf-blue); }
+        .action-icon.green { background: #e8f5e9; color: var(--tf-green); }
+        .action-icon.orange { background: #fff3e0; color: var(--tf-orange); }
+
+        .action-info { flex: 1; }
+        .action-title { font-weight: 600; color: var(--tf-navy); margin-bottom: 0.25rem; }
+        .action-desc { font-size: 0.8rem; color: #5a6c7d; }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title { font-size: 1.5rem; font-weight: 700; color: var(--tf-navy); }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #5a6c7d;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .stats-bar { grid-template-columns: repeat(3, 1fr); }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .heatmap-stats { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .stats-bar { grid-template-columns: repeat(2, 1fr); }
+            .segments-grid { grid-template-columns: 1fr; }
+            .tab-btn { padding: 0.75rem 1rem; font-size: 0.85rem; }
+            .india-map { height: 400px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo-main">Trip<span>Factory</span> <span class="logo-sub">India</span></div>
+        <div class="user-badge">
+            <i class="fas fa-user-circle"></i>
+            <span>National Sales Manager</span>
+        </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('overview')">
+            <i class="fas fa-chart-pie"></i> Overview
+        </button>
+        <button class="tab-btn" onclick="switchTab('heatmap')">
+            <i class="fas fa-map-marked-alt"></i> India Heatmap
+        </button>
+        <button class="tab-btn" onclick="switchTab('agents')">
+            <i class="fas fa-users"></i> Agent List
+        </button>
+        <button class="tab-btn" onclick="switchTab('campaigns')">
+            <i class="fas fa-bullhorn"></i> Campaigns
+        </button>
+        <button class="tab-btn" onclick="switchTab('actions')">
+            <i class="fas fa-bolt"></i> Quick Actions
+        </button>
+    </div>
+
+    <div class="main-content">
+        
+        <!-- OVERVIEW TAB -->
+        <div id="overview" class="tab-panel active">
+            
+            <!-- Top Stats -->
+            <div class="stats-bar">
+                <div class="stat-card saffron">
+                    <div class="stat-label">Total Agents - India</div>
+                    <div class="stat-value">88,000</div>
+                    <div class="stat-change positive"><i class="fas fa-arrow-up"></i> 12% YoY</div>
+                    <i class="fas fa-users stat-icon"></i>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-label">Active Agents (30 days)</div>
+                    <div class="stat-value">12,400</div>
+                    <div class="stat-change negative">14% of total</div>
+                    <i class="fas fa-check-circle stat-icon"></i>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-label">Monthly Revenue (INR)</div>
+                    <div class="stat-value">₹42.8Cr</div>
+                    <div class="stat-change positive"><i class="fas fa-arrow-up"></i> 8.5% vs last month</div>
+                    <i class="fas fa-rupee-sign stat-icon"></i>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-label">Sleeping Agents</div>
+                    <div class="stat-value">35,200</div>
+                    <div class="stat-change negative">40% need wake-up</div>
+                    <i class="fas fa-bed stat-icon"></i>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-label">Avg Booking Value</div>
+                    <div class="stat-value">₹45,600</div>
+                    <div class="stat-change positive"><i class="fas fa-arrow-up"></i> 5.2%</div>
+                    <i class="fas fa-suitcase stat-icon"></i>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Top City</div>
+                    <div class="stat-value">Mumbai</div>
+                    <div class="stat-change">₹8.2Cr revenue</div>
+                    <i class="fas fa-city stat-icon"></i>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <div class="action-card" onclick="showModal('reactivation')">
+                    <div class="action-icon pink"><i class="fas fa-bolt"></i></div>
+                    <div class="action-info">
+                        <div class="action-title">Mass Reactivation</div>
+                        <div class="action-desc">Launch campaign to 35,200 sleeping agents</div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color: #ccc;"></i>
+                </div>
+                <div class="action-card" onclick="showModal('tierupgrade')">
+                    <div class="action-icon blue"><i class="fas fa-trophy"></i></div>
+                    <div class="action-info">
+                        <div class="action-title">Tier Upgrade Offers</div>
+                        <div class="action-desc">Push 2,400 agents to next commission tier</div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color: #ccc;"></i>
+                </div>
+                <div class="action-card" onclick="showModal('training')">
+                    <div class="action-icon green"><i class="fas fa-graduation-cap"></i></div>
+                    <div class="action-info">
+                        <div class="action-title">Training Blitz</div>
+                        <div class="action-desc">Schedule certification for 8,800 agents</div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color: #ccc;"></i>
+                </div>
+                <div class="action-card" onclick="showModal('festive')">
+                    <div class="action-icon orange"><i class="fas fa-gift"></i></div>
+                    <div class="action-info">
+                        <div class="action-title">Festive Campaign</div>
+                        <div class="action-desc">Diwali special commission boost</div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color: #ccc;"></i>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Activation Segments -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fas fa-bolt"></i> Agent Activation Status</div>
+                        <button class="btn-small btn-primary" onclick="launchReactivation()">Launch Campaign</button>
+                    </div>
+                    <div class="segments-grid">
+                        <div class="segment-card active" onclick="filterTable('active')">
+                            <div class="segment-header">
+                                <span class="segment-name"><i class="fas fa-check-circle"></i> Active</span>
+                                <span class="segment-badge badge-active">14%</span>
+                            </div>
+                            <div class="segment-stats">
+                                <div class="segment-stat">
+                                    <div class="segment-stat-value">12,400</div>
+                                    <div class="segment-stat-label">Agents</div>
+                                </div>
+                                <div class="segment-stat">
+                                    <div class="segment-stat-value">₹42Cr</div>
+                                    <div class="segment-stat-label">Revenue</div>
+                                </div>
+                                <div class="segment-stat">
+                                    <div class="segment-stat-value">30</div>
+                                    <div class="segment-stat-label">Days</div>
+                                </div>
+                            </div>
+                            <button class="segment-action btn-success">View Active</button>
+                        </div>
+
+                        <div class="segment-card waking" onclick="filterTable('waking')">
+                            <div class="segment-header">
+                                <span class="segment-name"><i class="fas fa-sun"></i> Waking</span>
+                                <span class="segment-badge badge-waking">10%</span>
+                            </div>
+                            <div class="segment-stats">
+                                <div class="segment-stat">
+                                    <div class="segment-stat-value">8,800</div>
+                                    <div class="segment-stat-label">Agents</div>
+                                </div>
+                                <div class="segment-stat">
+                                    <div class="segment-stat-value">₹8.9Cr</div>
+                                    <div class="segment-stat-label">Revenue</div>
+                                </div>
+                                <div class="segment-stat">
+                                    <div class="segment-stat-value">90</div>
+                                    <div class="segment-stat-label">Days</div>
+                                </div>
+                            </div>
+                            <button class="segment-action" style="background: var(--tf-amber); color: #333;">Nurture</button>
+                        </div>
+
+                        <div class="segment-card sleeping" onclick="filterTable('sleeping')">
+                            <div class="segment-header">
+                                <span class="segment-name"><i class="fas fa-bed"></i> Sleeping</span>
+                                <span class="segment-badge badge-sleeping">40%</span>
+                            </div>
+                            <div class="segment-stats">
+                                <div class="segment-stat">
+                                    <div class="segment-stat-value">35,200</div>
+                                    <div class="segment-stat-label">Agents</div>
+                                </div>
+                                <div class="segment-stat">
+                                    <div class="segment-stat-value">₹0</div>
+                                    <div class="segment-stat-label">Revenue</div>
+                                </div>
+                                <div class="segment-stat">
+                                    <div class="segment-stat-value">90-365</div>
+                                    <div class="segment-stat-label">Days</div>
+                                </div>
+                            </div>
+                            <button class="segment-action" style="background: var(--tf-red); color: white;">URGENT</button>
+                        </div>
+
+                        <div class="segment-card dead" onclick="filterTable('dead')">
+                            <div class="segment-header">
+                                <span class="segment-name"><i class="fas fa-skull"></i> Dead</span>
+                                <span class="segment-badge badge-dead">36%</span>
+                            </div>
+                            <div class="segment-stats">
+                                <div class="segment-stat">
+                                    <div class="segment-stat-value">31,600</div>
+                                    <div class="segment-stat-label">Agents</div>
+                                </div>
+                                <div class="segment-stat">
+                                    <div class="segment-stat-value">₹0</div>
+                                    <div class="segment-stat-label">Revenue</div>
+                                </div>
+                                <div class="segment-stat">
+                                    <div class="segment-stat-value">365+</div>
+                                    <div class="segment-stat-label">Days</div>
+                                </div>
+                            </div>
+                            <button class="segment-action" style="background: #9e9e9e; color: white;">Purge</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Tiers -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fas fa-trophy"></i> Performance Tiers</div>
+                        <button class="btn-small btn-secondary">This Month</button>
+                    </div>
+                    <div class="tiers-list">
+                        <div class="tier-row platinum">
+                            <div class="tier-icon platinum"><i class="fas fa-crown"></i></div>
+                            <div class="tier-info">
+                                <div class="tier-name">Platinum Elite</div>
+                                <div class="tier-details">₹50L+ monthly • 15% commission • VIP support • Fam trips</div>
+                            </div>
+                            <div class="tier-stats">
+                                <div class="tier-count">880</div>
+                                <div class="tier-revenue">₹52Cr total</div>
+                            </div>
+                            <div class="tier-commission">15%</div>
+                        </div>
+
+                        <div class="tier-row gold">
+                            <div class="tier-icon gold"><i class="fas fa-medal"></i></div>
+                            <div class="tier-info">
+                                <div class="tier-name">Gold Partners</div>
+                                <div class="tier-details">₹20L-₹50L monthly • 12% commission • Priority support</div>
+                            </div>
+                            <div class="tier-stats">
+                                <div class="tier-count">4,400</div>
+                                <div class="tier-revenue">₹128Cr total</div>
+                            </div>
+                            <div class="tier-commission">12%</div>
+                        </div>
+
+                        <div class="tier-row silver">
+                            <div class="tier-icon silver"><i class="fas fa-star"></i></div>
+                            <div class="tier-info">
+                                <div class="tier-name">Silver Agents</div>
+                                <div class="tier-details">₹5L-₹20L monthly • 10% commission • Standard support</div>
+                            </div>
+                            <div class="tier-stats">
+                                <div class="tier-count">17,600</div>
+                                <div class="tier-revenue">₹198Cr total</div>
+                            </div>
+                            <div class="tier-commission">10%</div>
+                        </div>
+
+                        <div class="tier-row bronze">
+                            <div class="tier-icon bronze"><i class="fas fa-certificate"></i></div>
+                            <div class="tier-info">
+                                <div class="tier-name">Bronze Members</div>
+                                <div class="tier-details">₹1L-₹5L monthly • 8% commission • Self-service</div>
+                            </div>
+                            <div class="tier-stats">
+                                <div class="tier-count">26,400</div>
+                                <div class="tier-revenue">₹66Cr total</div>
+                            </div>
+                            <div class="tier-commission">8%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HEATMAP TAB -->
+        <div id="heatmap" class="tab-panel">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-map-marked-alt"></i> India Agent Distribution & Performance</div>
+                    <div class="panel-actions">
+                        <button class="btn-small btn-secondary">By Revenue</button>
+                        <button class="btn-small btn-primary">By Agent Count</button>
+                    </div>
+                </div>
+                
+                <div class="heatmap-container">
+                    <div class="heatmap-stats">
+                        <div class="heatmap-stat">
+                            <div class="heatmap-stat-value">6</div>
+                            <div class="heatmap-stat-label">Regions</div>
+                        </div>
+                        <div class="heatmap-stat">
+                            <div class="heatmap-stat-value">28</div>
+                            <div class="heatmap-stat-label">States/UTs</div>
+                        </div>
+                        <div class="heatmap-stat">
+                            <div class="heatmap-stat-value">42</div>
+                            <div class="heatmap-stat-label">Major Cities</div>
+                        </div>
+                        <div class="heatmap-stat">
+                            <div class="heatmap-stat-value">₹42.8Cr</div>
+                            <div class="heatmap-stat-label">Total Revenue</div>
+                        </div>
+                    </div>
+
+                    <div class="india-map">
+                        <div class="map-region region-north high" onclick="showRegionDetails('North')">
+                            <div class="region-name"><i class="fas fa-map-marker-alt"></i> North</div>
+                            <div class="region-agents">18,500</div>
+                            <div class="region-revenue">₹12.4Cr</div>
+                        </div>
+
+                        <div class="map-region region-west high" onclick="showRegionDetails('West')">
+                            <div class="region-name"><i class="fas fa-map-marker-alt"></i> West</div>
+                            <div class="region-agents">22,400</div>
+                            <div class="region-revenue">₹15.8Cr</div>
+                        </div>
+
+                        <div class="map-region region-south medium" onclick="showRegionDetails('South')">
+                            <div class="region-name"><i class="fas fa-map-marker-alt"></i> South</div>
+                            <div class="region-agents">19,800</div>
+                            <div class="region-revenue">₹8.9Cr</div>
+                        </div>
+
+                        <div class="map-region region-east low" onclick="showRegionDetails('East')">
+                            <div class="region-name"><i class="fas fa-map-marker-alt"></i> East</div>
+                            <div class="region-agents">12,600</div>
+                            <div class="region-revenue">₹3.2Cr</div>
+                        </div>
+
+                        <div class="map-region region-central medium" onclick="showRegionDetails('Central')">
+                            <div class="region-name"><i class="fas fa-map-marker-alt"></i> Central</div>
+                            <div class="region-agents">9,200</div>
+                            <div class="region-revenue">₹2.1Cr</div>
+                        </div>
+
+                        <div class="map-region region-northeast low" onclick="showRegionDetails('North East')">
+                            <div class="region-name"><i class="fas fa-map-marker-alt"></i> North East</div>
+                            <div class="region-agents">5,500</div>
+                            <div class="region-revenue">₹0.4Cr</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Cities Table -->
+            <div class="panel" style="margin-top: 1.5rem;">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-city"></i> Top Performing Cities</div>
+                </div>
+                <div class="agent-table-container">
+                    <table class="agent-table">
+                        <thead>
+                            <tr>
+                                <th>City</th>
+                                <th>Region</th>
+                                <th>Total Agents</th>
+                                <th>Active Agents</th>
+                                <th>Monthly Revenue</th>
+                                <th>Avg Booking</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Mumbai</strong></td>
+                                <td>West</td>
+                                <td>8,500</td>
+                                <td>1,890 (22%)</td>
+                                <td>₹8.2Cr</td>
+                                <td>₹52,400</td>
+                                <td><button class="action-btn call">Visit</button></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Delhi NCR</strong></td>
+                                <td>North</td>
+                                <td>7,200</td>
+                                <td>1,440 (20%)</td>
+                                <td>₹7.8Cr</td>
+                                <td>₹48,900</td>
+                                <td><button class="action-btn call">Visit</button></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Bangalore</strong></td>
+                                <td>South</td>
+                                <td>6,800</td>
+                                <td>1,224 (18%)</td>
+                                <td>₹5.4Cr</td>
+                                <td>₹45,600</td>
+                                <td><button class="action-btn call">Visit</button></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Chennai</strong></td>
+                                <td>South</td>
+                                <td>5,400</td>
+                                <td>810 (15%)</td>
+                                <td>₹3.2Cr</td>
+                                <td>₹42,100</td>
+                                <td><button class="action-btn email">Connect</button></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Pune</strong></td>
+                                <td>West</td>
+                                <td>4,600</td>
+                                <td>690 (15%)</td>
+                                <td>₹2.8Cr</td>
+                                <td>₹44,300</td>
+                                <td><button class="action-btn email">Connect</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- AGENTS TAB -->
+        <div id="agents" class="tab-panel">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-users"></i> Agent Management</div>
+                    <div class="panel-actions">
+                        <button class="btn-small btn-secondary">Export CSV</button>
+                        <button class="btn-small btn-primary">+ Add Agent</button>
+                    </div>
+                </div>
+                
+                <div class="agent-table-container">
+                    <div class="table-filters">
+                        <input type="text" class="filter-input" placeholder="Search agent name, ID, city...">
+                        <select class="filter-input">
+                            <option>All Regions</option>
+                            <option>North</option>
+                            <option>South</option>
+                            <option>East</option>
+                            <option>West</option>
+                            <option>Central</option>
+                            <option>North East</option>
+                        </select>
+                        <select class="filter-input">
+                            <option>All Status</option>
+                            <option>Active</option>
+                            <option>Waking</option>
+                            <option>Sleeping</option>
+                            <option>Dead</option>
+                        </select>
+                        <select class="filter-input">
+                            <option>All Tiers</option>
+                            <option>Platinum</option>
+                            <option>Gold</option>
+                            <option>Silver</option>
+                            <option>Bronze</option>
+                        </select>
+                    </div>
+
+                    <table class="agent-table">
+                        <thead>
+                            <tr>
+                                <th>Agent/Agency</th>
+                                <th>City/Region</th>
+                                <th>Last Booking</th>
+                                <th>Status</th>
+                                <th>Tier</th>
+                                <th>Monthly Revenue</th>
+                                <th>Potential</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="agent-name">Sunshine Travels Pvt Ltd</div>
+                                    <div class="agent-location">Mumbai, Maharashtra</div>
+                                </td>
+                                <td>West</td>
+                                <td>112 days ago</td>
+                                <td><span class="status-badge badge-sleeping">Sleeping</span></td>
+                                <td>Gold</td>
+                                <td>₹0</td>
+                                <td class="trend-indicator trend-up"><i class="fas fa-arrow-up"></i> High (was ₹45L)</td>
+                                <td>
+                                    <button class="action-btn whatsapp" title="WhatsApp"><i class="fab fa-whatsapp"></i></button>
+                                    <button class="action-btn call" title="Call"><i class="fas fa-phone"></i></button>
+                                    <button class="action-btn offer" title="Offer">15%</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="agent-name">Global Getaways</div>
+                                    <div class="agent-location">Delhi NCR</div>
+                                </td>
+                                <td>North</td>
+                                <td>67 days ago</td>
+                                <td><span class="status-badge badge-waking">Waking</span></td>
+                                <td>Silver</td>
+                                <td>₹8.5L</td>
+                                <td class="trend-indicator trend-flat"><i class="fas fa-minus"></i> Medium</td>
+                                <td>
+                                    <button class="action-btn whatsapp" title="WhatsApp"><i class="fab fa-whatsapp"></i></button>
+                                    <button class="action-btn email" title="Email"><i class="fas fa-envelope"></i></button>
+                                    <button class="action-btn offer" title="Offer">Deal</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="agent-name">Chennai Tours & Travels</div>
+                                    <div class="agent-location">Chennai, Tamil Nadu</div>
+                                </td>
+                                <td>South</td>
+                                <td>2 days ago</td>
+                                <td><span class="status-badge badge-active">Active</span></td>
+                                <td>Platinum</td>
+                                <td>₹62L</td>
+                                <td class="trend-indicator trend-up"><i class="fas fa-arrow-up"></i> Excellent</td>
+                                <td>
+                                    <button class="action-btn whatsapp" title="WhatsApp"><i class="fab fa-whatsapp"></i></button>
+                                    <button class="action-btn call" title="Call"><i class="fas fa-phone"></i></button>
+                                    <button class="action-btn offer" title="Reward">VIP</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="agent-name">Kolkata Holiday Makers</div>
+                                    <div class="agent-location">Kolkata, West Bengal</div>
+                                </td>
+                                <td>East</td>
+                                <td>234 days ago</td>
+                                <td><span class="status-badge badge-dead">Dead</span></td>
+                                <td>Bronze</td>
+                                <td>₹0</td>
+                                <td class="trend-indicator trend-down"><i class="fas fa-arrow-down"></i> Low</td>
+                                <td>
+                                    <button class="action-btn call" title="Call"><i class="fas fa-phone"></i></button>
+                                    <button class="action-btn offer" title="Win Back">Win</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="agent-name">Bangalore Luxury Travels</div>
+                                    <div class="agent-location">Bangalore, Karnataka</div>
+                                </td>
+                                <td>South</td>
+                                <td>5 days ago</td>
+                                <td><span class="status-badge badge-active">Active</span></td>
+                                <td>Gold</td>
+                                <td>₹38L</td>
+                                <td class="trend-indicator trend-up"><i class="fas fa-arrow-up"></i> High</td>
+                                <td>
+                                    <button class="action-btn whatsapp" title="WhatsApp"><i class="fab fa-whatsapp"></i></button>
+                                    <button class="action-btn email" title="Email"><i class="fas fa-envelope"></i></button>
+                                    <button class="action-btn offer" title="Upgrade">Upgrade</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- CAMPAIGNS TAB -->
+        <div id="campaigns" class="tab-panel">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-bullhorn"></i> Active & Scheduled Campaigns</div>
+                    <div class="panel-actions">
+                        <button class="btn-small btn-primary">+ New Campaign</button>
+                    </div>
+                </div>
+                
+                <div class="campaign-list">
+                    <div class="campaign-item">
+                        <div class="campaign-icon"><i class="fas fa-bolt"></i></div>
+                        <div class="campaign-info">
+                            <div class="campaign-name">"We Miss You" - Sleeping Agents Reactivation</div>
+                            <div class="campaign-stats">Target: 35,200 agents • 12% open rate • 3% click-through • ₹2.4Cr potential</div>
+                        </div>
+                        <span class="campaign-status status-running">Running</span>
+                    </div>
+
+                    <div class="campaign-item" style="border-left-color: var(--tf-amber);">
+                        <div class="campaign-icon" style="background: var(--tf-amber);"><i class="fas fa-percentage"></i></div>
+                        <div class="campaign-info">
+                            <div class="campaign-name">15% Commission Boost - Waking Agents</div>
+                            <div class="campaign-stats">Target: 8,800 agents • 234 reactivated • ₹4.5Cr revenue generated</div>
+                        </div>
+                        <span class="campaign-status status-running">Running</span>
+                    </div>
+
+                    <div class="campaign-item" style="border-left-color: var(--tf-purple);">
+                        <div class="campaign-icon" style="background: var(--tf-purple);"><i class="fas fa-phone"></i></div>
+                        <div class="campaign-info">
+                            <div class="campaign-name">VIP Personal Calls - Former Platinum (West Region)</div>
+                            <div class="campaign-stats">Target: 450 agents • 89 contacted • 34 reactivated • ₹1.8Cr value</div>
+                        </div>
+                        <span class="campaign-status status-running">Running</span>
+                    </div>
+
+                    <div class="campaign-item" style="border-left-color: var(--tf-green);">
+                        <div class="campaign-icon" style="background: var(--tf-green);"><i class="fas fa-graduation-cap"></i></div>
+                        <div class="campaign-info">
+                            <div class="campaign-name">Product Certification Blitz - South India</div>
+                            <div class="campaign-stats">Target: 2,400 agents • Online + In-person • Chennai, Bangalore, Hyderabad</div>
+                        </div>
+                        <span class="campaign-status status-scheduled">Scheduled</span>
+                    </div>
+
+                    <div class="campaign-item" style="border-left-color: var(--india-saffron);">
+                        <div class="campaign-icon" style="background: var(--india-saffron);"><i class="fas fa-gift"></i></div>
+                        <div class="campaign-info">
+                            <div class="campaign-name">Diwali Dhamaka - Festive Commission Boost</div>
+                            <div class="campaign-stats">Target: All 88,000 agents • 18% commission on festival bookings • Oct 20 - Nov 15</div>
+                        </div>
+                        <span class="campaign-status status-scheduled">Scheduled</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campaign Performance -->
+            <div class="panel" style="margin-top: 1.5rem;">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-chart-line"></i> Campaign Performance History</div>
+                </div>
+                <div class="agent-table-container">
+                    <table class="agent-table">
+                        <thead>
+                            <tr>
+                                <th>Campaign</th>
+                                <th>Period</th>
+                                <th>Target</th>
+                                <th>Reached</th>
+                                <th>Response</th>
+                                <th>Revenue Impact</th>
+                                <th>ROI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Independence Day Special</td>
+                                <td>Aug 2024</td>
+                                <td>25,000</td>
+                                <td>22,400 (90%)</td>
+                                <td>8.5%</td>
+                                <td>₹6.2Cr</td>
+                                <td class="trend-indicator trend-up">4.2x</td>
+                            </tr>
+                            <tr>
+                                <td>Monsoon Magic Offers</td>
+                                <td>Jul 2024</td>
+                                <td>30,000</td>
+                                <td>28,900 (96%)</td>
+                                <td>6.2%</td>
+                                <td>₹4.8Cr</td>
+                                <td class="trend-indicator trend-up">3.8x</td>
+                            </tr>
+                            <tr>
+                                <td>Summer Holiday Push</td>
+                                <td>May-Jun 2024</td>
+                                <td>40,000</td>
+                                <td>38,500 (96%)</td>
+                                <td>12.4%</td>
+                                <td>₹12.4Cr</td>
+                                <td class="trend-indicator trend-up">5.1x</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUICK ACTIONS TAB -->
+        <div id="actions" class="tab-panel">
+            <div class="dashboard-grid full">
+                
+                <!-- Mass Actions -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fas fa-bolt"></i> Mass Actions</div>
+                    </div>
+                    <div class="quick-actions" style="padding: 1.5rem; margin: 0;">
+                        <div class="action-card" onclick="showModal('email')">
+                            <div class="action-icon blue"><i class="fas fa-envelope"></i></div>
+                            <div class="action-info">
+                                <div class="action-title">Bulk Email Campaign</div>
+                                <div class="action-desc">Send targeted emails to segmented agent lists</div>
+                            </div>
+                        </div>
+                        <div class="action-card" onclick="showModal('sms')">
+                            <div class="action-icon green"><i class="fas fa-sms"></i></div>
+                            <div class="action-info">
+                                <div class="action-title">Bulk SMS Blast</div>
+                                <div class="action-desc">Instant reach to 88,000 agents via SMS</div>
+                            </div>
+                        </div>
+                        <div class="action-card" onclick="showModal('whatsapp')">
+                            <div class="action-icon" style="background: #e8f5e9; color: #25d366;"><i class="fab fa-whatsapp"></i></div>
+                            <div class="action-info">
+                                <div class="action-title">WhatsApp Broadcast</div>
+                                <div class="action-desc">Rich media messages to WhatsApp Business</div>
+                            </div>
+                        </div>
+                        <div class="action-card" onclick="showModal('commission')">
+                            <div class="action-icon pink"><i class="fas fa-percentage"></i></div>
+                            <div class="action-info">
+                                <div class="action-title">Commission Override</div>
+                                <div class="action-desc">Temporary boost for specific segments</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Individual Actions -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fas fa-user-cog"></i> Individual Agent Actions</div>
+                    </div>
+                    <div class="agent-table-container">
+                        <div class="table-filters">
+                            <input type="text" class="filter-input" placeholder="Enter Agent ID or Name">
+                            <button class="btn-small btn-primary">Search</button>
+                        </div>
+                        <div style="padding: 2rem; text-align: center; color: #5a6c7d;">
+                            <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                            <p>Search for an agent to view details and perform actions</p>
+                            <p style="font-size: 0.85rem; margin-top: 0.5rem;">Actions: View Profile | Edit Details | Change Tier | Reset Password | Deactivate</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports & Analytics -->
+                <div class="panel" style="margin-top: 1.5rem;">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fas fa-file-alt"></i> Generate Reports</div>
+                    </div>
+                    <div class="quick-actions" style="padding: 1.5rem; margin: 0;">
+                        <div class="action-card">
+                            <div class="action-icon" style="background: #e3f2fd; color: #1976d2;"><i class="fas fa-chart-bar"></i></div>
+                            <div class="action-info">
+                                <div class="action-title">Performance Report</div>
+                                <div class="action-desc">Monthly agent performance by region/tier</div>
+                            </div>
+                        </div>
+                        <div class="action-card">
+                            <div class="action-icon" style="background: #fce4ec; color: #c2185b;"><i class="fas fa-rupee-sign"></i></div>
+                            <div class="action-info">
+                                <div class="action-title">Commission Statement</div>
+                                <div class="action-desc">Payout reports for finance team</div>
+                            </div>
+                        </div>
+                        <div class="action-card">
+                            <div class="action-icon" style="background: #f3e5f5; color: #7b1fa2;"><i class="fas fa-map-marker-alt"></i></div>
+                            <div class="action-info">
+                                <div class="action-title">Geographic Analysis</div>
+                                <div class="action-desc">Agent density and performance by location</div>
+                            </div>
+                        </div>
+                        <div class="action-card">
+                            <div class="action-icon" style="background: #e0f2f1; color: #00796b;"><i class="fas fa-graduation-cap"></i></div>
+                            <div class="action-info">
+                                <div class="action-title">Training Compliance</div>
+                                <div class="action-desc">Certification status across network</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Action</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalBody">
+                <p>Modal content here...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function switchTab(tabId) {
+            // Hide all panels
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            // Remove active from buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected panel
+            document.getElementById(tabId).classList.add('active');
+            
+            // Add active to button
+            event.target.classList.add('active');
+        }
+
+        // Launch reactivation
+        function launchReactivation() {
+            const count = 35200;
+            if(confirm(`Launch email campaign to ${count.toLocaleString()} sleeping agents?`)) {
+                alert('Campaign launched! Emails will be sent in batches over 24 hours.');
+            }
+        }
+
+        // Filter table
+        function filterTable(segment) {
+            switchTab('agents');
+            console.log('Filtering for:', segment);
+        }
+
+        // Show region details
+        function showRegionDetails(region) {
+            alert(`${region} Region Details:\n\nClick on the Agents tab and filter by ${region} to see all agents in this region.`);
+        }
+
+        // Modal functions
+        function showModal(type) {
+            const modal = document.getElementById('modal');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            
+            const titles = {
+                'reactivation': 'Mass Reactivation Campaign',
+                'tierupgrade': 'Tier Upgrade Offers',
+                'training': 'Training Blitz',
+                'festive': 'Festive Campaign',
+                'email': 'Bulk Email Campaign',
+                'sms': 'Bulk SMS Blast',
+                'whatsapp': 'WhatsApp Broadcast',
+                'commission': 'Commission Override'
+            };
+            
+            title.textContent = titles[type] || 'Action';
+            body.innerHTML = `<p>Configure your ${titles[type] || 'action'} here...</p>`;
+            
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target === modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        // Initialize
+        window.onload = function() {
+            console.log('TripFactory India Agent Command Centre loaded');
+            console.log('Priority: 35,200 sleeping agents in India need immediate attention');
+        };
+    </script>
+
+</body>
+</html>

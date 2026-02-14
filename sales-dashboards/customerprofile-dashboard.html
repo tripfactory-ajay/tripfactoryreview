@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory Customer 360</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .timeline-line { position: absolute; left: 24px; top: 0; bottom: 0; width: 2px; background: #e2e8f0; }
+        .timeline-dot { position: relative; z-index: 10; }
+        .journey-card { transition: all 0.3s; }
+        .journey-card:hover { transform: translateX(8px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+<header class="bg-white border-b-2 border-[#0066cc] px-6 py-4 shadow-sm">
+    <div class="flex justify-between items-center max-w-7xl mx-auto">
+        <div class="flex items-center gap-4">
+            <h1 class="text-2xl font-bold text-[#1e3a5f]">Customer 360°</h1>
+            <span class="text-sm text-slate-500">Single Customer View</span>
+        </div>
+        <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-[#0066cc] text-white rounded-lg text-sm font-bold hover:bg-[#1e3a5f]">
+            ← Back to Dashboard
+        </button>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto p-6 grid grid-cols-3 gap-6">
+
+    <!-- Customer Profile Card -->
+    <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+        <div class="flex items-center gap-4 mb-6">
+            <div class="w-20 h-20 bg-gradient-to-br from-[#0066cc] to-[#1e3a5f] rounded-full flex items-center justify-center text-3xl font-bold text-white">
+                SJ
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-[#1e3a5f]">Sarah Johnson</h2>
+                <p class="text-sm text-slate-500">VIP Customer since 2021</p>
+                <span class="inline-block mt-2 px-3 py-1 bg-[#2a9d8f] text-white text-xs font-bold rounded-full">Champion</span>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <div class="flex justify-between py-2 border-b border-slate-100">
+                <span class="text-slate-600">Total Spend</span>
+                <span class="font-bold text-[#1e3a5f]">$24,850</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-slate-100">
+                <span class="text-slate-600">Bookings</span>
+                <span class="font-bold text-[#1e3a5f]">8 trips</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-slate-100">
+                <span class="text-slate-600">Avg. Booking Value</span>
+                <span class="font-bold text-[#1e3a5f]">$3,106</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-slate-100">
+                <span class="text-slate-600">Last Contact</span>
+                <span class="font-bold text-[#2a9d8f]">2 days ago</span>
+            </div>
+            <div class="flex justify-between py-2">
+                <span class="text-slate-600">NPS Score</span>
+                <span class="font-bold text-[#2a9d8f]">9/10</span>
+            </div>
+        </div>
+
+        <div class="mt-6 flex gap-2">
+            <button class="flex-1 py-2 bg-[#0066cc] text-white rounded-lg text-sm font-bold hover:bg-[#1e3a5f]">Send Email</button>
+            <button class="flex-1 py-2 border-2 border-[#0066cc] text-[#0066cc] rounded-lg text-sm font-bold hover:bg-[#f0f9ff]">Call</button>
+        </div>
+    </div>
+
+    <!-- Customer Journey Timeline -->
+    <div class="col-span-2 bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+        <h3 class="text-lg font-bold text-[#1e3a5f] mb-6">Customer Journey</h3>
+        
+        <div class="relative space-y-6">
+            <div class="timeline-line"></div>
+
+            <!-- Journey Step 1 -->
+            <div class="journey-card flex gap-4 relative">
+                <div class="timeline-dot w-12 h-12 bg-[#0066cc] rounded-full flex items-center justify-center text-white font-bold shrink-0">1</div>
+                <div class="flex-1 p-4 bg-[#f0f9ff] rounded-lg border border-[#0066cc]">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-bold text-[#1e3a5f]">First Enquiry</h4>
+                        <span class="text-xs text-slate-500">March 2021</span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-2">Came through Google Ads - "Luxury Maldives Holidays"</p>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-1 bg-white rounded text-xs text-[#0066cc] font-bold">Source: Paid Search</span>
+                        <span class="px-2 py-1 bg-white rounded text-xs text-[#0066cc] font-bold">Device: Mobile</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Journey Step 2 -->
+            <div class="journey-card flex gap-4 relative">
+                <div class="timeline-dot w-12 h-12 bg-[#2a9d8f] rounded-full flex items-center justify-center text-white font-bold shrink-0">2</div>
+                <div class="flex-1 p-4 bg-[#f0fdf4] rounded-lg border border-[#2a9d8f]">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-bold text-[#1e3a5f]">First Booking</h4>
+                        <span class="text-xs text-slate-500">April 2021</span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-2">7 nights at Conrad Maldives - Honeymoon package</p>
+                    <div class="flex justify-between items-center mt-3 p-2 bg-white rounded">
+                        <span class="text-sm font-bold text-[#1e3a5f]">$8,400</span>
+                        <span class="text-xs text-[#2a9d8f] font-bold">✓ Completed</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Journey Step 3 -->
+            <div class="journey-card flex gap-4 relative">
+                <div class="timeline-dot w-12 h-12 bg-[#ffb703] rounded-full flex items-center justify-center text-white font-bold shrink-0">3</div>
+                <div class="flex-1 p-4 bg-[#fef9c3] rounded-lg border border-[#ffb703]">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-bold text-[#1e3a5f]">Repeat Booking</h4>
+                        <span class="text-xs text-slate-500">December 2022</span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-2">Family trip to Dubai - 2 rooms, 5 nights</p>
+                    <div class="flex justify-between items-center mt-3 p-2 bg-white rounded">
+                        <span class="text-sm font-bold text-[#1e3a5f]">$6,200</span>
+                        <span class="text-xs text-[#2a9d8f] font-bold">✓ Completed</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Journey Step 4 - Current -->
+            <div class="journey-card flex gap-4 relative">
+                <div class="timeline-dot w-12 h-12 bg-[#e63946] rounded-full flex items-center justify-center text-white font-bold shrink-0 animate-pulse">4</div>
+                <div class="flex-1 p-4 bg-red-50 rounded-lg border-2 border-[#e63946]">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-bold text-[#1e3a5f]">Current Enquiry</h4>
+                        <span class="text-xs text-[#e63946] font-bold animate-pulse">ACTIVE NOW</span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-2">Looking at Thailand for Summer 2025 - 4 people</p>
+                    <div class="flex gap-2 mt-3">
+                        <button class="px-3 py-1 bg-[#0066cc] text-white rounded text-xs font-bold">Send Quote</button>
+                        <button class="px-3 py-1 border border-[#0066cc] text-[#0066cc] rounded text-xs font-bold">View Details</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preferences & Insights -->
+    <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+        <h3 class="text-lg font-bold text-[#1e3a5f] mb-4">Travel Preferences</h3>
+        <div class="space-y-3">
+            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                <span class="text-2xl">🏖️</span>
+                <div>
+                    <div class="font-bold text-sm text-[#1e3a5f]">Beach Resorts</div>
+                    <div class="text-xs text-slate-500">Preferred 75% of time</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                <span class="text-2xl">✈️</span>
+                <div>
+                    <div class="font-bold text-sm text-[#1e3a5f]">Business Class</div>
+                    <div class="text-xs text-slate-500">Always upgrades</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                <span class="text-2xl">🍽️</span>
+                <div>
+                    <div class="font-bold text-sm text-[#1e3a5f]">Fine Dining</div>
+                    <div class="text-xs text-slate-500">Adds to every trip</div>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="text-lg font-bold text-[#1e3a5f] mt-6 mb-4">AI Insights</h3>
+        <div class="p-4 bg-[#f0f9ff] rounded-lg border border-[#0066cc]">
+            <p class="text-sm text-slate-600 mb-2">💡 <span class="font-bold">Likely to book within 7 days</span></p>
+            <p class="text-xs text-slate-500">Based on historical patterns and current engagement</p>
+        </div>
+        <div class="mt-3 p-4 bg-[#f0fdf4] rounded-lg border border-[#2a9d8f]">
+            <p class="text-sm text-slate-600 mb-2">🎯 <span class="font-bold">Recommended: Thailand Premium</span></p>
+            <p class="text-xs text-slate-500">Matches budget and preferences</p>
+        </div>
+    </div>
+
+    <!-- Upcoming Trips -->
+    <div class="col-span-2 bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+        <h3 class="text-lg font-bold text-[#1e3a5f] mb-4">Trip History & Upcoming</h3>
+        <div class="grid grid-cols-3 gap-4">
+            <div class="p-4 border-2 border-slate-200 rounded-lg hover:border-[#0066cc] transition-all cursor-pointer">
+                <img src="https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=400&h=200&fit=crop" class="w-full h-24 object-cover rounded-lg mb-3" alt="Maldives">
+                <div class="font-bold text-[#1e3a5f] text-sm">Maldives</div>
+                <div class="text-xs text-slate-500 mb-2">April 2021</div>
+                <span class="px-2 py-1 bg-[#2a9d8f] text-white text-xs rounded">Completed</span>
+            </div>
+            <div class="p-4 border-2 border-slate-200 rounded-lg hover:border-[#0066cc] transition-all cursor-pointer">
+                <img src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&h=200&fit=crop" class="w-full h-24 object-cover rounded-lg mb-3" alt="Dubai">
+                <div class="font-bold text-[#1e3a5f] text-sm">Dubai</div>
+                <div class="text-xs text-slate-500 mb-2">December 2022</div>
+                <span class="px-2 py-1 bg-[#2a9d8f] text-white text-xs rounded">Completed</span>
+            </div>
+            <div class="p-4 border-2 border-[#e63946] rounded-lg bg-red-50">
+                <img src="https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?w=400&h=200&fit=crop" class="w-full h-24 object-cover rounded-lg mb-3" alt="Thailand">
+                <div class="font-bold text-[#1e3a5f] text-sm">Thailand</div>
+                <div class="text-xs text-slate-500 mb-2">July 2025 (Enquiry)</div>
+                <span class="px-2 py-1 bg-[#e63946] text-white text-xs rounded animate-pulse">In Progress</span>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+</body>
+</html>

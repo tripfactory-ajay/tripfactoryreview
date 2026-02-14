@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory Journey | From Search to AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            background: #0a0a0a;
+            color: #fafafa;
+            line-height: 1.6;
+        }
+        
+        .font-display {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* IMPROVED COLOR PALETTES */
+        .era-pre2020 { 
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+            color: #ffffff;
+        }
+        
+        .era-2020 { 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            color: #f8fafc;
+        }
+        
+        .era-2022 { 
+            background: linear-gradient(135deg, #881337 0%, #be123c 50%, #e11d48 100%);
+            color: #fff1f2;
+        }
+        
+        .era-2024 { 
+            background: linear-gradient(135deg, #082f49 0%, #0c4a6e 50%, #075985 100%);
+            color: #f0f9ff;
+        }
+        
+        .era-2025 { 
+            background: linear-gradient(135deg, #022c22 0%, #064e3b 50%, #065f46 100%);
+            color: #ecfdf5;
+        }
+        
+        .era-2026 { 
+            background: linear-gradient(135deg, #451a03 0%, #92400e 50%, #b45309 100%);
+            color: #fffbeb;
+        }
+        
+        /* Glass cards */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        }
+        
+        .glass-card-strong {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+        
+        /* ENHANCED ANIMATIONS */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(2deg); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255,255,255,0.3); transform: scale(1); }
+            50% { box-shadow: 0 0 40px rgba(255,255,255,0.6); transform: scale(1.05); }
+        }
+        
+        @keyframes slide-in-left {
+            0% { transform: translateX(-100px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slide-in-right {
+            0% { transform: translateX(100px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes fade-in-up {
+            0% { transform: translateY(30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes rotate-slow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes bounce-subtle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        @keyframes morph {
+            0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+            50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+        }
+        
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .animate-float-slow {
+            animation: float-slow 6s ease-in-out infinite;
+        }
+        
+        .animate-pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        .animate-slide-in-left {
+            animation: slide-in-left 0.8s ease-out forwards;
+        }
+        
+        .animate-slide-in-right {
+            animation: slide-in-right 0.8s ease-out forwards;
+        }
+        
+        .animate-fade-in-up {
+            animation: fade-in-up 0.8s ease-out forwards;
+        }
+        
+        .animate-rotate-slow {
+            animation: rotate-slow 20s linear infinite;
+        }
+        
+        .animate-bounce-subtle {
+            animation: bounce-subtle 2s ease-in-out infinite;
+        }
+        
+        .animate-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+        
+        .animate-morph {
+            animation: morph 8s ease-in-out infinite;
+        }
+        
+        /* Hover animations */
+        .hover-lift {
+            transition: all 0.3s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        
+        .hover-rotate:hover {
+            transform: rotate(5deg) scale(1.05);
+        }
+        
+        /* Timeline connector */
+        .timeline-line {
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+            height: 2px;
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            z-index: 0;
+        }
+        
+        /* Card flip effect */
+        .flip-card {
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 1rem;
+        }
+        
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+        
+        /* Progress indicator */
+        .progress-dot {
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .progress-dot.active {
+            transform: scale(1.5);
+            background: white;
+            box-shadow: 0 0 20px rgba(255,255,255,0.8);
+        }
+        
+        /* Text emphasis */
+        .text-highlight {
+            background: linear-gradient(120deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-weight: 600;
+        }
+        
+        /* Decision callout boxes */
+        .decision-box {
+            border-left: 4px solid currentColor;
+            background: rgba(0,0,0,0.3);
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0 0.75rem 0.75rem 0;
+            transition: all 0.3s ease;
+        }
+        
+        .decision-box:hover {
+            transform: translateX(10px);
+            background: rgba(0,0,0,0.5);
+        }
+        
+        /* Stat cards */
+        .stat-card {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255,255,255,0.5);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        
+        /* Quote styling */
+        .quote-mark {
+            font-size: 4rem;
+            line-height: 1;
+            opacity: 0.3;
+            font-family: Georgia, serif;
+        }
+        
+        /* Custom cursor */
+        .custom-cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s;
+            mix-blend-mode: difference;
+        }
+        
+        .cursor-dot {
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        /* Narrative text styling */
+        .narrative-text {
+            font-size: 1.125rem;
+            line-height: 1.8;
+            color: rgba(255,255,255,0.95);
+        }
+        
+        .narrative-text strong {
+            color: #fff;
+            font-weight: 700;
+        }
+        
+        /* Key decision badge */
+        .decision-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.15);
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255,255,255,0.3);
+            animation: fade-in-up 0.6s ease-out;
+        }
+        
+        /* World map dots animation */
+        @keyframes pulse-dot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.7; }
+        }
+        
+        .world-dot {
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        
+        /* Gradient text animation */
+        .gradient-text-animate {
+            background: linear-gradient(90deg, #fff, #a5b4fc, #fff);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s linear infinite;
+        }
+        
+        /* Stagger animation delays */
+        .stagger-1 { animation-delay: 0.1s; }
+        .stagger-2 { animation-delay: 0.2s; }
+        .stagger-3 { animation-delay: 0.3s; }
+        .stagger-4 { animation-delay: 0.4s; }
+        
+        /* Logo styling */
+        .logo-white {
+            filter: brightness(0) invert(1) drop-shadow(0 0 10px rgba(255,255,255,0.5));
+            transition: all 0.3s ease;
+        }
+        
+        .logo-white:hover {
+            filter: brightness(0) invert(1) drop-shadow(0 0 20px rgba(255,255,255,0.8));
+            transform: scale(1.05);
+        }
+        
+        /* Floating shapes */
+        .floating-shape {
+            position: absolute;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+        
+        /* Scroll reveal */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Custom Cursor -->
+    <div class="custom-cursor hidden md:block" id="cursor"></div>
+    <div class="cursor-dot hidden md:block" id="cursor-dot"></div>
+
+    <!-- Navigation - ENHANCED LOGO -->
+    <nav class="fixed top-0 w-full z-50 glass-card border-b border-white/10 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-4 group cursor-pointer" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+                <!-- WHITE VERSION OF LOGO - BIGGER -->
+                <div class="relative">
+                    <img src="https://kimi-web-img.moonshot.cn/img/mma.prnewswire.com/0dd7b517fac6329b9f482617ccc9caf3f1a11c1f.jpg" 
+                         alt="TripFactory" 
+                         class="h-14 w-auto logo-white rounded-lg">
+                    <div class="absolute inset-0 bg-white/20 blur-xl rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                </div>
+                <div class="hidden sm:block">
+                    <span class="font-display font-bold text-2xl tracking-tight block">TripFactory</span>
+                    <span class="text-xs text-white/60 uppercase tracking-widest">The Journey</span>
+                </div>
+            </div>
+            <div class="hidden md:flex gap-6 text-sm font-medium">
+                <button onclick="scrollToEra('pre2020')" class="hover:text-indigo-300 transition-all hover:scale-110">Genesis</button>
+                <button onclick="scrollToEra('2020')" class="hover:text-slate-300 transition-all hover:scale-110">Pivot</button>
+                <button onclick="scrollToEra('2022')" class="hover:text-rose-300 transition-all hover:scale-110">Scale</button>
+                <button onclick="scrollToEra('2024')" class="hover:text-sky-300 transition-all hover:scale-110">Fundraise</button>
+                <button onclick="scrollToEra('2025')" class="hover:text-emerald-300 transition-all hover:scale-110">AI Era</button>
+                <button onclick="scrollToEra('2026')" class="hover:text-amber-300 transition-all hover:scale-110">Present</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section - ENHANCED ANIMATIONS -->
+    <section class="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900">
+        <!-- Animated background elements -->
+        <div class="absolute inset-0 overflow-hidden">
+            <div class="absolute top-20 left-10 w-72 h-72 bg-indigo-500/30 rounded-full blur-3xl animate-float"></div>
+            <div class="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-float-slow"></div>
+            <div class="absolute top-1/3 right-1/4 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
+            
+            <!-- Floating geometric shapes -->
+            <div class="absolute top-1/4 left-1/4 w-20 h-20 border border-white/10 rounded-full animate-rotate-slow"></div>
+            <div class="absolute bottom-1/3 right-1/3 w-32 h-32 border border-white/5 rounded-lg animate-float-slow" style="animation-delay: 1s;"></div>
+            <div class="absolute top-2/3 left-1/3 w-16 h-16 bg-white/5 rounded-full animate-morph"></div>
+        </div>
+        
+        <!-- Grid overlay -->
+        <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
+        
+        <div class="relative z-10 text-center px-6 max-w-5xl mx-auto">
+            <!-- Animated badge -->
+            <div class="mb-8 inline-block animate-fade-in-up">
+                <span class="px-6 py-3 rounded-full glass-card text-sm font-medium tracking-wider uppercase text-indigo-300 border border-indigo-500/30 animate-pulse-glow">
+                    Interactive Timeline Experience
+                </span>
+            </div>
+            
+            <!-- Main heading with animation -->
+            <h1 class="font-display text-5xl md:text-7xl lg:text-8xl font-bold mb-8 leading-tight animate-fade-in-up stagger-1">
+                <span class="gradient-text-animate">From Search</span><br>
+                <span class="text-white">to Intelligence</span>
+            </h1>
+            
+            <p class="text-xl md:text-2xl text-gray-300 mb-10 max-w-2xl mx-auto font-light leading-relaxed animate-fade-in-up stagger-2">
+                The evolution of TripFactory: A journey from semantic search pioneer to AI-powered travel ecosystem serving 1,000+ employees across 20+ countries
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up stagger-3">
+                <button onclick="startJourney()" class="group relative px-8 py-4 bg-white text-slate-900 rounded-full font-semibold text-lg hover:scale-110 transition-all duration-300 overflow-hidden shadow-2xl hover:shadow-white/25">
+                    <span class="relative z-10 flex items-center gap-2">
+                        Start the Journey
+                        <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                        </svg>
+                    </span>
+                    <div class="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                </button>
+                <button onclick="document.getElementById('overview').scrollIntoView({behavior: 'smooth'})" class="px-8 py-4 glass-card rounded-full font-medium hover:bg-white/10 transition-all hover:scale-105 border border-white/20">
+                    View Overview
+                </button>
+            </div>
+        </div>
+
+        <!-- Enhanced scroll indicator -->
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce-subtle">
+            <div class="flex flex-col items-center gap-2">
+                <span class="text-xs uppercase tracking-widest text-white/50">Scroll</span>
+                <svg class="w-6 h-6 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- Overview Stats - REMOVED $500M VALUATION -->
+    <section id="overview" class="py-20 bg-slate-950 border-y border-white/5">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12 reveal">
+                <h2 class="font-display text-3xl md:text-4xl font-bold mb-4">Global Scale & Impact</h2>
+                <p class="text-gray-400">TripFactory today stands as a major force in global travel technology</p>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-6 mb-12 max-w-4xl mx-auto">
+                <div class="stat-card p-6 rounded-2xl text-center group cursor-pointer hover-lift reveal stagger-1" onclick="createParticles(event)">
+                    <div class="text-4xl md:text-5xl font-display font-bold text-indigo-400 mb-2 group-hover:scale-110 transition-transform">1,000+</div>
+                    <div class="text-sm text-gray-400 uppercase tracking-wider font-medium">Employees Worldwide</div>
+                    <div class="text-xs text-gray-500 mt-1">Across 20+ countries</div>
+                </div>
+                <div class="stat-card p-6 rounded-2xl text-center group cursor-pointer hover-lift reveal stagger-2" onclick="createParticles(event)">
+                    <div class="text-4xl md:text-5xl font-display font-bold text-emerald-400 mb-2 group-hover:scale-110 transition-transform">$500M+</div>
+                    <div class="text-sm text-gray-400 uppercase tracking-wider font-medium">Annual Sales Revenue</div>
+                    <div class="text-xs text-gray-500 mt-1">Run rate 2024-2025</div>
+                </div>
+                <div class="stat-card p-6 rounded-2xl text-center group cursor-pointer hover-lift reveal stagger-3" onclick="createParticles(event)">
+                    <div class="text-4xl md:text-5xl font-display font-bold text-rose-400 mb-2 group-hover:scale-110 transition-transform">20+</div>
+                    <div class="text-sm text-gray-400 uppercase tracking-wider font-medium">Global Offices</div>
+                    <div class="text-xs text-gray-500 mt-1">6 countries & growing</div>
+                </div>
+            </div>
+
+            <!-- Office Locations Visual -->
+            <div class="glass-card-strong p-8 rounded-2xl max-w-4xl mx-auto reveal hover-lift">
+                <h3 class="font-display text-xl font-bold mb-6 text-center">Worldwide Presence</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                    <div class="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group cursor-pointer">
+                        <span class="world-dot w-3 h-3 rounded-full bg-indigo-400 group-hover:scale-150 transition-transform"></span>
+                        <div>
+                            <div class="font-semibold">India (HQ)</div>
+                            <div class="text-gray-400 text-xs">Bangalore, Gurugram</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group cursor-pointer">
+                        <span class="world-dot w-3 h-3 rounded-full bg-emerald-400" style="animation-delay: 0.2s"></span>
+                        <div>
+                            <div class="font-semibold">Singapore</div>
+                            <div class="text-gray-400 text-xs">Regional HQ</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group cursor-pointer">
+                        <span class="world-dot w-3 h-3 rounded-full bg-rose-400" style="animation-delay: 0.4s"></span>
+                        <div>
+                            <div class="font-semibold">Dubai</div>
+                            <div class="text-gray-400 text-xs">Middle East Hub</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group cursor-pointer">
+                        <span class="world-dot w-3 h-3 rounded-full bg-amber-400" style="animation-delay: 0.6s"></span>
+                        <div>
+                            <div class="font-semibold">Thailand</div>
+                            <div class="text-gray-400 text-xs">Chonburi Operations</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group cursor-pointer">
+                        <span class="world-dot w-3 h-3 rounded-full bg-cyan-400" style="animation-delay: 0.8s"></span>
+                        <div>
+                            <div class="font-semibold">Bali</div>
+                            <div class="text-gray-400 text-xs">Indonesia Operations</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group cursor-pointer">
+                        <span class="world-dot w-3 h-3 rounded-full bg-purple-400" style="animation-delay: 1s"></span>
+                        <div>
+                            <div class="font-semibold">Philippines</div>
+                            <div class="text-gray-400 text-xs">Manila Support Center</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Timeline Container -->
+    <div class="relative">
+        
+        <!-- Progress Bar -->
+        <div class="fixed right-6 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col gap-4">
+            <div class="progress-dot w-3 h-3 rounded-full cursor-pointer hover:scale-125 transition-transform" data-era="pre2020" onclick="scrollToEra('pre2020')"></div>
+            <div class="progress-dot w-3 h-3 rounded-full cursor-pointer hover:scale-125 transition-transform" data-era="2020" onclick="scrollToEra('2020')"></div>
+            <div class="progress-dot w-3 h-3 rounded-full cursor-pointer hover:scale-125 transition-transform" data-era="2022" onclick="scrollToEra('2022')"></div>
+            <div class="progress-dot w-3 h-3 rounded-full cursor-pointer hover:scale-125 transition-transform" data-era="2024" onclick="scrollToEra('2024')"></div>
+            <div class="progress-dot w-3 h-3 rounded-full cursor-pointer hover:scale-125 transition-transform" data-era="2025" onclick="scrollToEra('2025')"></div>
+            <div class="progress-dot w-3 h-3 rounded-full cursor-pointer hover:scale-125 transition-transform" data-era="2026" onclick="scrollToEra('2026')"></div>
+        </div>
+
+        <!-- Era: Pre-2020 (Genesis) -->
+        <section id="pre2020" class="era-section min-h-screen relative flex items-center py-20 era-pre2020 transition-all duration-1000">
+            <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+            
+            <!-- Floating elements -->
+            <div class="absolute top-20 right-20 w-32 h-32 bg-indigo-500/20 rounded-full blur-2xl animate-float"></div>
+            <div class="absolute bottom-20 left-20 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl animate-float-slow"></div>
+            
+            <div class="max-w-7xl mx-auto px-6 w-full relative z-10">
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <div class="space-y-6 reveal">
+                        <div class="decision-badge">
+                            <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                            <span>Genesis Era • 2013-2019</span>
+                        </div>
+                        <h2 class="font-display text-5xl md:text-6xl font-bold leading-tight">
+                            The Semantic<br>Travel Pioneer
+                        </h2>
+                        
+                        <div class="narrative-text space-y-4">
+                            <p>
+                                Before ChatGPT existed, <strong>TripFactory made a bold bet:</strong> that travelers didn't want to browse through endless dropdown menus and filters. They wanted to ask for "half day in Rome" or "hotels near central Rome" and get intelligent, conversational responses.
+                            </p>
+                            <p>
+                                This was the <span class="text-highlight">first semantic travel search engine</span> with a travel-specific interface—built entirely in-house with proprietary technology. While others focused on transactions, TripFactory focused on understanding intent.
+                            </p>
+                        </div>
+
+                        <div class="decision-box border-indigo-400 reveal stagger-1">
+                            <h4 class="font-bold text-lg mb-2 flex items-center gap-2">
+                                <span>🎯</span> Key Strategic Decision
+                            </h4>
+                            <p class="text-sm opacity-90">
+                                <strong>Move from Pure Search to Curation:</strong> Recognizing that search alone wasn't enough, the team pivoted to sourcing and curating packages from multiple DMCs (Destination Management Companies), building a consumer-facing vacation platform underpinned by a massive content engine.
+                            </p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mt-8">
+                            <div class="glass-card-strong p-4 rounded-xl hover-lift reveal stagger-2">
+                                <div class="text-3xl mb-2 animate-bounce-subtle">🔍</div>
+                                <div class="font-semibold text-white">Semantic Search</div>
+                                <div class="text-sm text-indigo-200">Natural language processing before it was mainstream</div>
+                            </div>
+                            <div class="glass-card-strong p-4 rounded-xl hover-lift reveal stagger-3">
+                                <div class="text-3xl mb-2 animate-bounce-subtle" style="animation-delay: 0.5s">🌍</div>
+                                <div class="font-semibold text-white">Global Content</div>
+                                <div class="text-sm text-indigo-200">Billions of structured data points created</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flip-card h-[450px] w-full reveal hover-lift" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front glass-card-strong p-8 flex flex-col justify-center items-center text-center">
+                                <div class="w-24 h-24 mb-6 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center text-4xl shadow-2xl animate-pulse-glow">
+                                    🚀
+                                </div>
+                                <h3 class="text-2xl font-bold mb-2 text-white">The Foundation</h3>
+                                <p class="text-indigo-100">Building the travel-first search engine to capture queries happening on generic search platforms</p>
+                                <div class="mt-6 text-sm text-indigo-300 animate-bounce">Click to reveal impact →</div>
+                            </div>
+                            <div class="flip-card-back glass-card-strong p-8 flex flex-col justify-center bg-gradient-to-br from-indigo-900/80 to-purple-900/80">
+                                <h3 class="text-2xl font-bold mb-4 text-white">Early Traction</h3>
+                                <ul class="space-y-3 text-left text-indigo-100">
+                                    <li class="flex items-start gap-3">
+                                        <span class="text-green-400 mt-1 text-xl">✓</span>
+                                        <span>Traffic from <strong>190+ countries</strong> organically</span>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <span class="text-green-400 mt-1 text-xl">✓</span>
+                                        <span>First-mover advantage in conversational travel AI</span>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <span class="text-green-400 mt-1 text-xl">✓</span>
+                                        <span>Built proprietary content structuring technology</span>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <span class="text-green-400 mt-1 text-xl">✓</span>
+                                        <span>Established foundation for B2B pivot during COVID</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Era: 2020 (The Pivot) -->
+        <section id="2020" class="era-section min-h-screen relative flex items-center py-20 era-2020 transition-all duration-1000">
+            <div class="absolute inset-0 bg-black/40"></div>
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-red-900/20 via-transparent to-transparent"></div>
+            
+            <!-- Animated storm elements -->
+            <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-gray-500/10 rounded-full blur-3xl animate-pulse"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-red-500/10 rounded-full blur-3xl animate-pulse" style="animation-delay: 0.5s;"></div>
+            
+            <div class="max-w-7xl mx-auto px-6 w-full relative z-10">
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <div class="order-2 lg:order-1 reveal">
+                        <div class="glass-card-strong p-8 rounded-2xl border-l-4 border-red-500 relative overflow-hidden group hover-lift">
+                            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                </svg>
+                            </div>
+                            
+                            <div class="decision-badge bg-red-500/20 border-red-400/50 mb-4">
+                                <span class="w-2 h-2 rounded-full bg-red-400 animate-pulse"></span>
+                                <span>Crisis Response Decision</span>
+                            </div>
+                            
+                            <h3 class="text-3xl font-bold mb-4 font-display text-white">The COVID Pivot</h3>
+                            
+                            <div class="narrative-text space-y-3 text-gray-200 mb-6">
+                                <p>
+                                    When global travel halted in March 2020, TripFactory faced an existential threat. The B2C business collapsed overnight. Rather than retreat, leadership made a <strong>counter-intuitive strategic decision</strong>.
+                                </p>
+                            </div>
+
+                            <div class="decision-box border-red-400 bg-red-950/30">
+                                <h4 class="font-bold text-lg mb-2 text-white">The Insight</h4>
+                                <p class="text-sm text-gray-200">
+                                    "The itinerary creation and complexity problem exists for travel agents too—and they still need to plan for the future even when travelers aren't booking."
+                                </p>
+                            </div>
+                            
+                            <div class="flex items-center gap-4 mt-6">
+                                <div class="flex -space-x-2">
+                                    <div class="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center text-sm font-bold border-2 border-slate-800 animate-slide-in-left">B2C</div>
+                                    <div class="w-10 h-10 rounded-full bg-slate-500 flex items-center justify-center text-sm font-bold border-2 border-slate-800">→</div>
+                                    <div class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-sm font-bold border-2 border-slate-800 animate-slide-in-right">B2B</div>
+                                </div>
+                                <span class="text-sm font-medium text-gray-300">Birth of Nexus DMC Platform</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="order-1 lg:order-2 space-y-6 reveal">
+                        <div class="decision-badge bg-slate-700/50 border-slate-500">
+                            <span class="w-2 h-2 rounded-full bg-red-400 animate-pulse"></span>
+                            <span>2020 • Adapt or Perish</span>
+                        </div>
+                        <h2 class="font-display text-5xl md:text-6xl font-bold leading-tight text-white">
+                            Survival Through<br>Reinvention
+                        </h2>
+                        
+                        <div class="space-y-4 narrative-text text-gray-300">
+                            <p class="flex items-start gap-3">
+                                <span class="text-red-400 font-bold text-xl font-display">01</span>
+                                <span><strong>Immediate Action:</strong> Recognized that the technology built for consumers could solve the same complexity problems for travel agents</span>
+                            </p>
+                            <p class="flex items-start gap-3">
+                                <span class="text-red-400 font-bold text-xl font-display">02</span>
+                                <span><strong>Product Pivot:</strong> Repurposed the itinerary engine as a B2B tool—TF Nexus was born in the middle of the pandemic</span>
+                            </p>
+                            <p class="flex items-start gap-3">
+                                <span class="text-red-400 font-bold text-xl font-display">03</span>
+                                <span><strong>Strategic Insight:</strong> The engine could help the entire ecosystem, not just direct consumers—opening a larger market</span>
+                            </p>
+                        </div>
+
+                        <div class="glass-card-strong p-6 rounded-xl mt-6 hover-lift">
+                            <div class="quote-mark text-slate-600 -mb-6">"</div>
+                            <p class="text-lg italic text-gray-200 relative z-10 pl-4">
+                                We realized our technology was too valuable to keep to ourselves. If we could help agents survive the crisis, we'd build loyalty for decades.
+                            </p>
+                            <div class="mt-3 text-sm text-gray-400 pl-4">— Leadership Team, 2020</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Era: 2022 (Scale) -->
+        <section id="2022" class="era-section min-h-screen relative flex items-center py-20 era-2022 transition-all duration-1000">
+            <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z\' fill=\'%23ffffff\' fill-opacity=\'0.05\' fill-rule=\'evenodd\'/%3E%3C/svg%3E')]"></div>
+            
+            <!-- Floating growth elements -->
+            <div class="absolute top-20 left-10 w-40 h-40 bg-rose-500/20 rounded-full blur-3xl animate-float"></div>
+            <div class="absolute bottom-20 right-10 w-56 h-56 bg-pink-500/20 rounded-full blur-3xl animate-float-slow"></div>
+            
+            <div class="max-w-7xl mx-auto px-6 w-full relative z-10">
+                <div class="text-center mb-16 reveal">
+                    <div class="decision-badge bg-rose-500/20 border-rose-400/50 mx-auto mb-6">
+                        <span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
+                        <span>2022 • Travel Reopens</span>
+                    </div>
+                    <h2 class="font-display text-5xl md:text-6xl font-bold mb-4 text-white">The Great Expansion</h2>
+                    <p class="text-xl text-rose-100 max-w-3xl mx-auto">Markets reopened. TripFactory leaned aggressively into B2B and discovered remarkable agent stickiness.</p>
+                </div>
+
+                <div class="decision-box border-rose-400 bg-rose-950/20 max-w-4xl mx-auto mb-12 reveal">
+                    <h4 class="font-bold text-xl mb-3 text-white flex items-center gap-2">
+                        <span>📈</span> Strategic Decision: Double Down on B2B
+                    </h4>
+                    <p class="text-rose-100 narrative-text">
+                        As markets reopened, leadership made the decisive call to prioritize B2B scaling over rebuilding B2C. The hypothesis: agents who experienced the platform's efficiency would become permanent partners. This proved correct—once agents onboarded, they stayed.
+                    </p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8 mb-12">
+                    <div class="glass-card-strong p-8 rounded-2xl text-center group hover-lift reveal stagger-1">
+                        <div class="text-6xl mb-4 group-hover:scale-110 transition-transform animate-bounce-subtle">🤝</div>
+                        <h3 class="text-xl font-bold mb-2 text-white">Mass Onboarding</h3>
+                        <p class="text-rose-200 text-sm">Aggressive agent acquisition across reopening markets</p>
+                    </div>
+                    
+                    <div class="glass-card-strong p-8 rounded-2xl text-center group hover-lift reveal stagger-2 border-2 border-rose-400/50 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-rose-500/20 to-pink-500/20"></div>
+                        <div class="relative z-10">
+                            <div class="text-6xl mb-4 group-hover:scale-110 transition-transform animate-pulse-glow">📊</div>
+                            <div class="text-6xl font-bold text-rose-300 mb-2 font-display">88%</div>
+                            <h3 class="text-xl font-bold mb-2 text-white">Retention Rate</h3>
+                            <p class="text-rose-200 text-sm">Of onboarded agents stayed after experiencing 2-minute itinerary generation</p>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card-strong p-8 rounded-2xl text-center group hover-lift reveal stagger-3">
+                        <div class="text-6xl mb-4 group-hover:scale-110 transition-transform animate-bounce-subtle" style="animation-delay: 1s">🏗️</div>
+                        <h3 class="text-xl font-bold mb-2 text-white">Infrastructure Build</h3>
+                        <p class="text-rose-200 text-sm">Started building serious ground infrastructure and DMC capabilities</p>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                    <div class="glass-card-strong p-6 rounded-xl flex items-center gap-4 hover-lift reveal stagger-1">
+                        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-2xl flex-shrink-0 animate-float">✈️</div>
+                        <div>
+                            <div class="font-bold text-lg text-white">Strategic Acquisition</div>
+                            <div class="text-rose-200 text-sm"><strong>GoFlySmart:</strong> Strengthening air and buying capabilities</div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card-strong p-6 rounded-xl flex items-center gap-4 hover-lift reveal stagger-2">
+                        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-2xl flex-shrink-0 animate-float" style="animation-delay: 0.5s">⚠️</div>
+                        <div>
+                            <div class="font-bold text-lg text-white">Key Learning</div>
+                            <div class="text-rose-200 text-sm">Many available DMCs were "half-baked"—highlighting need for operational control</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Era: 2024 (Fundraise & Focus) - REMOVED VALUATION -->
+        <section id="2024" class="era-section min-h-screen relative flex items-center py-20 era-2024 transition-all duration-1000">
+            <!-- Animated background -->
+            <div class="absolute top-0 right-0 w-96 h-96 bg-sky-500/20 rounded-full blur-3xl animate-float"></div>
+            <div class="absolute bottom-0 left-0 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl animate-float-slow"></div>
+            
+            <div class="max-w-7xl mx-auto px-6 w-full relative z-10">
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <div class="space-y-6 reveal">
+                        <div class="decision-badge bg-sky-500/20 border-sky-400/50">
+                            <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+                            <span>2024 • Major Inflection Point</span>
+                        </div>
+                        <h2 class="font-display text-5xl md:text-6xl font-bold leading-tight text-white">
+                            $50M & The<br>Ground Game
+                        </h2>
+                        
+                        <div class="narrative-text space-y-4 text-sky-100">
+                            <p>
+                                In October 2024, TripFactory closed a <strong>$50 million Series A</strong> from HNL Group and international investors including Mohandas Pai and Vani Kola. But this wasn't just about capital—it was about strategic intent.
+                            </p>
+                            <p>
+                                The funding came with a clear mandate: <span class="text-highlight">own the ground experience</span> through DMCs and infrastructure, not just aggregate others' inventory.
+                            </p>
+                        </div>
+
+                        <div class="decision-box border-sky-400 bg-sky-950/30 reveal">
+                            <h4 class="font-bold text-lg mb-2 text-white flex items-center gap-2">
+                                <span>🎯</span> The Strategic Pivot Decision
+                            </h4>
+                            <p class="text-sky-100 text-sm mb-3">
+                                <strong>B2C → B2B Focus:</strong> Leadership recognized that going global through agent partnerships (B2B) was faster and more capital-efficient than rebuilding direct consumer markets. The decision: consolidate destinations first, consumer markets later.
+                            </p>
+                            <div class="flex gap-2 flex-wrap">
+                                <span class="px-3 py-1 rounded-full bg-sky-500/20 text-xs border border-sky-400/30">Europe Priority</span>
+                                <span class="px-3 py-1 rounded-full bg-sky-500/20 text-xs border border-sky-400/30">Dubai Hub</span>
+                                <span class="px-3 py-1 rounded-full bg-sky-500/20 text-xs border border-sky-400/30">Australia Entry</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 mt-6">
+                            <div class="flex items-center gap-3 glass-card-strong p-4 rounded-lg hover-lift reveal stagger-1">
+                                <span class="text-2xl">👥</span>
+                                <div>
+                                    <span class="font-medium text-white">Leadership Restructure:</span>
+                                    <span class="text-sky-200 text-sm ml-2">Lalita (CEO India), Seema (DMC Guru), Sachin (Commercial), Priscilla (Process)</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 glass-card-strong p-4 rounded-lg hover-lift reveal stagger-2">
+                                <span class="text-2xl">🧹</span>
+                                <div>
+                                    <span class="font-medium text-white">Operational Cleanup:</span>
+                                    <span class="text-sky-200 text-sm ml-2">Hard decisions on legacy leadership no longer fit for next growth phase</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="relative reveal">
+                        <div class="glass-card-strong p-8 rounded-3xl relative overflow-hidden border border-sky-400/30 hover-lift">
+                            <div class="absolute inset-0 bg-gradient-to-br from-sky-500/10 to-blue-500/10"></div>
+                            <div class="relative z-10 text-center">
+                                <div class="text-7xl font-bold font-display mb-2 bg-clip-text text-transparent bg-gradient-to-r from-sky-300 to-blue-300 animate-pulse-glow">$50M</div>
+                                <div class="text-lg text-sky-200 mb-6">Series A Funding</div>
+                                
+                                <div class="flex justify-center gap-3 mb-6 flex-wrap">
+                                    <div class="px-4 py-2 rounded-full bg-white/10 text-sm border border-white/20 hover:bg-white/20 transition-colors cursor-pointer">HNL Group</div>
+                                    <div class="px-4 py-2 rounded-full bg-white/10 text-sm border border-white/20 hover:bg-white/20 transition-colors cursor-pointer">Mohandas Pai</div>
+                                    <div class="px-4 py-2 rounded-full bg-white/10 text-sm border border-white/20 hover:bg-white/20 transition-colors cursor-pointer">Vani Kola</div>
+                                </div>
+                                
+                                <div class="grid grid-cols-3 gap-4 text-center border-t border-white/10 pt-6">
+                                    <div class="p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group cursor-pointer">
+                                        <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">🏛️</div>
+                                        <div class="text-xs text-sky-200 font-medium">Europe</div>
+                                        <div class="text-[10px] text-sky-300/70">1 in 2 global passengers</div>
+                                    </div>
+                                    <div class="p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group cursor-pointer">
+                                        <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">🏜️</div>
+                                        <div class="text-xs text-sky-200 font-medium">Dubai</div>
+                                        <div class="text-[10px] text-sky-300/70">Visa & logistics hub</div>
+                                    </div>
+                                    <div class="p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group cursor-pointer">
+                                        <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">🦘</div>
+                                        <div class="text-xs text-sky-200 font-medium">Australia</div>
+                                        <div class="text-[10px] text-sky-300/70">US market gateway</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Removed valuation badge -->
+                        <div class="absolute -bottom-4 -left-4 glass-card-strong px-4 py-2 rounded-full text-sm font-medium animate-float border border-sky-400/30 text-sky-200">
+                            110+ Countries Served
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Era: 2025 (AI Revolution) -->
+        <section id="2025" class="era-section min-h-screen relative flex items-center py-20 era-2025 transition-all duration-1000 overflow-hidden">
+            <!-- Neural network background -->
+            <div class="absolute inset-0">
+                <svg class="w-full h-full opacity-10" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <defs>
+                        <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                            <circle cx="5" cy="5" r="0.5" fill="white"/>
+                        </pattern>
+                    </defs>
+                    <rect width="100" height="100" fill="url(#grid)"/>
+                </svg>
+            </div>
+            
+            <!-- Animated neural nodes -->
+            <div class="absolute top-1/4 left-1/4 w-32 h-32 bg-emerald-500/20 rounded-full blur-2xl animate-pulse"></div>
+            <div class="absolute bottom-1/3 right-1/4 w-48 h-48 bg-teal-500/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+            <div class="absolute top-2/3 left-1/3 w-24 h-24 bg-green-500/20 rounded-full blur-xl animate-pulse" style="animation-delay: 0.5s;"></div>
+            
+            <div class="max-w-7xl mx-auto px-6 w-full relative z-10">
+                <div class="text-center mb-12 reveal">
+                    <div class="decision-badge bg-emerald-500/20 border-emerald-400/50 mx-auto mb-6">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Feb-March 2025 • AI Pivot</span>
+                    </div>
+                    <h2 class="font-display text-5xl md:text-7xl font-bold mb-6 text-white">
+                        The AI Revolution
+                    </h2>
+                    <p class="text-xl text-emerald-100 max-w-3xl mx-auto">
+                        "If anyone was going to disrupt our business with AI, it should be us."
+                    </p>
+                </div>
+
+                <div class="decision-box border-emerald-400 bg-emerald-950/40 max-w-4xl mx-auto mb-12 reveal">
+                    <h4 class="font-bold text-2xl mb-3 text-white flex items-center gap-3">
+                        <span>⚡</span> The All-In Decision
+                    </h4>
+                    <p class="text-emerald-100 narrative-text mb-4">
+                        In February 2025, TripFactory made its most consequential strategic decision: <strong>halt traditional investments that AI could obsolete</strong> and redirect all enterprise energy into building proprietary AI capabilities. This wasn't incremental adoption—it was existential transformation.
+                    </p>
+                    <div class="grid md:grid-cols-2 gap-4 text-sm">
+                        <div class="flex items-start gap-2">
+                            <span class="text-emerald-400 font-bold">→</span>
+                            <span class="text-emerald-200">Brakes on traditional tech investments</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-emerald-400 font-bold">→</span>
+                            <span class="text-emerald-200">Massive technical talent acquisition</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-emerald-400 font-bold">→</span>
+                            <span class="text-emerald-200">GPT used for reasoning, not core logic</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-emerald-400 font-bold">→</span>
+                            <span class="text-emerald-200">Domain intelligence kept proprietary</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="glass-card-strong p-6 rounded-2xl hover-lift transition-transform group border border-emerald-400/20 reveal stagger-1">
+                        <div class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center mb-4 text-2xl group-hover:rotate-12 transition-transform animate-bounce-subtle">🧠</div>
+                        <h3 class="font-bold mb-2 text-white text-lg">Expert "Twins"</h3>
+                        <p class="text-sm text-emerald-200 leading-relaxed">AI systems that learn domain expertise—ski holidays, scuba diving—in hours and scale globally</p>
+                    </div>
+                    
+                    <div class="glass-card-strong p-6 rounded-2xl hover-lift transition-transform group border border-emerald-400/20 reveal stagger-2">
+                        <div class="w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center mb-4 text-2xl group-hover:rotate-12 transition-transform animate-bounce-subtle" style="animation-delay: 0.2s">💡</div>
+                        <h3 class="font-bold mb-2 text-white text-lg">Ideas First</h3>
+                        <p class="text-sm text-emerald-200 leading-relaxed">Shift from destination-search to "anniversary ideas" and life-moment based travel planning</p>
+                    </div>
+                    
+                    <div class="glass-card-strong p-6 rounded-2xl hover-lift transition-transform group border border-emerald-400/20 reveal stagger-3">
+                        <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mb-4 text-2xl group-hover:rotate-12 transition-transform animate-bounce-subtle" style="animation-delay: 0.4s">🎯</div>
+                        <h3 class="font-bold mb-2 text-white text-lg">Decision Sequencing</h3>
+                        <p class="text-sm text-emerald-200 leading-relaxed">AI guides users through decisions in the right order—no moving forward until each choice is made</p>
+                    </div>
+                    
+                    <div class="glass-card-strong p-6 rounded-2xl hover-lift transition-transform group border border-emerald-400/20 reveal stagger-4">
+                        <div class="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center mb-4 text-2xl group-hover:rotate-12 transition-transform animate-bounce-subtle" style="animation-delay: 0.6s">🎬</div>
+                        <h3 class="font-bold mb-2 text-white text-lg">Advice Replay</h3>
+                        <p class="text-sm text-emerald-200 leading-relaxed">Track and replay "advice tapes" to learn from every interaction and continuously improve</p>
+                    </div>
+                </div>
+
+                <div class="mt-12 glass-card-strong p-8 rounded-2xl max-w-4xl mx-auto border border-emerald-400/30 bg-gradient-to-r from-emerald-900/30 to-teal-900/30 reveal hover-lift">
+                    <div class="flex items-start gap-6">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-3xl flex-shrink-0 shadow-lg shadow-emerald-500/20 animate-pulse-glow">
+                            🎭
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-3 text-white">The Philosophy</h3>
+                            <p class="text-emerald-100 leading-relaxed mb-4">
+                                The system understands <strong>why</strong> a person is traveling, their anxieties, constraints, language, and emphasis—then gives advice tailored to them, not generic "average customer" recommendations. It avoids overwhelming users with multi-page outputs; instead, it sequences information to match the user's decision-making pace.
+                            </p>
+                            <div class="flex gap-3 flex-wrap">
+                                <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-xs border border-emerald-400/30 text-emerald-200 hover:bg-emerald-500/30 transition-colors cursor-pointer">Strategy Integration</span>
+                                <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-xs border border-emerald-400/30 text-emerald-200 hover:bg-emerald-500/30 transition-colors cursor-pointer">Org Chart Aware</span>
+                                <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-xs border border-emerald-400/30 text-emerald-200 hover:bg-emerald-500/30 transition-colors cursor-pointer">KPI Driven</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Era: 2026 (Present) -->
+        <section id="2026" class="era-section min-h-screen relative flex items-center py-20 era-2026 transition-all duration-1000">
+            <!-- Animated background elements -->
+            <div class="absolute top-20 right-20 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl animate-float"></div>
+            <div class="absolute bottom-20 left-20 w-48 h-48 bg-orange-500/20 rounded-full blur-3xl animate-float-slow"></div>
+            
+            <div class="max-w-7xl mx-auto px-6 w-full relative z-10">
+                <div class="text-center mb-12 reveal">
+                    <div class="decision-badge bg-amber-500/20 border-amber-400/50 mx-auto mb-6">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span>January 2026 • Present Day</span>
+                    </div>
+                    
+                    <h2 class="font-display text-5xl md:text-7xl font-bold mb-6 text-white">
+                        Engine Complete.<br>Next Chapter Begins.
+                    </h2>
+                    
+                    <p class="text-xl text-amber-100 max-w-3xl mx-auto mb-8">
+                        By end of January 2026, the conversation engine, design, and architecture reached completion—a natural inflection point for bringing in new leadership to build the next phase.
+                    </p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-12">
+                    <div class="glass-card-strong p-8 rounded-2xl text-left border-t-4 border-amber-400 hover-lift reveal stagger-1">
+                        <div class="text-3xl mb-4 animate-bounce-subtle">🎯</div>
+                        <h3 class="font-bold text-xl mb-3 text-white">Current Focus</h3>
+                        <ul class="text-amber-100 space-y-2 text-sm">
+                            <li class="flex items-start gap-2">
+                                <span class="text-amber-400">•</span>
+                                <span>Scale B2B via Nexus DMC platform</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-amber-400">•</span>
+                                <span>Standardize DMC workflows across regions</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-amber-400">•</span>
+                                <span>Clean remaining operational gaps</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="glass-card-strong p-8 rounded-2xl text-left border-t-4 border-orange-400 bg-gradient-to-br from-amber-900/20 to-orange-900/20 hover-lift reveal stagger-2">
+                        <div class="text-3xl mb-4 animate-bounce-subtle" style="animation-delay: 0.3s">🚀</div>
+                        <h3 class="font-bold text-xl mb-3 text-white">Immediate Priorities</h3>
+                        <ul class="text-amber-100 space-y-2 text-sm">
+                            <li class="flex items-start gap-2">
+                                <span class="text-orange-400">•</span>
+                                <span>ITB Berlin marketing collateral (Paulina & Julia)</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-orange-400">•</span>
+                                <span>Validate organizational cleanup plan</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-orange-400">•</span>
+                                <span>Demonstrate AI conversation engine live</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="glass-card-strong p-8 rounded-2xl text-left border-t-4 border-yellow-400 hover-lift reveal stagger-3">
+                        <div class="text-3xl mb-4 animate-bounce-subtle" style="animation-delay: 0.6s">🌟</div>
+                        <h3 class="font-bold text-xl mb-3 text-white">The Vision</h3>
+                        <ul class="text-amber-100 space-y-2 text-sm">
+                            <li class="flex items-start gap-2">
+                                <span class="text-yellow-400">•</span>
+                                <span>Single conversational interface for all travel</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-yellow-400">•</span>
+                                <span>Past, present, and future trip memory</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-yellow-400">•</span>
+                                <span>Global AI-native travel platform</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Final Stats - 3 COLUMNS INSTEAD OF 4 -->
+                <div class="glass-card-strong p-8 rounded-3xl max-w-3xl mx-auto border border-amber-400/30 reveal hover-lift">
+                    <div class="grid grid-cols-3 gap-8 text-center">
+                        <div class="group cursor-pointer" onclick="createParticles(event)">
+                            <div class="text-3xl font-bold text-amber-300 font-display group-hover:scale-110 transition-transform">1,000+</div>
+                            <div class="text-xs text-amber-200/70 uppercase tracking-wider mt-1">Team Members</div>
+                        </div>
+                        <div class="group cursor-pointer" onclick="createParticles(event)">
+                            <div class="text-3xl font-bold text-amber-300 font-display group-hover:scale-110 transition-transform">$500M+</div>
+                            <div class="text-xs text-amber-200/70 uppercase tracking-wider mt-1">Annual Sales</div>
+                        </div>
+                        <div class="group cursor-pointer" onclick="createParticles(event)">
+                            <div class="text-3xl font-bold text-amber-300 font-display group-hover:scale-110 transition-transform">20+</div>
+                            <div class="text-xs text-amber-200/70 uppercase tracking-wider mt-1">Global Offices</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-12 text-center reveal">
+                    <div class="inline-flex items-center gap-4 px-8 py-4 rounded-full glass-card-strong border border-amber-400/30 hover-lift cursor-pointer group" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+                        <span class="text-2xl group-hover:rotate-12 transition-transform">✈️</span>
+                        <span class="text-lg font-medium text-amber-100">The journey from semantic search to AI intelligence continues...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="bg-slate-950 border-t border-white/10 py-12">
+            <div class="max-w-7xl mx-auto px-6 text-center">
+                <!-- BIGGER WHITE LOGO IN FOOTER -->
+                <div class="mb-6 inline-block relative group cursor-pointer" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+                    <img src="https://kimi-web-img.moonshot.cn/img/mma.prnewswire.com/0dd7b517fac6329b9f482617ccc9caf3f1a11c1f.jpg" 
+                         alt="TripFactory" 
+                         class="h-16 w-auto logo-white rounded-lg mx-auto group-hover:scale-110 transition-transform">
+                    <div class="absolute inset-0 bg-white/20 blur-2xl rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                </div>
+                <p class="text-white/40 text-sm mb-2">
+                    From semantic search to AI-powered travel intelligence.
+                </p>
+                <p class="text-white/60 font-display text-lg">
+                    The TripFactory Story • 2013-2026
+                </p>
+                <div class="mt-6 flex justify-center gap-4 text-xs text-white/30 flex-wrap">
+                    <span class="hover:text-white/60 transition-colors cursor-pointer">Bangalore</span>
+                    <span>•</span>
+                    <span class="hover:text-white/60 transition-colors cursor-pointer">Singapore</span>
+                    <span>•</span>
+                    <span class="hover:text-white/60 transition-colors cursor-pointer">Dubai</span>
+                    <span>•</span>
+                    <span class="hover:text-white/60 transition-colors cursor-pointer">Bangkok</span>
+                    <span>•</span>
+                    <span class="hover:text-white/60 transition-colors cursor-pointer">Bali</span>
+                    <span>•</span>
+                    <span class="hover:text-white/60 transition-colors cursor-pointer">Manila</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Custom cursor with trail effect
+        const cursor = document.getElementById('cursor');
+        const cursorDot = document.getElementById('cursor-dot');
+        let mouseX = 0, mouseY = 0;
+        let cursorX = 0, cursorY = 0;
+        
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            
+            if (cursorDot) {
+                cursorDot.style.left = mouseX - 2 + 'px';
+                cursorDot.style.top = mouseY - 2 + 'px';
+            }
+        });
+        
+        // Smooth cursor follow
+        function animateCursor() {
+            if (cursor) {
+                cursorX += (mouseX - cursorX) * 0.1;
+                cursorY += (mouseY - cursorY) * 0.1;
+                cursor.style.left = cursorX - 10 + 'px';
+                cursor.style.top = cursorY - 10 + 'px';
+            }
+            requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+
+        // Enhanced particle effect
+        function createParticles(e) {
+            const colors = ['#818cf8', '#f472b6', '#34d399', '#fbbf24', '#60a5fa', '#a78bfa'];
+            const particleCount = 12;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                const size = Math.random() * 12 + 4;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                particle.className = 'particle';
+                particle.style.cssText = `
+                    position: fixed;
+                    left: ${e.clientX}px;
+                    top: ${e.clientY}px;
+                    width: ${size}px;
+                    height: ${size}px;
+                    background: ${color};
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: 9999;
+                    box-shadow: 0 0 10px ${color};
+                `;
+                
+                document.body.appendChild(particle);
+                
+                const angle = (Math.PI * 2 * i) / particleCount;
+                const velocity = Math.random() * 100 + 50;
+                const tx = Math.cos(angle) * velocity;
+                const ty = Math.sin(angle) * velocity;
+                
+                particle.animate([
+                    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                    { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+                ], {
+                    duration: 800 + Math.random() * 400,
+                    easing: 'cubic-bezier(0, .9, .57, 1)',
+                }).onfinish = () => particle.remove();
+            }
+        }
+
+        // Scroll to era function
+        function scrollToEra(eraId) {
+            document.getElementById(eraId).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function startJourney() {
+            scrollToEra('pre2020');
+        }
+
+        // Intersection Observer for progress dots and scroll reveals
+        const observerOptions = {
+            threshold: 0.2,
+            rootMargin: '-10% 0px -10% 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Update progress dots
+                    const eraId = entry.target.id;
+                    document.querySelectorAll('.progress-dot').forEach(dot => {
+                        dot.classList.remove('active');
+                        if (dot.dataset.era === eraId) {
+                            dot.classList.add('active');
+                        }
+                    });
+                    
+                    // Add reveal animation
+                    entry.target.querySelectorAll('.reveal').forEach((el, index) => {
+                        setTimeout(() => {
+                            el.classList.add('active');
+                        }, index * 100);
+                    });
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.era-section').forEach(section => {
+            observer.observe(section);
+        });
+
+        // Add click handlers to all interactive elements
+        document.querySelectorAll('.glass-card-strong, .flip-card, .stat-card, .hover-lift').forEach(card => {
+            card.addEventListener('click', createParticles);
+        });
+
+        // Parallax effect on scroll
+        let ticking = false;
+        function updateParallax() {
+            const scrolled = window.pageYOffset;
+            document.querySelectorAll('.floating-shape, .animate-float').forEach((el, index) => {
+                const speed = 0.5 + (index * 0.1);
+                el.style.transform = `translateY(${scrolled * speed}px)`;
+            });
+            ticking = false;
+        }
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                window.requestAnimationFrame(updateParallax);
+                ticking = true;
+            }
+        });
+
+        // Magnetic effect for buttons
+        document.querySelectorAll('button, .hover-lift').forEach(btn => {
+            btn.addEventListener('mousemove', (e) => {
+                const rect = btn.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                
+                btn.style.transform = `translate(${x * 0.1}px, ${y * 0.1}px)`;
+            });
+            
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = '';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory - Marketing Performance Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .metric-card { transition: all 0.3s; }
+        .metric-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .channel-card { transition: all 0.3s; cursor: pointer; }
+        .channel-card:hover { transform: scale(1.02); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .trend-up { color: #22c55e; }
+        .trend-down { color: #ef4444; }
+        .filter-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            appearance: none;
+        }
+        .tab-active {
+            background: #0066cc;
+            color: white;
+        }
+        .tab-inactive {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        .tab-inactive:hover {
+            background: #e2e8f0;
+        }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            z-index: 50;
+            min-width: 200px;
+        }
+        .dropdown-menu.show {
+            display: block;
+        }
+        .heatmap-cell { transition: all 0.3s; cursor: pointer; }
+        .heatmap-cell:hover { transform: scale(1.05); z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .progress-fill { transition: width 1s ease-out; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white border-b-2 border-[#0066cc] px-6 py-4 shadow-lg sticky top-0 z-50">
+        <div class="max-w-[1920px] mx-auto flex justify-between items-center flex-wrap gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#0066cc] to-[#1e3a5f] rounded-xl flex items-center justify-center text-white text-2xl">
+                    <i class="fas fa-bullhorn"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-[#1e3a5f]">Marketing Performance Dashboard</h1>
+                    <p class="text-xs text-slate-500">Digital Marketing ROI & Channel Analytics</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3 flex-wrap">
+                <!-- B2B/B2C Toggle -->
+                <div class="flex bg-slate-100 rounded-lg p-1">
+                    <button onclick="setCustomerType('b2c')" class="customer-tab tab-active px-4 py-2 rounded-md text-sm font-bold transition" id="tab-b2c">B2C</button>
+                    <button onclick="setCustomerType('b2b')" class="customer-tab tab-inactive px-4 py-2 rounded-md text-sm font-bold transition" id="tab-b2b">B2B</button>
+                    <button onclick="setCustomerType('all')" class="customer-tab tab-inactive px-4 py-2 rounded-md text-sm font-bold transition" id="tab-all">Combined</button>
+                </div>
+
+                <!-- Period Filter -->
+                <select id="periodFilter" onchange="updateDashboard()" class="filter-select px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium focus:outline-none focus:border-[#0066cc] pr-10">
+                    <option value="mtd">Month to Date</option>
+                    <option value="qtd">Quarter to Date</option>
+                    <option value="ytd">Year to Date</option>
+                    <option value="last30">Last 30 Days</option>
+                    <option value="last90">Last 90 Days</option>
+                </select>
+
+                <button onclick="window.location.href='menu.html'" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-300 transition">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filter Bar -->
+    <div class="bg-white border-b border-slate-200 px-6 py-3">
+        <div class="max-w-[1920px] mx-auto flex flex-wrap items-center gap-4">
+            <span class="text-sm font-bold text-slate-500 uppercase">Filters:</span>
+            
+            <!-- Channel Filter -->
+            <div class="relative">
+                <select id="channelFilter" onchange="updateDashboard()" class="filter-select px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc] pr-8">
+                    <option value="all">All Channels</option>
+                    <option value="google">Google Ads</option>
+                    <option value="meta">Meta Ads</option>
+                    <option value="seo">SEO/Organic</option>
+                    <option value="programmatic">Programmatic</option>
+                    <option value="email">Email Marketing</option>
+                    <option value="affiliates">Affiliates</option>
+                </select>
+            </div>
+
+            <!-- Office Filter -->
+            <div class="relative">
+                <select id="officeFilter" onchange="updateDashboard()" class="filter-select px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc] pr-8">
+                    <option value="all">All Offices</option>
+                    <option value="uk">UK - London</option>
+                    <option value="us">USA - New York</option>
+                    <option value="india">India - Mumbai</option>
+                    <option value="singapore">Singapore</option>
+                    <option value="uae">UAE - Dubai</option>
+                    <option value="australia">Australia - Sydney</option>
+                </select>
+            </div>
+
+            <!-- Destination Filter -->
+            <div class="relative">
+                <select id="destinationFilter" onchange="updateDashboard()" class="filter-select px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc] pr-8">
+                    <option value="all">All Destinations</option>
+                    <option value="maldives">Maldives</option>
+                    <option value="thailand">Thailand</option>
+                    <option value="dubai">Dubai</option>
+                    <option value="spain">Spain</option>
+                    <option value="bali">Bali</option>
+                    <option value="usa">USA</option>
+                    <option value="singapore">Singapore</option>
+                    <option value="srilanka">Sri Lanka</option>
+                </select>
+            </div>
+
+            <!-- Campaign Type Filter -->
+            <div class="relative">
+                <select id="campaignFilter" onchange="updateDashboard()" class="filter-select px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc] pr-8">
+                    <option value="all">All Campaigns</option>
+                    <option value="brand">Brand</option>
+                    <option value="performance">Performance</option>
+                    <option value="retargeting">Retargeting</option>
+                    <option value="prospecting">Prospecting</option>
+                </select>
+            </div>
+
+            <button onclick="resetFilters()" class="px-3 py-1.5 text-sm text-[#0066cc] hover:underline">
+                <i class="fas fa-undo mr-1"></i>Reset
+            </button>
+
+            <div class="ml-auto flex items-center gap-2 text-sm text-slate-500">
+                <i class="fas fa-sync-alt"></i>
+                <span>Last updated: <span id="lastUpdated">Just now</span></span>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-[1920px] mx-auto p-6 space-y-6">
+
+        <!-- Top KPI Cards - 8 Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4" id="kpiCards">
+            
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="text-xs text-slate-500 uppercase font-bold">Total Spend</p>
+                    <i class="fas fa-dollar-sign text-blue-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-[#1e3a5f]" id="kpiSpend">$1.24M</h3>
+                <div class="flex items-center gap-1 text-xs mt-1">
+                    <span class="trend-up font-bold"><i class="fas fa-arrow-up"></i> 12%</span>
+                </div>
+            </div>
+
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="text-xs text-slate-500 uppercase font-bold">Impressions</p>
+                    <i class="fas fa-eye text-indigo-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-[#1e3a5f]" id="kpiImpressions">2.4M</h3>
+                <div class="flex items-center gap-1 text-xs mt-1">
+                    <span class="trend-up font-bold"><i class="fas fa-arrow-up"></i> 8%</span>
+                </div>
+            </div>
+
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="text-xs text-slate-500 uppercase font-bold">Clicks</p>
+                    <i class="fas fa-mouse-pointer text-purple-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-[#1e3a5f]" id="kpiClicks">85K</h3>
+                <div class="flex items-center gap-1 text-xs mt-1">
+                    <span class="trend-up font-bold"><i class="fas fa-arrow-up"></i> 15%</span>
+                </div>
+            </div>
+
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="text-xs text-slate-500 uppercase font-bold">CTR</p>
+                    <i class="fas fa-percentage text-pink-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-[#1e3a5f]" id="kpiCtr">3.54%</h3>
+                <div class="flex items-center gap-1 text-xs mt-1">
+                    <span class="trend-up font-bold"><i class="fas fa-arrow-up"></i> 0.2%</span>
+                </div>
+            </div>
+
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="text-xs text-slate-500 uppercase font-bold">Enquiries</p>
+                    <i class="fas fa-comment-dots text-orange-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-[#1e3a5f]" id="kpiEnquiries">12,450</h3>
+                <div class="flex items-center gap-1 text-xs mt-1">
+                    <span class="trend-up font-bold"><i class="fas fa-arrow-up"></i> 18%</span>
+                </div>
+            </div>
+
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="text-xs text-slate-500 uppercase font-bold">Bookings</p>
+                    <i class="fas fa-shopping-cart text-green-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-[#1e3a5f]" id="kpiBookings">1,890</h3>
+                <div class="flex items-center gap-1 text-xs mt-1">
+                    <span class="trend-up font-bold"><i class="fas fa-arrow-up"></i> 22%</span>
+                </div>
+            </div>
+
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="text-xs text-slate-500 uppercase font-bold">Revenue</p>
+                    <i class="fas fa-chart-line text-green-600"></i>
+                </div>
+                <h3 class="text-xl font-bold text-[#1e3a5f]" id="kpiRevenue">$8.4M</h3>
+                <div class="flex items-center gap-1 text-xs mt-1">
+                    <span class="trend-up font-bold"><i class="fas fa-arrow-up"></i> 18%</span>
+                </div>
+            </div>
+
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="flex justify-between items-start mb-2">
+                    <p class="text-xs text-slate-500 uppercase font-bold">ROAS</p>
+                    <i class="fas fa-bullseye text-red-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-[#1e3a5f]" id="kpiRoas">6.8x</h3>
+                <div class="flex items-center gap-1 text-xs mt-1">
+                    <span class="trend-up font-bold"><i class="fas fa-arrow-up"></i> 0.4</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secondary KPIs -->
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div class="bg-white rounded-xl p-4 shadow border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Cost Per Click</div>
+                <div class="text-lg font-bold text-[#1e3a5f]" id="kpiCpc">$14.60</div>
+                <div class="text-xs text-green-500"><i class="fas fa-arrow-down"></i> 5%</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Cost Per Enquiry</div>
+                <div class="text-lg font-bold text-[#1e3a5f]" id="kpiCpe">$99.60</div>
+                <div class="text-xs text-green-500"><i class="fas fa-arrow-down"></i> 8%</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Cost Per Booking</div>
+                <div class="text-lg font-bold text-[#1e3a5f]" id="kpiCpb">$656</div>
+                <div class="text-xs text-green-500"><i class="fas fa-arrow-down"></i> 12%</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Enquiry to Booking</div>
+                <div class="text-lg font-bold text-[#1e3a5f]" id="kpiEtb">15.2%</div>
+                <div class="text-xs text-green-500"><i class="fas fa-arrow-up"></i> 1.8%</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Avg Booking Value</div>
+                <div class="text-lg font-bold text-[#1e3a5f]" id="kpiAbv">$4,444</div>
+                <div class="text-xs text-slate-500">-</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Look-to-Book</div>
+                <div class="text-lg font-bold text-[#1e3a5f]" id="kpiLtb">4.2%</div>
+                <div class="text-xs text-green-500"><i class="fas fa-arrow-up"></i> 0.3%</div>
+            </div>
+        </div>
+
+        <!-- Channel Performance Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Channel Cards -->
+            <div class="lg:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-[#1e3a5f] text-lg">Channel Performance</h3>
+                    <div class="flex gap-2">
+                        <button onclick="sortChannels('roas')" class="px-3 py-1 text-xs font-bold bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Sort by ROAS</button>
+                        <button onclick="sortChannels('spend')" class="px-3 py-1 text-xs font-bold bg-slate-100 text-slate-700 rounded hover:bg-slate-200">Sort by Spend</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="channelGrid">
+                    <!-- Channels populated by JS -->
+                </div>
+            </div>
+
+            <!-- Funnel & Attribution -->
+            <div class="space-y-6">
+                <!-- Conversion Funnel -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-5">
+                    <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                        <i class="fas fa-filter text-blue-500"></i> Conversion Funnel
+                    </h3>
+                    <div class="space-y-3" id="funnelContainer">
+                        <!-- Funnel populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Attribution Model -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-5">
+                    <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                        <i class="fas fa-project-diagram text-purple-500"></i> Attribution
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-2 bg-blue-50 rounded cursor-pointer hover:bg-blue-100" onclick="setAttribution('first')">
+                            <span class="text-sm font-medium">First Touch</span>
+                            <span class="font-bold text-blue-600" id="attrFirst">35%</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-indigo-50 rounded cursor-pointer hover:bg-indigo-100" onclick="setAttribution('last')">
+                            <span class="text-sm font-medium">Last Touch</span>
+                            <span class="font-bold text-indigo-600" id="attrLast">40%</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-purple-50 rounded cursor-pointer hover:bg-purple-100" onclick="setAttribution('linear')">
+                            <span class="text-sm font-medium">Linear</span>
+                            <span class="font-bold text-purple-600" id="attrLinear">15%</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-green-50 rounded cursor-pointer hover:bg-green-100" onclick="setAttribution('decay')">
+                            <span class="text-sm font-medium">Time Decay</span>
+                            <span class="font-bold text-green-600" id="attrDecay">10%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Tables -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- By Office -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                    <h3 class="font-bold text-[#1e3a5f] flex items-center gap-2">
+                        <i class="fas fa-building text-blue-500"></i> Performance by Office
+                    </h3>
+                    <select id="officeMetric" onchange="updateOfficeTable()" class="text-xs border border-slate-300 rounded px-2 py-1">
+                        <option value="revenue">Sort by Revenue</option>
+                        <option value="roas">Sort by ROAS</option>
+                        <option value="enquiries">Sort by Enquiries</option>
+                    </select>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                            <tr>
+                                <th class="px-4 py-3 text-left">Office</th>
+                                <th class="px-4 py-3 text-right">Spend</th>
+                                <th class="px-4 py-3 text-right">Enquiries</th>
+                                <th class="px-4 py-3 text-right">Bookings</th>
+                                <th class="px-4 py-3 text-right">Revenue</th>
+                                <th class="px-4 py-3 text-right">ROAS</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100" id="officeTable">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- By Destination -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                    <h3 class="font-bold text-[#1e3a5f] flex items-center gap-2">
+                        <i class="fas fa-map-marker-alt text-red-500"></i> Performance by Destination
+                    </h3>
+                    <select id="destMetric" onchange="updateDestTable()" class="text-xs border border-slate-300 rounded px-2 py-1">
+                        <option value="revenue">Sort by Revenue</option>
+                        <option value="roas">Sort by ROAS</option>
+                        <option value="enquiries">Sort by Enquiries</option>
+                    </select>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                            <tr>
+                                <th class="px-4 py-3 text-left">Destination</th>
+                                <th class="px-4 py-3 text-right">Spend</th>
+                                <th class="px-4 py-3 text-right">Enquiries</th>
+                                <th class="px-4 py-3 text-right">Bookings</th>
+                                <th class="px-4 py-3 text-right">Revenue</th>
+                                <th class="px-4 py-3 text-right">ROAS</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100" id="destTable">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- B2B vs B2C Deep Dive -->
+        <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+            <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                <i class="fas fa-balance-scale text-indigo-500"></i> B2B vs B2C Deep Dive Analysis
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                    <h4 class="font-bold text-blue-800 mb-3">B2C Characteristics</h4>
+                    <ul class="space-y-2 text-sm text-blue-700">
+                        <li><i class="fas fa-check mr-2"></i>Avg Booking: $3,200</li>
+                        <li><i class="fas fa-check mr-2"></i>Decision Time: 7 days</li>
+                        <li><i class="fas fa-check mr-2"></i>Group Size: 2.4 people</li>
+                        <li><i class="fas fa-check mr-2"></i>Lead Time: 45 days</li>
+                        <li><i class="fas fa-check mr-2"></i>Mobile Bookings: 72%</li>
+                    </ul>
+                </div>
+                <div class="p-4 bg-purple-50 rounded-xl border border-purple-200">
+                    <h4 class="font-bold text-purple-800 mb-3">B2B Characteristics</h4>
+                    <ul class="space-y-2 text-sm text-purple-700">
+                        <li><i class="fas fa-check mr-2"></i>Avg Booking: $12,800</li>
+                        <li><i class="fas fa-check mr-2"></i>Decision Time: 21 days</li>
+                        <li><i class="fas fa-check mr-2"></i>Group Size: 12 people</li>
+                        <li><i class="fas fa-check mr-2"></i>Lead Time: 90 days</li>
+                        <li><i class="fas fa-check mr-2"></i>Mobile Bookings: 34%</li>
+                    </ul>
+                </div>
+                <div class="p-4 bg-green-50 rounded-xl border border-green-200">
+                    <h4 class="font-bold text-green-800 mb-3">B2C Top Channels</h4>
+                    <ul class="space-y-2 text-sm text-green-700">
+                        <li><i class="fas fa-trophy mr-2 text-yellow-500"></i>Meta Ads (28%)</li>
+                        <li><i class="fas fa-medal mr-2 text-slate-400"></i>Google Ads (26%)</li>
+                        <li><i class="fas fa-medal mr-2 text-orange-400"></i>SEO (18%)</li>
+                        <li><i class="fas fa-star mr-2"></i>Influencers (12%)</li>
+                    </ul>
+                </div>
+                <div class="p-4 bg-orange-50 rounded-xl border border-orange-200">
+                    <h4 class="font-bold text-orange-800 mb-3">B2B Top Channels</h4>
+                    <ul class="space-y-2 text-sm text-orange-700">
+                        <li><i class="fas fa-trophy mr-2 text-yellow-500"></i>LinkedIn (32%)</li>
+                        <li><i class="fas fa-medal mr-2 text-slate-400"></i>Google Ads (24%)</li>
+                        <li><i class="fas fa-medal mr-2 text-orange-400"></i>Email (20%)</li>
+                        <li><i class="fas fa-star mr-2"></i>Events (14%)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Campaign Performance Matrix -->
+        <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+            <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                <i class="fas fa-th text-teal-500"></i> Campaign Performance Matrix (Spend vs ROAS)
+            </h3>
+            <div class="grid grid-cols-4 md:grid-cols-8 gap-2" id="campaignMatrix">
+                <!-- Populated by JS -->
+            </div>
+            <div class="flex justify-between items-center mt-4 text-xs text-slate-500">
+                <span>Low Spend / Low ROAS</span>
+                <div class="flex gap-3">
+                    <span class="flex items-center gap-1"><div class="w-3 h-3 bg-red-500 rounded"></div> Poor</span>
+                    <span class="flex items-center gap-1"><div class="w-3 h-3 bg-yellow-500 rounded"></div> Fair</span>
+                    <span class="flex items-center gap-1"><div class="w-3 h-3 bg-green-500 rounded"></div> Good</span>
+                    <span class="flex items-center gap-1"><div class="w-3 h-3 bg-blue-500 rounded"></div> Excellent</span>
+                </div>
+                <span>High Spend / High ROAS</span>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Data Models
+        const data = {
+            b2c: {
+                spend: 1240000,
+                impressions: 2400000,
+                clicks: 85000,
+                ctr: 3.54,
+                enquiries: 12450,
+                bookings: 1890,
+                revenue: 8400000,
+                roas: 6.8,
+                cpc: 14.60,
+                cpe: 99.60,
+                cpb: 656,
+                etb: 15.2,
+                abv: 4444,
+                ltb: 4.2
+            },
+            b2b: {
+                spend: 680000,
+                impressions: 890000,
+                clicks: 32000,
+                ctr: 3.60,
+                enquiries: 4200,
+                bookings: 580,
+                revenue: 7424000,
+                roas: 10.9,
+                cpc: 21.25,
+                cpe: 161.90,
+                cpb: 1172,
+                etb: 13.8,
+                abv: 12800,
+                ltb: 6.5
+            },
+            combined: {
+                spend: 1920000,
+                impressions: 3290000,
+                clicks: 117000,
+                ctr: 3.56,
+                enquiries: 16650,
+                bookings: 2470,
+                revenue: 15824000,
+                roas: 8.2,
+                cpc: 16.41,
+                cpe: 115.32,
+                cpb: 777,
+                etb: 14.8,
+                abv: 6406,
+                ltb: 4.8
+            }
+        };
+
+        const channels = [
+            { name: 'Google Ads', icon: 'fab fa-google', color: 'blue', b2c: { spend: 420000, roas: 8.2, enquiries: 5200, bookings: 890, revenue: 3444000 }, b2b: { spend: 180000, roas: 12.4, enquiries: 1200, bookings: 180, revenue: 2232000 } },
+            { name: 'Meta Ads', icon: 'fab fa-facebook', color: 'indigo', b2c: { spend: 380000, roas: 5.4, enquiries: 6800, bookings: 720, revenue: 2052000 }, b2b: { spend: 45000, roas: 3.2, enquiries: 280, bookings: 45, revenue: 144000 } },
+            { name: 'SEO/Organic', icon: 'fas fa-search', color: 'green', b2c: { spend: 85000, roas: 12.4, enquiries: 3200, bookings: 680, revenue: 1054000 }, b2b: { spend: 35000, roas: 18.6, enquiries: 890, bookings: 165, revenue: 651000 } },
+            { name: 'Programmatic', icon: 'fas fa-ad', color: 'purple', b2c: { spend: 195000, roas: 3.8, enquiries: 2100, bookings: 280, revenue: 741000 }, b2b: { spend: 120000, roas: 4.2, enquiries: 680, bookings: 95, revenue: 504000 } },
+            { name: 'Email Marketing', icon: 'fas fa-envelope', color: 'orange', b2c: { spend: 45000, roas: 9.6, enquiries: 1200, bookings: 420, revenue: 432000 }, b2b: { spend: 85000, roas: 14.2, enquiries: 2100, bookings: 380, revenue: 1207000 } },
+            { name: 'Affiliates', icon: 'fas fa-handshake', color: 'pink', b2c: { spend: 125000, roas: 4.2, enquiries: 1800, bookings: 260, revenue: 525000 }, b2b: { spend: 45000, roas: 6.8, enquiries: 420, bookings: 85, revenue: 306000 } },
+            { name: 'LinkedIn', icon: 'fab fa-linkedin', color: 'blue', b2c: { spend: 8000, roas: 2.1, enquiries: 120, bookings: 12, revenue: 16800 }, b2b: { spend: 95000, roas: 8.9, enquiries: 1800, bookings: 220, revenue: 845500 } },
+            { name: 'TikTok', icon: 'fab fa-tiktok', color: 'black', b2c: { spend: 65000, roas: 3.2, enquiries: 2100, bookings: 180, revenue: 208000 }, b2b: { spend: 5000, roas: 1.8, enquiries: 45, bookings: 8, revenue: 9000 } }
+        ];
+
+        const offices = [
+            { name: 'UK - London', b2c: { spend: 280000, enquiries: 4200, bookings: 680, revenue: 2400000, roas: 8.6 }, b2b: { spend: 180000, enquiries: 1200, bookings: 165, revenue: 2100000, roas: 11.7 } },
+            { name: 'USA - New York', b2c: { spend: 320000, enquiries: 4800, bookings: 720, revenue: 3100000, roas: 9.7 }, b2b: { spend: 220000, enquiries: 1800, bookings: 220, revenue: 2800000, roas: 12.7 } },
+            { name: 'India - Mumbai', b2c: { spend: 120000, enquiries: 2100, bookings: 320, revenue: 980000, roas: 8.2 }, b2b: { spend: 85000, enquiries: 680, bookings: 95, revenue: 890000, roas: 10.5 } },
+            { name: 'Singapore', b2c: { spend: 95000, enquiries: 1800, bookings: 280, revenue: 890000, roas: 9.4 }, b2b: { spend: 65000, enquiries: 520, bookings: 68, revenue: 720000, roas: 11.1 } },
+            { name: 'UAE - Dubai', b2c: { spend: 85000, enquiries: 1500, bookings: 220, revenue: 630000, roas: 7.4 }, b2b: { spend: 55000, enquiries: 420, bookings: 52, revenue: 580000, roas: 10.5 } },
+            { name: 'Australia - Sydney', b2c: { spend: 65000, enquiries: 1200, bookings: 180, revenue: 520000, roas: 8.0 }, b2b: { spend: 45000, enquiries: 320, bookings: 42, revenue: 480000, roas: 10.7 } }
+        ];
+
+        const destinations = [
+            { name: 'Maldives', b2c: { spend: 280000, enquiries: 3200, bookings: 580, revenue: 2800000, roas: 10.0 }, b2b: { spend: 120000, enquiries: 420, bookings: 85, revenue: 1088000, roas: 9.1 } },
+            { name: 'Thailand', b2c: { spend: 195000, enquiries: 4200, bookings: 680, revenue: 2100000, roas: 10.8 }, b2b: { spend: 85000, enquiries: 680, bookings: 120, revenue: 1536000, roas: 18.1 } },
+            { name: 'Dubai', b2c: { spend: 165000, enquiries: 2100, bookings: 320, revenue: 1200000, roas: 7.3 }, b2b: { spend: 95000, enquiries: 890, bookings: 165, revenue: 2112000, roas: 22.2 } },
+            { name: 'Spain', b2c: { spend: 145000, enquiries: 3800, bookings: 620, revenue: 1800000, roas: 12.4 }, b2b: { spend: 65000, enquiries: 520, bookings: 95, revenue: 1216000, roas: 18.7 } },
+            { name: 'Bali', b2c: { spend: 125000, enquiries: 2800, bookings: 420, revenue: 980000, roas: 7.8 }, b2b: { spend: 45000, enquiries: 380, bookings: 68, revenue: 870400, roas: 19.3 } },
+            { name: 'USA', b2c: { spend: 180000, enquiries: 2400, bookings: 380, revenue: 1520000, roas: 8.4 }, b2b: { spend: 120000, enquiries: 680, bookings: 125, revenue: 1600000, roas: 13.3 } },
+            { name: 'Singapore', b2c: { spend: 95000, enquiries: 1800, bookings: 320, revenue: 960000, roas: 10.1 }, b2b: { spend: 55000, enquiries: 420, bookings: 72, revenue: 921600, roas: 16.8 } },
+            { name: 'Sri Lanka', b2c: { spend: 65000, enquiries: 1200, bookings: 180, revenue: 720000, roas: 11.1 }, b2b: { spend: 35000, enquiries: 280, bookings: 52, revenue: 665600, roas: 19.0 } }
+        ];
+
+        let currentType = 'b2c';
+        let currentAttribution = 'last';
+
+        function init() {
+            updateDashboard();
+        }
+
+        function setCustomerType(type) {
+            currentType = type;
+            
+            // Update tabs
+            document.querySelectorAll('.customer-tab').forEach(tab => {
+                tab.classList.remove('tab-active');
+                tab.classList.add('tab-inactive');
+            });
+            document.getElementById('tab-' + type).classList.remove('tab-inactive');
+            document.getElementById('tab-' + type).classList.add('tab-active');
+            
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            const d = data[currentType];
+            
+            // Update KPIs
+            document.getElementById('kpiSpend').textContent = '$' + (d.spend / 1000000).toFixed(2) + 'M';
+            document.getElementById('kpiImpressions').textContent = (d.impressions / 1000000).toFixed(1) + 'M';
+            document.getElementById('kpiClicks').textContent = (d.clicks / 1000).toFixed(0) + 'K';
+            document.getElementById('kpiCtr').textContent = d.ctr + '%';
+            document.getElementById('kpiEnquiries').textContent = d.enquiries.toLocaleString();
+            document.getElementById('kpiBookings').textContent = d.bookings.toLocaleString();
+            document.getElementById('kpiRevenue').textContent = '$' + (d.revenue / 1000000).toFixed(1) + 'M';
+            document.getElementById('kpiRoas').textContent = d.roas + 'x';
+            document.getElementById('kpiCpc').textContent = '$' + d.cpc.toFixed(2);
+            document.getElementById('kpiCpe').textContent = '$' + d.cpe.toFixed(0);
+            document.getElementById('kpiCpb').textContent = '$' + d.cpb.toFixed(0);
+            document.getElementById('kpiEtb').textContent = d.etb + '%';
+            document.getElementById('kpiAbv').textContent = '$' + d.abv.toLocaleString();
+            document.getElementById('kpiLtb').textContent = d.ltb + '%';
+            
+            updateChannels();
+            updateFunnel();
+            updateOfficeTable();
+            updateDestTable();
+            updateCampaignMatrix();
+            
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+        }
+
+        function updateChannels() {
+            const grid = document.getElementById('channelGrid');
+            const channelFilter = document.getElementById('channelFilter').value;
+            
+            let filteredChannels = channels;
+            if (channelFilter !== 'all') {
+                filteredChannels = channels.filter(c => c.name.toLowerCase().includes(channelFilter) || c.icon.includes(channelFilter));
+            }
+            
+            grid.innerHTML = filteredChannels.map(c => {
+                const data = c[currentType];
+                const spendPct = (data.spend / data[currentType === 'b2c' ? 1240000 : 680000] * 100).toFixed(0);
+                
+                return `
+                    <div class="channel-card bg-white rounded-xl p-5 shadow-lg border-l-4 border-${c.color}-500">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-${c.color}-100 rounded-lg flex items-center justify-center text-${c.color}-600">
+                                    <i class="${c.icon} text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-[#1e3a5f] text-sm">${c.name}</h4>
+                                    <p class="text-xs text-slate-500">${currentType.toUpperCase()}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 mb-3 text-center">
+                            <div>
+                                <div class="text-lg font-bold text-[#1e3a5f]">$${(data.spend/1000).toFixed(0)}K</div>
+                                <div class="text-xs text-slate-500">Spend</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-green-600">${data.roas}x</div>
+                                <div class="text-xs text-slate-500">ROAS</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-blue-600">${data.enquiries.toLocaleString()}</div>
+                                <div class="text-xs text-slate-500">Enq</div>
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-slate-500">Bookings: ${data.bookings}</span>
+                                <span class="text-slate-500">Rev: $${(data.revenue/1000000).toFixed(1)}M</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2">
+                                <div class="bg-${c.color}-500 h-2 rounded-full progress-fill" style="width: ${spendPct}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateFunnel() {
+            const d = data[currentType];
+            const steps = [
+                { name: 'Impressions', value: d.impressions, width: 100, color: 'blue' },
+                { name: 'Clicks', value: d.clicks, width: (d.clicks/d.impressions*100*20), color: 'indigo' },
+                { name: 'Enquiries', value: d.enquiries, width: (d.enquiries/d.clicks*100*3), color: 'purple' },
+                { name: 'Quotes', value: Math.floor(d.enquiries * 0.65), width: (65*2), color: 'orange' },
+                { name: 'Bookings', value: d.bookings, width: (d.bookings/d.enquiries*100*4), color: 'green' }
+            ];
+            
+            document.getElementById('funnelContainer').innerHTML = steps.map((step, i) => {
+                const conversion = i > 0 ? ((step.value / steps[i-1].value) * 100).toFixed(1) + '%' : '100%';
+                return `
+                    <div class="flex items-center gap-3">
+                        <div class="w-20 text-xs text-slate-500 font-medium">${step.name}</div>
+                        <div class="flex-1">
+                            <div class="bg-${step.color}-200 rounded-r-lg h-8 flex items-center justify-end px-2" style="width: ${Math.max(step.width, 15)}%">
+                                <span class="text-xs font-bold text-${step.color}-800">${(step.value/1000).toFixed(1)}K</span>
+                            </div>
+                        </div>
+                        <div class="w-16 text-xs text-right font-bold text-slate-600">${conversion}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateOfficeTable() {
+            const tbody = document.getElementById('officeTable');
+            const sortBy = document.getElementById('officeMetric').value;
+            
+            let sortedOffices = [...offices];
+            sortedOffices.sort((a, b) => b[currentType][sortBy] - a[currentType][sortBy]);
+            
+            tbody.innerHTML = sortedOffices.map(o => {
+                const d = o[currentType];
+                return `
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-4 py-3 font-medium text-[#1e3a5f]">${o.name}</td>
+                        <td class="px-4 py-3 text-right">$${(d.spend/1000).toFixed(0)}K</td>
+                        <td class="px-4 py-3 text-right">${d.enquiries.toLocaleString()}</td>
+                        <td class="px-4 py-3 text-right">${d.bookings}</td>
+                        <td class="px-4 py-3 text-right font-bold">$${(d.revenue/1000000).toFixed(2)}M</td>
+                        <td class="px-4 py-3 text-right font-bold ${d.roas >= 8 ? 'text-green-600' : d.roas >= 5 ? 'text-yellow-600' : 'text-red-600'}">${d.roas}x</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateDestTable() {
+            const tbody = document.getElementById('destTable');
+            const sortBy = document.getElementById('destMetric').value;
+            
+            let sortedDests = [...destinations];
+            sortedDests.sort((a, b) => b[currentType][sortBy] - a[currentType][sortBy]);
+            
+            tbody.innerHTML = sortedDests.map(d => {
+                const data = d[currentType];
+                return `
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-4 py-3 font-medium text-[#1e3a5f]">${d.name}</td>
+                        <td class="px-4 py-3 text-right">$${(data.spend/1000).toFixed(0)}K</td>
+                        <td class="px-4 py-3 text-right">${data.enquiries.toLocaleString()}</td>
+                        <td class="px-4 py-3 text-right">${data.bookings}</td>
+                        <td class="px-4 py-3 text-right font-bold">$${(data.revenue/1000000).toFixed(2)}M</td>
+                        <td class="px-4 py-3 text-right font-bold ${data.roas >= 10 ? 'text-green-600' : data.roas >= 7 ? 'text-yellow-600' : 'text-red-600'}">${data.roas}x</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateCampaignMatrix() {
+            const matrix = document.getElementById('campaignMatrix');
+            const campaigns = [
+                { name: 'Brand Search', spend: 95, roas: 12.4 },
+                { name: 'Generic Search', spend: 78, roas: 6.8 },
+                { name: 'Display Prospecting', spend: 45, roas: 2.1 },
+                { name: 'Display Retargeting', spend: 82, roas: 8.9 },
+                { name: 'Meta Prospecting', spend: 68, roas: 4.2 },
+                { name: 'Meta Retargeting', spend: 88, roas: 7.5 },
+                { name: 'YouTube Brand', spend: 55, roas: 3.8 },
+                { name: 'YouTube Action', spend: 42, roas: 5.2 },
+                { name: 'Gmail Ads', spend: 35, roas: 6.5 },
+                { name: 'Discovery', spend: 48, roas: 4.8 },
+                { name: 'Shopping', spend: 72, roas: 9.2 },
+                { name: 'Video Seq', spend: 38, roas: 3.5 },
+                { name: 'App Install', spend: 25, roas: 2.8 },
+                { name: 'Lead Gen', spend: 58, roas: 5.8 },
+                { name: 'Engagement', spend: 42, roas: 4.1 },
+                { name: 'Traffic', spend: 35, roas: 2.5 }
+            ];
+            
+            matrix.innerHTML = campaigns.map(c => {
+                let color = 'bg-red-500';
+                if (c.roas > 8 && c.spend > 70) color = 'bg-blue-500';
+                else if (c.roas > 6) color = 'bg-green-500';
+                else if (c.roas > 4) color = 'bg-yellow-500';
+                
+                return `
+                    <div class="heatmap-cell ${color} rounded-lg p-2 text-center text-white text-xs" title="${c.name}: ${c.roas}x ROAS, ${c.spend}% spend">
+                        <div class="font-bold truncate">${c.name}</div>
+                        <div class="text-lg font-bold">${c.roas}x</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setAttribution(model) {
+            currentAttribution = model;
+            const weights = { first: [45, 30, 15, 10], last: [20, 25, 25, 30], linear: [25, 25, 25, 25], decay: [15, 20, 30, 35] };
+            const w = weights[model];
+            
+            document.getElementById('attrFirst').textContent = w[0] + '%';
+            document.getElementById('attrLast').textContent = w[1] + '%';
+            document.getElementById('attrLinear').textContent = w[2] + '%';
+            document.getElementById('attrDecay').textContent = w[3] + '%';
+        }
+
+        function sortChannels(by) {
+            if (by === 'roas') {
+                channels.sort((a, b) => b[currentType].roas - a[currentType].roas);
+            } else {
+                channels.sort((a, b) => b[currentType].spend - a[currentType].spend);
+            }
+            updateChannels();
+        }
+
+        function resetFilters() {
+            document.getElementById('channelFilter').value = 'all';
+            document.getElementById('officeFilter').value = 'all';
+            document.getElementById('destinationFilter').value = 'all';
+            document.getElementById('campaignFilter').value = 'all';
+            document.getElementById('periodFilter').value = 'mtd';
+            updateDashboard();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

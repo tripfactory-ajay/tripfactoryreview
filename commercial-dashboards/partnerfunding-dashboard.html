@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory Partner Investment Opportunities</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .opportunity-card { transition: all 0.3s; }
+        .opportunity-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
+        .investment-tier { position: relative; overflow: hidden; }
+        .investment-tier::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .investment-tier:hover::before { left: 100%; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+<header class="bg-gradient-to-r from-[#1e3a5f] to-[#0066cc] text-white px-6 py-6">
+    <div class="max-w-[1400px] mx-auto">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold">Partner Investment Opportunities</h1>
+                <p class="text-blue-200 mt-2">Revenue Growth Partnerships for Tourism Boards & Hotels</p>
+            </div>
+            <div class="text-right">
+                <div class="text-sm text-blue-200">TripFactory Network</div>
+                <div class="text-2xl font-bold mono">$18.4M Annual Volume</div>
+            </div>
+        </div>
+        <div class="flex gap-4 mt-6">
+            <button onclick="window.location.href='home.html'" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-bold transition-all">
+                ← Back to Platform
+            </button>
+            <button onclick="downloadDeck()" class="px-4 py-2 bg-white text-[#0066cc] rounded-lg text-sm font-bold hover:bg-blue-50 transition-all">
+                Download Investment Deck (PDF)
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-[1400px] mx-auto p-6 space-y-8">
+
+    <!-- Executive Summary for Partners -->
+    <div class="bg-white rounded-2xl p-8 shadow-xl border border-slate-200">
+        <div class="grid grid-cols-4 gap-6 text-center">
+            <div>
+                <div class="text-4xl font-bold text-[#0066cc] mono">47K</div>
+                <div class="text-sm text-slate-600 mt-2">Annual Bookings</div>
+                <div class="text-xs text-slate-400">Across all destinations</div>
+            </div>
+            <div>
+                <div class="text-4xl font-bold text-[#2a9d8f] mono">$3,847</div>
+                <div class="text-sm text-slate-600 mt-2">Avg. Booking Value</div>
+                <div class="text-xs text-slate-400">Premium segment focus</div>
+            </div>
+            <div>
+                <div class="text-4xl font-bold text-[#ffb703] mono">68%</div>
+                <div class="text-sm text-slate-600 mt-2">Repeat Booking Rate</div>
+                <div class="text-xs text-slate-400">High customer loyalty</div>
+            </div>
+            <div>
+                <div class="text-4xl font-bold text-[#1e3a5f] mono">42%</div>
+                <div class="text-sm text-slate-600 mt-2">Market Share (Premium)</div>
+                <div class="text-xs text-slate-400">In key destinations</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Destination Opportunities -->
+    <div>
+        <h2 class="text-2xl font-bold text-[#1e3a5f] mb-6">Featured Investment Opportunities</h2>
+        
+        <div class="grid grid-cols-3 gap-6">
+
+            <!-- Maldives - Tier 1 -->
+            <div class="opportunity-card investment-tier bg-white rounded-xl overflow-hidden shadow-lg border-2 border-[#ffb703]">
+                <div class="h-48 bg-gradient-to-br from-blue-400 to-blue-600 relative">
+                    <div class="absolute inset-0 flex items-center justify-center text-6xl">🏝️</div>
+                    <div class="absolute top-4 right-4 px-3 py-1 bg-[#ffb703] text-white text-xs font-bold rounded-full">TIER 1 PRIORITY</div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-[#1e3a5f] mb-2">Maldives</h3>
+                    <p class="text-sm text-slate-600 mb-4">Luxury island resorts and overwater villas</p>
+                    
+                    <div class="space-y-3 mb-4">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-600">Current Revenue</span>
+                            <span class="font-bold text-[#1e3a5f] mono">$4.2M</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-600">Growth Potential</span>
+                            <span class="font-bold text-green-600">+35%</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-600">Avg. Commission</span>
+                            <span class="font-bold text-[#1e3a5f]">12-15%</span>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-blue-50 rounded-lg mb-4">
+                        <div class="text-xs font-bold text-blue-800 mb-1">Investment Opportunity</div>
+                        <div class="text-sm text-blue-700">$150K marketing partnership → $890K additional revenue</div>
+                    </div>
+
+                    <button onclick="showProposal('maldives')" class="w-full py-2 bg-[#0066cc] text-white rounded-lg font-bold hover:bg-[#1e3a5f] transition-all">
+                        View Partnership Proposal
+                    </button>
+                </div>
+            </div>
+
+            <!-- Thailand - Tier 2 -->
+            <div class="opportunity-card investment-tier bg-white rounded-xl overflow-hidden shadow-lg border-2 border-[#2a9d8f]">
+                <div class="h-48 bg-gradient-to-br from-green-400 to-green-600 relative">
+                    <div class="absolute inset-0 flex items-center justify-center text-6xl">🌴</div>
+                    <div class="absolute top-4 right-4 px-3 py-1 bg-[#2a9d8f] text-white text-xs font-bold rounded-full">TIER 2 GROWTH</div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-[#1e3a5f] mb-2">Thailand</h3>
+                    <p class="text-sm text-slate-600 mb-4">Beach resorts, culture, and wellness tourism</p>
+                    
+                    <div class="space-y-3 mb-4">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-600">Current Revenue</span>
+                            <span class="font-bold text-[#1e3a5f] mono">$3.8M</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-600">Growth Potential</span>
+                            <span class="font-bold text-green-600">+28%</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-600">Avg. Commission</span>
+                            <span class="font-bold text-[#1e3a5f]">10-12%</span>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-green-50 rounded-lg mb-4">
+                        <div class="text-xs font-bold text-green-800 mb-1">Investment Opportunity</div>
+                        <div class="text-sm text-green-700">$100K co-marketing → $620K additional revenue</div>
+                    </div>
+
+                    <button onclick="showProposal('thailand')" class="w-full py-2 bg-[#2a9d8f] text-white rounded-lg font-bold hover:bg-[#236c62] transition-all">
+                        View Partnership Proposal
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dubai - Tier 2 -->
+            <div class="opportunity-card investment-tier bg-white rounded-xl overflow-hidden shadow-lg border-2 border-purple-400">
+                <div class="h-48 bg-gradient-to-br from-purple-400 to-purple-600 relative">
+                    <div class="absolute inset-0 flex items-center justify-center text-6xl">🏙️</div>
+                    <div class="absolute top-4 right-4 px-3 py-1 bg-purple-500 text-white text-xs font-bold rounded-full">TIER 2 GROWTH</div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-[#1e3a5f] mb-2">Dubai</h3>
+                    <p class="text-sm text-slate-600 mb-4">Luxury city breaks and desert experiences</p>
+                    
+                    <div class="space-y-3 mb-4">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-600">Current Revenue</span>
+                            <span class="font-bold text-[#1e3a5f] mono">$3.1M</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-600">Growth Potential</span>
+                            <span class="font-bold text-green-600">+22%</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-600">Avg. Commission</span>
+                            <span class="font-bold text-[#1e3a5f]">10-14%</span>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-purple-50 rounded-lg mb-4">
+                        <div class="text-xs font-bold text-purple-800 mb-1">Investment Opportunity</div>
+                        <div class="text-sm text-purple-700">$80K partnership → $480K additional revenue</div>
+                    </div>
+
+                    <button onclick="showProposal('dubai')" class="w-full py-2 bg-purple-500 text-white rounded-lg font-bold hover:bg-purple-600 transition-all">
+                        View Partnership Proposal
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Hotel Partner Section -->
+    <div class="bg-white rounded-2xl p-8 shadow-xl border border-slate-200">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-[#1e3a5f]">Hotel Group Partnerships</h2>
+                <p class="text-slate-600">Exclusive distribution and marketing agreements</p>
+            </div>
+            <button onclick="contactPartnerships()" class="px-6 py-3 bg-[#0066cc] text-white rounded-lg font-bold hover:bg-[#1e3a5f]">
+                Become a Partner
+            </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-6">
+            <!-- Marriott Example -->
+            <div class="p-6 border-2 border-slate-200 rounded-xl hover:border-[#0066cc] transition-all">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-16 h-16 bg-red-800 rounded-lg flex items-center justify-center text-white text-2xl font-bold">M</div>
+                    <div>
+                        <h3 class="text-xl font-bold text-[#1e3a5f]">Marriott International</h3>
+                        <p class="text-sm text-slate-500">Current Partner • Premium Tier</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <div class="text-center p-3 bg-slate-50 rounded-lg">
+                        <div class="text-xl font-bold text-[#0066cc] mono">$1.2M</div>
+                        <div class="text-xs text-slate-500">Annual Revenue</div>
+                    </div>
+                    <div class="text-center p-3 bg-slate-50 rounded-lg">
+                        <div class="text-xl font-bold text-[#2a9d8f] mono">340</div>
+                        <div class="text-xs text-slate-500">Bookings</div>
+                    </div>
+                    <div class="text-center p-3 bg-slate-50 rounded-lg">
+                        <div class="text-xl font-bold text-[#ffb703] mono">14%</div>
+                        <div class="text-xs text-slate-500">Commission</div>
+                    </div>
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div class="text-sm text-green-800">
+                        <strong>Success Story:</strong> 45% revenue increase after exclusive rate agreement
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hilton Example -->
+            <div class="p-6 border-2 border-slate-200 rounded-xl hover:border-[#0066cc] transition-all">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-16 h-16 bg-blue-800 rounded-lg flex items-center justify-center text-white text-2xl font-bold">H</div>
+                    <div>
+                        <h3 class="text-xl font-bold text-[#1e3a5f]">Hilton Worldwide</h3>
+                        <p class="text-sm text-slate-500">Current Partner • Growth Tier</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <div class="text-center p-3 bg-slate-50 rounded-lg">
+                        <div class="text-xl font-bold text-[#0066cc] mono">$892K</div>
+                        <div class="text-xs text-slate-500">Annual Revenue</div>
+                    </div>
+                    <div class="text-center p-3 bg-slate-50 rounded-lg">
+                        <div class="text-xl font-bold text-[#2a9d8f] mono">268</div>
+                        <div class="text-xs text-slate-500">Bookings</div>
+                    </div>
+                    <div class="text-center p-3 bg-slate-50 rounded-lg">
+                        <div class="text-xl font-bold text-[#ffb703] mono">12%</div>
+                        <div class="text-xs text-slate-500">Commission</div>
+                    </div>
+                </div>
+                <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div class="text-sm text-blue-800">
+                        <strong>Opportunity:</strong> Expand to Curio Collection properties
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROI Calculator -->
+    <div class="bg-gradient-to-r from-[#1e3a5f] to-[#0066cc] rounded-2xl p-8 text-white">
+        <h2 class="text-2xl font-bold mb-6">Partnership ROI Calculator</h2>
+        <div class="grid grid-cols-4 gap-6">
+            <div>
+                <label class="text-sm text-blue-200 mb-2 block">Your Investment</label>
+                <select id="investmentAmount" onchange="calculateROI()" class="w-full p-3 rounded-lg text-[#1e3a5f] font-bold">
+                    <option value="50000">$50,000</option>
+                    <option value="100000" selected>$100,000</option>
+                    <option value="150000">$150,000</option>
+                    <option value="250000">$250,000</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-sm text-blue-200 mb-2 block">Destination</label>
+                <select id="destinationSelect" onchange="calculateROI()" class="w-full p-3 rounded-lg text-[#1e3a5f] font-bold">
+                    <option value="maldives">Maldives</option>
+                    <option value="thailand">Thailand</option>
+                    <option value="dubai">Dubai</option>
+                    <option value="spain">Spain</option>
+                </select>
+            </div>
+            <div class="bg-white/10 rounded-lg p-3">
+                <div class="text-sm text-blue-200 mb-1">Projected Revenue</div>
+                <div class="text-2xl font-bold mono" id="projectedRevenue">$620K</div>
+            </div>
+            <div class="bg-white/10 rounded-lg p-3">
+                <div class="text-sm text-blue-200 mb-1">Your ROI</div>
+                <div class="text-2xl font-bold mono text-green-300" id="roiResult">520%</div>
+            </div>
+        </div>
+        <p class="text-sm text-blue-200 mt-4">*Based on historical performance data and market growth projections</p>
+    </div>
+
+    <!-- Testimonials -->
+    <div class="bg-white rounded-2xl p-8 shadow-xl border border-slate-200">
+        <h2 class="text-2xl font-bold text-[#1e3a5f] mb-6">Partner Testimonials</h2>
+        <div class="grid grid-cols-3 gap-6">
+            <div class="p-6 bg-slate-50 rounded-xl border border-slate-200">
+                <div class="text-4xl text-[#0066cc] mb-4">"</div>
+                <p class="text-slate-700 mb-4">TripFactory delivered 340% ROI on our marketing partnership. Their premium customer base is exactly what we needed.</p>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-[#0066cc] rounded-full flex items-center justify-center text-white font-bold">JD</div>
+                    <div>
+                        <div class="font-bold text-[#1e3a5f] text-sm">James Davidson</div>
+                        <div class="text-xs text-slate-500">CMO, Maldives Tourism Board</div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 bg-slate-50 rounded-xl border border-slate-200">
+                <div class="text-4xl text-[#0066cc] mb-4">"</div>
+                <p class="text-slate-700 mb-4">The data insights alone are worth the partnership. We've optimized our pricing strategy and increased ADR by 18%.</p>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-[#2a9d8f] rounded-full flex items-center justify-center text-white font-bold">SC</div>
+                    <div>
+                        <div class="font-bold text-[#1e3a5f] text-sm">Sarah Chen</div>
+                        <div class="text-xs text-slate-500">Revenue Director, Marriott Asia</div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 bg-slate-50 rounded-xl border border-slate-200">
+                <div class="text-4xl text-[#0066cc] mb-4">"</div>
+                <p class="text-slate-700 mb-4">Professional team, transparent reporting, and most importantly - they deliver results. Our fastest growing channel.</p>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-[#ffb703] rounded-full flex items-center justify-center text-white font-bold">MK</div>
+                    <div>
+                        <div class="font-bold text-[#1e3a5f] text-sm">Mohammed Khalid</div>
+                        <div class="text-xs text-slate-500">Head of Partnerships, Dubai Tourism</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact CTA -->
+    <div class="text-center py-8">
+        <h2 class="text-3xl font-bold text-[#1e3a5f] mb-4">Ready to Grow Together?</h2>
+        <p class="text-slate-600 mb-6 max-w-2xl mx-auto">Join our network of premium partners and tap into high-value travelers seeking exceptional experiences.</p>
+        <div class="flex justify-center gap-4">
+            <button onclick="contactPartnerships()" class="px-8 py-4 bg-[#0066cc] text-white rounded-xl font-bold text-lg hover:bg-[#1e3a5f] transition-all shadow-lg">
+                Schedule Partnership Call
+            </button>
+            <button onclick="downloadDeck()" class="px-8 py-4 border-2 border-[#0066cc] text-[#0066cc] rounded-xl font-bold text-lg hover:bg-[#f0f9ff] transition-all">
+                Download Full Deck
+            </button>
+        </div>
+    </div>
+
+</main>
+
+<script>
+const roiData = {
+    maldives: { multiplier: 6.2, commission: 0.14 },
+    thailand: { multiplier: 5.8, commission: 0.11 },
+    dubai: { multiplier: 5.4, commission: 0.12 },
+    spain: { multiplier: 4.8, commission: 0.10 }
+};
+
+function calculateROI() {
+    const investment = parseInt(document.getElementById('investmentAmount').value);
+    const destination = document.getElementById('destinationSelect').value;
+    const data = roiData[destination];
+    
+    const projectedRevenue = Math.round(investment * data.multiplier);
+    const partnerRevenue = Math.round(projectedRevenue * data.commission);
+    const roi = Math.round((partnerRevenue / investment) * 100);
+    
+    document.getElementById('projectedRevenue').textContent = '$' + (projectedRevenue / 1000) + 'K';
+    document.getElementById('roiResult').textContent = roi + '%';
+}
+
+function showProposal(destination) {
+    const proposals = {
+        maldives: 'Maldives Partnership Proposal:\n\n• $150K marketing investment\n• Exclusive rate parity\n• Featured placement on homepage\n• Dedicated landing page\n• Email campaign to 45K VIP customers\n• Expected ROI: 520%\n\nContact: partnerships@tripfactory.com',
+        thailand: 'Thailand Partnership Proposal:\n\n• $100K co-marketing fund\n• Cultural experience packages\n• Wellness tourism focus\n• Social media campaign\n• Influencer partnerships\n• Expected ROI: 480%',
+        dubai: 'Dubai Partnership Proposal:\n\n• $80K partnership investment\n• Luxury city break packages\n• Desert experience add-ons\n• Corporate travel focus\n• Expected ROI: 450%'
+    };
+    
+    alert(proposals[destination]);
+}
+
+function contactPartnerships() {
+    alert('Partnership Inquiry\n\nEmail: partnerships@tripfactory.com\nPhone: +44 20 7123 4567\n\nOur partnership team will respond within 24 hours.');
+}
+
+function downloadDeck() {
+    alert('Downloading TripFactory Investment Deck...\n\nFile: TF_Partner_Investment_2024.pdf\nSize: 4.2MB\n\nIncludes:\n- Company overview\n- Market data\n- Case studies\n- Partnership tiers\n- ROI projections');
+}
+
+// Initialize
+calculateROI();
+</script>
+
+</body>
+</html>

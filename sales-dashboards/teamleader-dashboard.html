@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory - Agent Performance & Conversion Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .performance-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .performance-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0, 102, 204, 0.15); }
+        .urgent-pulse { animation: urgentPulse 2s infinite; }
+        @keyframes urgentPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } }
+        .conversion-bar { transition: width 1s ease-out; }
+        .agent-row { transition: all 0.2s; cursor: pointer; }
+        .agent-row:hover { background: #f0f9ff; transform: scale(1.01); }
+        .metric-badge { transition: all 0.2s; }
+        .metric-badge:hover { transform: scale(1.1); }
+        .coaching-alert { border-left: 4px solid #f59e0b; background: linear-gradient(to right, #fffbeb, #ffffff); }
+        .winner-glow { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
+        .at-risk { border-left: 4px solid #ef4444; background: linear-gradient(to right, #fef2f2, #ffffff); }
+        .trend-up { color: #22c55e; }
+        .trend-down { color: #ef4444; }
+        .sticky-header { position: sticky; top: 0; z-index: 50; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); }
+        .real-time-indicator { animation: blink 2s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+<!-- Sticky Header -->
+<header class="sticky-header border-b-2 border-[#0066cc] px-6 py-4 shadow-lg">
+    <div class="flex justify-between items-center max-w-[1920px] mx-auto">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-gradient-to-br from-[#0066cc] to-[#1e3a5f] rounded-xl flex items-center justify-center text-white text-2xl shadow-lg">
+                <i class="fas fa-users-cog"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-[#1e3a5f]">Agent Performance Center</h1>
+                <p class="text-xs text-slate-500 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-green-500 rounded-full real-time-indicator"></span>
+                    Live Monitoring • Conversion Optimization • Coaching Intelligence
+                </p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <!-- Office Selector -->
+            <select id="officeFilter" onchange="loadOfficeData()" class="bg-white border border-slate-300 rounded-lg px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#0066cc] shadow-sm">
+                <option value="all">All Offices</option>
+                <option value="uk">🇬🇧 UK Office (London)</option>
+                <option value="us">🇺🇸 US Office (New York)</option>
+                <option value="india">🇮🇳 India Office (Mumbai)</option>
+                <option value="singapore">🇸🇬 Singapore Hub</option>
+            </select>
+            
+            <!-- Date Range -->
+            <select id="periodFilter" onchange="updatePeriod()" class="bg-white border border-slate-300 rounded-lg px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#0066cc] shadow-sm">
+                <option value="today">Today</option>
+                <option value="week" selected>This Week</option>
+                <option value="month">This Month</option>
+                <option value="quarter">This Quarter</option>
+            </select>
+            
+            <button onclick="startCoachingSession()" class="px-4 py-2 bg-[#0066cc] text-white rounded-lg text-sm font-bold hover:bg-[#0052a3] shadow-md flex items-center gap-2">
+                <i class="fas fa-chalkboard-teacher"></i> Start Coaching
+            </button>
+            
+            <button onclick="exportPerformanceReport()" class="px-4 py-2 border-2 border-[#0066cc] text-[#0066cc] rounded-lg text-sm font-bold hover:bg-[#0066cc] hover:text-white transition-all">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-[1920px] mx-auto p-6 space-y-6">
+
+    <!-- Critical Alerts Banner -->
+    <div id="alertsBanner" class="grid grid-cols-3 gap-4">
+        <div class="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3 urgent-pulse">
+            <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+            <div>
+                <div class="font-bold text-red-700">3 Agents Need Immediate Attention</div>
+                <div class="text-xs text-red-600">Conversion rate below 10% for 3+ days</div>
+            </div>
+            <button onclick="viewAtRiskAgents()" class="ml-auto px-3 py-1 bg-red-500 text-white rounded text-xs font-bold">View</button>
+        </div>
+        
+        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-center gap-3">
+            <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+            <div>
+                <div class="font-bold text-yellow-700">12 Quotes Pending >24h</div>
+                <div class="text-xs text-yellow-600">Risk of losing to competitors</div>
+            </div>
+            <button onclick="viewPendingQuotes()" class="ml-auto px-3 py-1 bg-yellow-500 text-white rounded text-xs font-bold">Review</button>
+        </div>
+        
+        <div class="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 winner-glow">
+            <i class="fas fa-trophy text-green-600 text-2xl"></i>
+            <div>
+                <div class="font-bold text-green-700">Sarah Chen Hit 28% Conversion!</div>
+                <div class="text-xs text-green-600">Top performer this week</div>
+            </div>
+            <button onclick="viewTopPerformer()" class="ml-auto px-3 py-1 bg-green-500 text-white rounded text-xs font-bold">Celebrate</button>
+        </div>
+    </div>
+
+    <!-- Executive KPIs -->
+    <div class="grid grid-cols-6 gap-4">
+        <div class="performance-card bg-white rounded-xl p-5 shadow-lg border-l-4 border-[#0066cc]">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-slate-500 font-bold uppercase">Avg Conversion Rate</div>
+                <i class="fas fa-percentage text-[#0066cc]"></i>
+            </div>
+            <div class="text-3xl font-bold text-[#1e3a5f] mono">18.4%</div>
+            <div class="flex items-center gap-1 text-xs text-green-600 font-bold mt-1">
+                <i class="fas fa-arrow-up"></i> +2.1% vs last week
+            </div>
+            <div class="mt-2 text-xs text-slate-400">Target: 20%</div>
+        </div>
+        
+        <div class="performance-card bg-white rounded-xl p-5 shadow-lg border-l-4 border-[#2a9d8f]">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-slate-500 font-bold uppercase">Response Time</div>
+                <i class="fas fa-bolt text-[#2a9d8f]"></i>
+            </div>
+            <div class="text-3xl font-bold text-[#1e3a5f] mono">14m</div>
+            <div class="flex items-center gap-1 text-xs text-green-600 font-bold mt-1">
+                <i class="fas fa-arrow-down"></i> -3m vs target
+            </div>
+            <div class="mt-2 text-xs text-slate-400">Goal: &lt;15min</div>
+        </div>
+        
+        <div class="performance-card bg-white rounded-xl p-5 shadow-lg border-l-4 border-[#ffb703]">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-slate-500 font-bold uppercase">Quote-to-Book</div>
+                <i class="fas fa-file-invoice-dollar text-[#ffb703]"></i>
+            </div>
+            <div class="text-3xl font-bold text-[#1e3a5f] mono">3.2h</div>
+            <div class="flex items-center gap-1 text-xs text-red-600 font-bold mt-1">
+                <i class="fas fa-arrow-up"></i> +0.5h vs target
+            </div>
+            <div class="mt-2 text-xs text-slate-400">Target: &lt;2h</div>
+        </div>
+        
+        <div class="performance-card bg-white rounded-xl p-5 shadow-lg border-l-4 border-purple-500">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-slate-500 font-bold uppercase">Follow-up Rate</div>
+                <i class="fas fa-redo text-purple-500"></i>
+            </div>
+            <div class="text-3xl font-bold text-[#1e3a5f] mono">87%</div>
+            <div class="flex items-center gap-1 text-xs text-green-600 font-bold mt-1">
+                <i class="fas fa-arrow-up"></i> +5% this week
+            </div>
+            <div class="mt-2 text-xs text-slate-400">Target: 90%</div>
+        </div>
+        
+        <div class="performance-card bg-white rounded-xl p-5 shadow-lg border-l-4 border-red-500">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-slate-500 font-bold uppercase">Lost to Competitor</div>
+                <i class="fas fa-user-slash text-red-500"></i>
+            </div>
+            <div class="text-3xl font-bold text-[#e63946] mono">12%</div>
+            <div class="flex items-center gap-1 text-xs text-red-600 font-bold mt-1">
+                <i class="fas fa-arrow-up"></i> +2% vs last week
+            </div>
+            <div class="mt-2 text-xs text-slate-400">Action needed</div>
+        </div>
+        
+        <div class="performance-card bg-white rounded-xl p-5 shadow-lg border-l-4 border-[#1e3a5f]">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-slate-500 font-bold uppercase">Revenue/Agent</div>
+                <i class="fas fa-pound-sign text-[#1e3a5f]"></i>
+            </div>
+            <div class="text-3xl font-bold text-[#1e3a5f] mono">£24.5K</div>
+            <div class="flex items-center gap-1 text-xs text-green-600 font-bold mt-1">
+                <i class="fas fa-arrow-up"></i> +8.3% vs target
+            </div>
+            <div class="mt-2 text-xs text-slate-400">Weekly avg</div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Grid -->
+    <div class="grid grid-cols-12 gap-6">
+
+        <!-- Left Column: Agent Leaderboard (8 cols) -->
+        <div class="col-span-8 space-y-6">
+            
+            <!-- Agent Performance Table -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                    <div>
+                        <h3 class="text-xl font-bold text-[#1e3a5f] flex items-center gap-2">
+                            <i class="fas fa-chart-bar text-[#0066cc]"></i>
+                            Agent Performance Leaderboard
+                        </h3>
+                        <p class="text-sm text-slate-500 mt-1">Ranked by conversion rate • Last updated: 2 mins ago</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="rankBy" onchange="sortAgents()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm">
+                            <option value="conversion">Sort by Conversion</option>
+                            <option value="revenue">Sort by Revenue</option>
+                            <option value="response">Sort by Response Time</option>
+                            <option value="satisfaction">Sort by CSAT</option>
+                        </select>
+                        <button onclick="toggleView()" class="px-3 py-1.5 bg-[#0066cc] text-white rounded-lg text-sm">
+                            <i class="fas fa-th-large"></i> Grid View
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                            <tr>
+                                <th class="px-4 py-4 font-bold">Rank</th>
+                                <th class="px-4 py-4 font-bold">Agent</th>
+                                <th class="px-4 py-4 font-bold text-center">Office</th>
+                                <th class="px-4 py-4 font-bold text-right">Enquiries</th>
+                                <th class="px-4 py-4 font-bold text-right">Bookings</th>
+                                <th class="px-4 py-4 font-bold text-right">Conversion</th>
+                                <th class="px-4 py-4 font-bold text-right">Revenue</th>
+                                <th class="px-4 py-4 font-bold text-center">Response</th>
+                                <th class="px-4 py-4 font-bold text-center">Status</th>
+                                <th class="px-4 py-4 font-bold text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200" id="agentTable">
+                            <!-- Top Performer -->
+                            <tr class="agent-row bg-green-50 winner-glow" onclick="viewAgentDetail('sarah')">
+                                <td class="px-4 py-4"><span class="flex items-center justify-center w-8 h-8 bg-yellow-400 text-white rounded-full font-bold text-sm">1</span></td>
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">SC</div>
+                                        <div>
+                                            <div class="font-bold text-[#1e3a5f]">Sarah Chen</div>
+                                            <div class="text-xs text-slate-500">Senior Agent • 3 yrs</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-center"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold">UK</span></td>
+                                <td class="px-4 py-4 text-right mono font-medium">48</td>
+                                <td class="px-4 py-4 text-right mono font-medium text-green-600 font-bold">13</td>
+                                <td class="px-4 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <span class="text-lg font-bold text-green-600 mono">27.1%</span>
+                                        <i class="fas fa-arrow-up text-green-500 text-xs"></i>
+                                    </div>
+                                    <div class="w-24 bg-slate-200 rounded-full h-1.5 mt-1 ml-auto">
+                                        <div class="bg-green-500 h-1.5 rounded-full" style="width: 90%"></div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-right mono font-bold">£42.8K</td>
+                                <td class="px-4 py-4 text-center"><span class="text-green-600 font-bold">8m</span></td>
+                                <td class="px-4 py-4 text-center"><span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">EXCELLENT</span></td>
+                                <td class="px-4 py-4 text-center">
+                                    <button onclick="event.stopPropagation(); coachAgent('sarah')" class="text-[#0066cc] hover:text-[#0052a3] text-sm font-bold">
+                                        <i class="fas fa-user-graduate"></i>
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Good Performer -->
+                            <tr class="agent-row" onclick="viewAgentDetail('james')">
+                                <td class="px-4 py-4"><span class="flex items-center justify-center w-8 h-8 bg-slate-300 text-white rounded-full font-bold text-sm">2</span></td>
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold">JW</div>
+                                        <div>
+                                            <div class="font-bold text-[#1e3a5f]">James Wilson</div>
+                                            <div class="text-xs text-slate-500">Agent • 2 yrs</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-center"><span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-bold">US</span></td>
+                                <td class="px-4 py-4 text-right mono font-medium">52</td>
+                                <td class="px-4 py-4 text-right mono font-medium text-green-600 font-bold">11</td>
+                                <td class="px-4 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <span class="text-lg font-bold text-[#1e3a5f] mono">21.2%</span>
+                                        <i class="fas fa-minus text-slate-400 text-xs"></i>
+                                    </div>
+                                    <div class="w-24 bg-slate-200 rounded-full h-1.5 mt-1 ml-auto">
+                                        <div class="bg-blue-500 h-1.5 rounded-full" style="width: 70%"></div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-right mono font-bold">£38.2K</td>
+                                <td class="px-4 py-4 text-center"><span class="text-green-600 font-bold">12m</span></td>
+                                <td class="px-4 py-4 text-center"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">GOOD</span></td>
+                                <td class="px-4 py-4 text-center">
+                                    <button onclick="event.stopPropagation(); coachAgent('james')" class="text-[#0066cc] hover:text-[#0052a3] text-sm font-bold">
+                                        <i class="fas fa-user-graduate"></i>
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- At Risk Agent -->
+                            <tr class="agent-row at-risk" onclick="viewAgentDetail('priya')">
+                                <td class="px-4 py-4"><span class="flex items-center justify-center w-8 h-10 bg-slate-300 text-white rounded-full font-bold text-sm">3</span></td>
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-gradient-to-br from-orange-400 to-red-400 rounded-full flex items-center justify-center text-white font-bold">PK</div>
+                                        <div>
+                                            <div class="font-bold text-[#1e3a5f]">Priya Kumar</div>
+                                            <div class="text-xs text-slate-500">Agent • 1 yr</div>
+                                            <span class="text-xs text-red-600 font-bold">⚠️ Needs coaching</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-center"><span class="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-bold">IN</span></td>
+                                <td class="px-4 py-4 text-right mono font-medium">38</td>
+                                <td class="px-4 py-4 text-right mono font-medium text-red-600 font-bold">4</td>
+                                <td class="px-4 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <span class="text-lg font-bold text-red-600 mono">10.5%</span>
+                                        <i class="fas fa-arrow-down text-red-500 text-xs"></i>
+                                    </div>
+                                    <div class="w-24 bg-slate-200 rounded-full h-1.5 mt-1 ml-auto">
+                                        <div class="bg-red-500 h-1.5 rounded-full" style="width: 35%"></div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-right mono font-bold">£12.4K</td>
+                                <td class="px-4 py-4 text-center"><span class="text-red-600 font-bold">28m</span></td>
+                                <td class="px-4 py-4 text-center"><span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">AT RISK</span></td>
+                                <td class="px-4 py-4 text-center">
+                                    <button onclick="event.stopPropagation(); urgentCoaching('priya')" class="text-red-600 hover:text-red-700 text-sm font-bold animate-pulse">
+                                        <i class="fas fa-exclamation-circle"></i> Coach Now
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- More agents... -->
+                            <tr class="agent-row" onclick="viewAgentDetail('emma')">
+                                <td class="px-4 py-4"><span class="flex items-center justify-center w-8 h-8 bg-slate-300 text-white rounded-full font-bold text-sm">4</span></td>
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-teal-500 rounded-full flex items-center justify-center text-white font-bold">ET</div>
+                                        <div>
+                                            <div class="font-bold text-[#1e3a5f]">Emma Thompson</div>
+                                            <div class="text-xs text-slate-500">Agent • 2 yrs</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-center"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold">UK</span></td>
+                                <td class="px-4 py-4 text-right mono font-medium">41</td>
+                                <td class="px-4 py-4 text-right mono font-medium text-green-600 font-bold">8</td>
+                                <td class="px-4 py-4 text-right">
+                                    <span class="text-lg font-bold text-[#1e3a5f] mono">19.5%</span>
+                                    <div class="w-24 bg-slate-200 rounded-full h-1.5 mt-1 ml-auto">
+                                        <div class="bg-blue-400 h-1.5 rounded-full" style="width: 65%"></div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-right mono font-bold">£28.6K</td>
+                                <td class="px-4 py-4 text-center"><span class="text-yellow-600 font-bold">16m</span></td>
+                                <td class="px-4 py-4 text-center"><span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold">AVERAGE</span></td>
+                                <td class="px-4 py-4 text-center">
+                                    <button onclick="event.stopPropagation(); coachAgent('emma')" class="text-[#0066cc] hover:text-[#0052a3] text-sm font-bold">
+                                        <i class="fas fa-user-graduate"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
+                    <span class="text-xs text-slate-500">Showing 4 of 24 agents</span>
+                    <div class="flex gap-2">
+                        <button class="px-3 py-1 border border-slate-300 rounded text-xs hover:bg-white">Previous</button>
+                        <button class="px-3 py-1 border border-slate-300 rounded text-xs hover:bg-white">Next</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conversion Funnel Analysis -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="text-lg font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                    <i class="fas fa-filter text-[#0066cc]"></i>
+                    Conversion Funnel by Stage
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-32 text-sm font-bold text-slate-600">Enquiries</div>
+                        <div class="flex-1 bg-slate-100 rounded-full h-8 relative overflow-hidden">
+                            <div class="bg-[#0066cc] h-full rounded-full flex items-center justify-end pr-3 text-white text-xs font-bold" style="width: 100%">179</div>
+                        </div>
+                        <div class="w-20 text-right text-sm font-bold text-[#1e3a5f] mono">100%</div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-32 text-sm font-bold text-slate-600">Quoted</div>
+                        <div class="flex-1 bg-slate-100 rounded-full h-8 relative overflow-hidden">
+                            <div class="bg-blue-400 h-full rounded-full flex items-center justify-end pr-3 text-white text-xs font-bold" style="width: 85%">152</div>
+                        </div>
+                        <div class="w-20 text-right text-sm font-bold text-[#1e3a5f] mono">85%</div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-32 text-sm font-bold text-slate-600">Followed Up</div>
+                        <div class="flex-1 bg-slate-100 rounded-full h-8 relative overflow-hidden">
+                            <div class="bg-yellow-400 h-full rounded-full flex items-center justify-end pr-3 text-white text-xs font-bold" style="width: 68%">122</div>
+                        </div>
+                        <div class="w-20 text-right text-sm font-bold text-[#1e3a5f] mono">68%</div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-32 text-sm font-bold text-slate-600">Negotiating</div>
+                        <div class="flex-1 bg-slate-100 rounded-full h-8 relative overflow-hidden">
+                            <div class="bg-orange-400 h-full rounded-full flex items-center justify-end pr-3 text-white text-xs font-bold" style="width: 45%">81</div>
+                        </div>
+                        <div class="w-20 text-right text-sm font-bold text-[#1e3a5f] mono">45%</div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-32 text-sm font-bold text-slate-600">Booked</div>
+                        <div class="flex-1 bg-slate-100 rounded-full h-8 relative overflow-hidden">
+                            <div class="bg-green-500 h-full rounded-full flex items-center justify-end pr-3 text-white text-xs font-bold" style="width: 18%">33</div>
+                        </div>
+                        <div class="w-20 text-right text-sm font-bold text-green-600 mono">18.4%</div>
+                    </div>
+                </div>
+                <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div class="flex items-start gap-2">
+                        <i class="fas fa-lightbulb text-blue-500 mt-1"></i>
+                        <div class="text-sm text-blue-800">
+                            <span class="font-bold">Insight:</span> Biggest drop-off is between "Quoted" and "Followed Up" (17%). Consider implementing automated follow-up reminders for agents.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Coaching & Actions (4 cols) -->
+        <div class="col-span-4 space-y-6">
+
+            <!-- Coaching Queue -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="text-lg font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                    <i class="fas fa-chalkboard-teacher text-[#0066cc]"></i>
+                    Coaching Queue
+                    <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">3</span>
+                </h3>
+                
+                <div class="space-y-3">
+                    <div class="coaching-alert p-4 rounded-lg border border-yellow-200">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center text-white text-xs font-bold">PK</div>
+                                <div>
+                                    <div class="font-bold text-[#1e3a5f] text-sm">Priya Kumar</div>
+                                    <div class="text-xs text-slate-500">Conversion: 10.5% • Response: 28m</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded font-bold">URGENT</span>
+                        </div>
+                        <div class="text-xs text-slate-600 mb-2">Issues: Slow response, low follow-up rate, price objections</div>
+                        <div class="flex gap-2">
+                            <button onclick="scheduleCoaching('priya')" class="flex-1 py-2 bg-[#0066cc] text-white rounded text-xs font-bold">Schedule Session</button>
+                            <button onclick="viewActionPlan('priya')" class="px-3 py-2 border border-[#0066cc] text-[#0066cc] rounded text-xs font-bold">Plan</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center text-white text-xs font-bold">ET</div>
+                                <div>
+                                    <div class="font-bold text-[#1e3a5f] text-sm">Emma Thompson</div>
+                                    <div class="text-xs text-slate-500">Conversion: 19.5% • Avg deal: £3.2K</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded font-bold">REVIEW</span>
+                        </div>
+                        <div class="text-xs text-slate-600 mb-2">Opportunity: Upselling skills, could hit 25% with coaching</div>
+                        <button onclick="scheduleCoaching('emma')" class="w-full py-2 bg-white border border-slate-300 text-slate-700 rounded text-xs font-bold hover:bg-slate-50">Schedule Review</button>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 bg-green-400 rounded-full flex items-center justify-center text-white text-xs font-bold">RJ</div>
+                                <div>
+                                    <div class="font-bold text-[#1e3a5f] text-sm">Raj Patel</div>
+                                    <div class="text-xs text-slate-500">New hire • Week 3</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded font-bold">ONBOARD</span>
+                        </div>
+                        <div class="text-xs text-slate-600 mb-2">Scheduled: Product knowledge training</div>
+                        <button onclick="viewTraining('raj')" class="w-full py-2 bg-white border border-slate-300 text-slate-700 rounded text-xs font-bold hover:bg-slate-50">View Training</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- What to Improve (Actionable Insights) -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="text-lg font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                    <i class="fas fa-rocket text-[#0066cc]"></i>
+                    Improvement Opportunities
+                </h3>
+                
+                <div class="space-y-4">
+                    <div class="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-100">
+                        <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center text-red-600 flex-shrink-0">
+                            <i class="fas fa-clock text-sm"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-red-700 text-sm">Response Time Critical</div>
+                            <div class="text-xs text-slate-600 mt-1">3 agents averaging >20min. Target: &lt;15min. <span class="text-red-600 font-bold">Risk: Losing 40% enquiries to competitors.</span></div>
+                            <button onclick="viewResponseTimeFix()" class="mt-2 text-xs text-[#0066cc] font-bold hover:underline">View Fix Strategy →</button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-100">
+                        <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600 flex-shrink-0">
+                            <i class="fas fa-redo text-sm"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-yellow-700 text-sm">Follow-up Gap</div>
+                            <div class="text-xs text-slate-600 mt-1">Only 68% of quotes are followed up within 24h. Industry best practice: 90%.</div>
+                            <button onclick="viewFollowUpStrategy()" class="mt-2 text-xs text-[#0066cc] font-bold hover:underline">View Automation →</button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 flex-shrink-0">
+                            <i class="fas fa-tag text-sm"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-blue-700 text-sm">Price Objection Handling</div>
+                            <div class="text-xs text-slate-600 mt-1">32% of lost deals cite "too expensive". Top agents use value-selling techniques.</div>
+                            <button onclick="viewSalesTraining()" class="mt-2 text-xs text-[#0066cc] font-bold hover:underline">View Training →</button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3 p-3 bg-green-50 rounded-lg border border-green-100">
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 flex-shrink-0">
+                            <i class="fas fa-star text-sm"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-green-700 text-sm">Upsell Opportunity</div>
+                            <div class="text-xs text-slate-600 mt-1">Sarah Chen's method: Add insurance + transfers. Avg +£400/booking. <span class="text-green-600 font-bold">Replicate to team?</span></div>
+                            <button onclick="shareBestPractice()" class="mt-2 text-xs text-[#0066cc] font-bold hover:underline">Share with Team →</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Comparison -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="text-lg font-bold text-[#1e3a5f] mb-4">Office Comparison</h3>
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="font-bold text-[#1e3a5f]">🇬🇧 UK Office</span>
+                            <span class="font-bold text-green-600">22.4%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2">
+                            <div class="bg-green-500 h-2 rounded-full" style="width: 90%"></div>
+                        </div>
+                        <div class="text-xs text-slate-500 mt-1">Top performer: Sarah Chen</div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="font-bold text-[#1e3a5f]">🇸🇬 Singapore</span>
+                            <span class="font-bold text-green-600">19.8%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2">
+                            <div class="bg-blue-500 h-2 rounded-full" style="width: 80%"></div>
+                        </div>
+                        <div class="text-xs text-slate-500 mt-1">Consistent performance</div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="font-bold text-[#1e3a5f]">🇺🇸 US Office</span>
+                            <span class="font-bold text-yellow-600">17.2%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2">
+                            <div class="bg-yellow-500 h-2 rounded-full" style="width: 70%"></div>
+                        </div>
+                        <div class="text-xs text-slate-500 mt-1">Needs attention</div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="font-bold text-[#1e3a5f]">🇮🇳 India Office</span>
+                            <span class="font-bold text-red-600">14.1%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2">
+                            <div class="bg-red-500 h-2 rounded-full" style="width: 55%"></div>
+                        </div>
+                        <div class="text-xs text-slate-500 mt-1">Coaching intervention needed</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Bottom Section: Detailed Analytics -->
+    <div class="grid grid-cols-2 gap-6">
+        
+        <!-- Conversion by Source -->
+        <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+            <h3 class="text-lg font-bold text-[#1e3a5f] mb-4">Conversion Rate by Lead Source</h3>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-phone text-green-500"></i>
+                        <span class="font-bold text-[#1e3a5f]">Inbound Calls</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <div class="font-bold text-[#1e3a5f] mono">24.8%</div>
+                            <div class="text-xs text-slate-500">Conversion</div>
+                        </div>
+                        <span class="text-green-500 text-xs font-bold">↑ 3.2%</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-envelope text-blue-500"></i>
+                        <span class="font-bold text-[#1e3a5f]">Email Enquiries</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <div class="font-bold text-[#1e3a5f] mono">16.2%</div>
+                            <div class="text-xs text-slate-500">Conversion</div>
+                        </div>
+                        <span class="text-red-500 text-xs font-bold">↓ 1.4%</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-mouse-pointer text-purple-500"></i>
+                        <span class="font-bold text-[#1e3a5f]">Website Chat</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <div class="font-bold text-[#1e3a5f] mono">12.4%</div>
+                            <div class="text-xs text-slate-500">Conversion</div>
+                        </div>
+                        <span class="text-green-500 text-xs font-bold">↑ 0.8%</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fab fa-whatsapp text-green-600"></i>
+                        <span class="font-bold text-[#1e3a5f]">WhatsApp</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <div class="font-bold text-[#1e3a5f] mono">28.6%</div>
+                            <div class="text-xs text-slate-500">Conversion</div>
+                        </div>
+                        <span class="text-green-500 text-xs font-bold">↑ 5.1%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                <div class="text-sm text-green-800">
+                    <i class="fas fa-lightbulb mr-2"></i>
+                    <span class="font-bold">Recommendation:</span> Prioritize WhatsApp and phone leads. Consider routing more resources to these channels.
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Trends -->
+        <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+            <h3 class="text-lg font-bold text-[#1e3a5f] mb-4">Weekly Conversion Trends</h3>
+            <canvas id="trendChart" height="200"></canvas>
+            <div class="mt-4 grid grid-cols-3 gap-4 text-center">
+                <div class="p-2 bg-slate-50 rounded-lg">
+                    <div class="text-xs text-slate-500">This Week</div>
+                    <div class="text-lg font-bold text-[#1e3a5f] mono">18.4%</div>
+                </div>
+                <div class="p-2 bg-slate-50 rounded-lg">
+                    <div class="text-xs text-slate-500">Last Week</div>
+                    <div class="text-lg font-bold text-[#1e3a5f] mono">16.3%</div>
+                </div>
+                <div class="p-2 bg-slate-50 rounded-lg">
+                    <div class="text-xs text-slate-500">Change</div>
+                    <div class="text-lg font-bold text-green-600 mono">+2.1%</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</main>
+
+<!-- Modals -->
+<div id="agentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-gradient-to-r from-[#0066cc] to-[#1e3a5f] text-white rounded-t-2xl">
+            <h2 class="text-2xl font-bold" id="modalTitle">Agent Performance</h2>
+            <button onclick="closeModal()" class="text-white hover:text-slate-200 text-2xl">&times;</button>
+        </div>
+        <div class="p-6" id="modalContent">
+            <!-- Dynamic content -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // Chart initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
+                datasets: [{
+                    label: 'Conversion Rate %',
+                    data: [14.2, 15.1, 14.8, 16.3, 15.9, 18.4],
+                    borderColor: '#0066cc',
+                    backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'Target',
+                    data: [20, 20, 20, 20, 20, 20],
+                    borderColor: '#22c55e',
+                    borderDash: [5, 5],
+                    tension: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 25
+                    }
+                }
+            }
+        });
+    });
+
+    // Functions
+    function loadOfficeData() {
+        const office = document.getElementById('officeFilter').value;
+        console.log('Loading data for office:', office);
+        // Simulate data refresh
+        document.body.style.cursor = 'wait';
+        setTimeout(() => {
+            document.body.style.cursor = 'default';
+        }, 500);
+    }
+
+    function updatePeriod() {
+        loadOfficeData();
+    }
+
+    function viewAgentDetail(agent) {
+        const modal = document.getElementById('agentModal');
+        document.getElementById('modalTitle').textContent = 'Agent Performance Detail';
+        document.getElementById('modalContent').innerHTML = `
+            <div class="grid grid-cols-2 gap-6 mb-6">
+                <div class="bg-slate-50 p-4 rounded-xl">
+                    <h4 class="font-bold text-[#1e3a5f] mb-3">This Week's Performance</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between"><span>Enquiries handled:</span><span class="font-bold">48</span></div>
+                        <div class="flex justify-between"><span>Bookings secured:</span><span class="font-bold text-green-600">13</span></div>
+                        <div class="flex justify-between"><span>Conversion rate:</span><span class="font-bold text-green-600">27.1%</span></div>
+                        <div class="flex justify-between"><span>Revenue generated:</span><span class="font-bold">£42,800</span></div>
+                    </div>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-xl">
+                    <h4 class="font-bold text-[#1e3a5f] mb-3">Key Metrics</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between"><span>Avg response time:</span><span class="font-bold text-green-600">8 min</span></div>
+                        <div class="flex justify-between"><span>Follow-up rate:</span><span class="font-bold">94%</span></div>
+                        <div class="flex justify-between"><span>Customer satisfaction:</span><span class="font-bold">4.8/5</span></div>
+                        <div class="flex justify-between"><span>Avg booking value:</span><span class="font-bold">£3,292</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="coachAgent('${agent}')" class="flex-1 py-3 bg-[#0066cc] text-white rounded-xl font-bold">Schedule Coaching</button>
+                <button onclick="viewActionPlan('${agent}')" class="flex-1 py-3 border-2 border-[#0066cc] text-[#0066cc] rounded-xl font-bold">View Action Plan</button>
+            </div>
+        `;
+        modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('agentModal').classList.add('hidden');
+    }
+
+    function coachAgent(agent) {
+        alert(`Starting coaching session for ${agent}...\n\nThis would open the coaching interface with:\n- Performance history\n- Specific improvement areas\n- Training modules\n- Goal setting tools`);
+    }
+
+    function urgentCoaching(agent) {
+        coachAgent(agent);
+    }
+
+    function scheduleCoaching(agent) {
+        coachAgent(agent);
+    }
+
+    function viewActionPlan(agent) {
+        alert(`Viewing personalized action plan for ${agent}...\n\nIncludes:\n- Specific KPI targets\n- Training recommendations\n- Daily/weekly goals\n- Progress tracking`);
+    }
+
+    function viewTraining(agent) {
+        alert(`Opening training module for ${agent}...`);
+    }
+
+    function viewAtRiskAgents() {
+        alert('Showing all agents with conversion <10%...\n\nFiltering table to show only at-risk agents with specific red flags.');
+    }
+
+    function viewPendingQuotes() {
+        alert('Showing 12 quotes pending >24h...\n\nList of urgent follow-ups needed to prevent competitor loss.');
+    }
+
+    function viewTopPerformer() {
+        viewAgentDetail('sarah');
+    }
+
+    function viewResponseTimeFix() {
+        alert('Strategy to improve response time:\n\n1. Implement auto-acknowledgment emails\n2. Set up mobile notifications for agents\n3. Create response time alerts >15min\n4. Schedule optimization for peak hours');
+    }
+
+    function viewFollowUpStrategy() {
+        alert('Follow-up automation strategy:\n\n1. Automated reminder after 4 hours\n2. Template library for quick follow-ups\n3. Escalation to supervisor after 24h\n4. CRM integration for tracking');
+    }
+
+    function viewSalesTraining() {
+        alert('Value-selling training module:\n\n- Handling price objections\n- Upselling techniques\n- Building urgency ethically\n- Package value demonstration');
+    }
+
+    function shareBestPractice() {
+        alert('Sharing Sarah Chen\'s upselling technique with entire team...\n\nMethod: Always offer insurance + transfers as "complete package"\nResult: +£400 avg booking value\nTraining scheduled for Friday team meeting.');
+    }
+
+    function startCoachingSession() {
+        alert('Starting group coaching session...\n\nTopic: Improving conversion from quote to booking\nAttendees: All agents with <15% conversion');
+    }
+
+    function exportPerformanceReport() {
+        alert('Exporting comprehensive performance report...\n\nIncludes:\n- Individual agent scorecards\n- Office comparisons\n- Trend analysis\n- Coaching recommendations');
+    }
+
+    function sortAgents() {
+        const sortBy = document.getElementById('rankBy').value;
+        console.log('Sorting by:', sortBy);
+        // Implementation would re-sort the table
+    }
+
+    function toggleView() {
+        alert('Switching between list and grid view...');
+    }
+
+    // Close modal on outside click
+    window.onclick = function(event) {
+        const modal = document.getElementById('agentModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    }
+</script>
+
+</body>
+</html>

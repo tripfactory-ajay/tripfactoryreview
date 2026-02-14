@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory Global Forecast - Scenario Planning & Business Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        :root {
+            --tf-navy: #1e3a5f;
+            --tf-blue: #0066cc;
+            --tf-red: #e63946;
+            --tf-yellow: #ffb703;
+            --tf-green: #2a9d8f;
+        }
+        body { background-color: #f8fafc; color: var(--tf-navy); }
+        .tf-card {
+            background: #ffffff;
+            border: 2px solid var(--tf-blue);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .tf-card:hover {
+            box-shadow: 0 8px 16px rgba(0,102,204,0.15);
+            border-color: var(--tf-navy);
+            transform: translateY(-2px);
+        }
+        .slider-container {
+            position: relative;
+            padding: 1rem 0;
+        }
+        .scenario-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #e2e8f0;
+            outline: none;
+            transition: background 0.3s;
+        }
+        .scenario-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--tf-blue);
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+        .scenario-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+            border-left: 4px solid var(--tf-blue);
+        }
+        .impact-positive { color: var(--tf-green); }
+        .impact-negative { color: var(--tf-red); }
+        .impact-neutral { color: var(--tf-yellow); }
+        
+        .toggle-btn {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .toggle-btn.active {
+            background: var(--tf-blue);
+            color: white;
+            border-color: var(--tf-blue);
+        }
+        .toggle-btn:not(.active):hover {
+            background: #e0f2fe;
+            border-color: var(--tf-blue);
+        }
+        
+        .forecast-chart-container {
+            position: relative;
+            height: 400px;
+        }
+        
+        .waterfall-bar {
+            transition: all 0.5s ease;
+        }
+        
+        .sensitivity-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .scenario-preset {
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .scenario-preset:hover {
+            border-color: var(--tf-blue);
+            transform: translateY(-2px);
+        }
+        .scenario-preset.selected {
+            border-color: var(--tf-blue);
+            background: #f0f9ff;
+        }
+        
+        .multi-select-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 2px solid var(--tf-blue);
+            border-radius: 0.5rem;
+            margin-top: 0.25rem;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 50;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .multi-select.active .multi-select-dropdown { display: block; }
+        .multi-select-option {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .multi-select-option:hover { background: #f0f9ff; }
+        .multi-select-option.selected { background: #e0f2fe; }
+        
+        .kpi-trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .breakdown-row {
+            transition: all 0.2s;
+        }
+        .breakdown-row:hover {
+            background: #f0f9ff;
+        }
+        
+        .confidence-indicator {
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--tf-red), var(--tf-yellow), var(--tf-green));
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+<!-- Navigation -->
+<header class="fixed top-0 w-full z-50 bg-white border-b-2 border-[#0066cc] shadow-sm">
+    <div class="max-w-[1920px] mx-auto px-6 py-4">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-3xl font-bold text-[#1e3a5f]" style="font-family: 'Comic Sans MS', cursive, sans-serif; letter-spacing: -1px;">TripFactory</span>
+                    <svg class="w-8 h-8 text-[#1e3a5f]" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                    </svg>
+                </div>
+                <div class="h-8 w-px bg-slate-300 mx-2"></div>
+                <div>
+                    <h1 class="text-xl font-bold text-[#1e3a5f]">Global Forecast</h1>
+                    <p class="text-xs text-[#0066cc] mono font-bold">SCENARIO PLANNING & PREDICTIVE ANALYTICS</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="window.location.href='dashboard.html'" class="px-4 py-2 bg-[#0066cc] text-white rounded-lg text-sm font-bold hover:bg-[#1e3a5f] transition-all">
+    ← Back to Dashboard
+</button>
+                <button onclick="exportForecastReport()" class="px-4 py-2 bg-[#0066cc] text-white rounded-lg text-sm font-bold hover:bg-[#1e3a5f] transition-all flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Export Report
+                </button>
+                <div class="flex items-center gap-2 px-3 py-1.5 bg-[#0066cc]/10 border border-[#0066cc] rounded-full">
+                    <div class="w-2 h-2 bg-[#0066cc] rounded-full animate-pulse"></div>
+                    <span class="text-xs font-bold text-[#0066cc] mono">LIVE MODEL</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="pt-24 pb-8 px-6 max-w-[1920px] mx-auto space-y-6">
+
+    <!-- Control Panel -->
+    <section class="tf-card rounded-xl p-6 bg-gradient-to-r from-white to-slate-50">
+        <div class="flex justify-between items-start mb-6">
+            <div>
+                <h2 class="text-lg font-bold text-[#1e3a5f] mb-2">Forecast Configuration</h2>
+                <p class="text-sm text-slate-600">Adjust parameters to simulate different business scenarios and predict outcomes</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="resetScenario()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-300 transition-all">Reset</button>
+                <button onclick="saveScenario()" class="px-4 py-2 bg-[#2a9d8f] text-white rounded-lg text-sm font-bold hover:bg-[#236c62] transition-all">Save Scenario</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-6">
+            <!-- Country/Office Selection -->
+            <div class="space-y-3">
+                <label class="text-xs font-bold text-[#1e3a5f] uppercase tracking-wider">Region & Office</label>
+                <div class="multi-select relative" id="countrySelectContainer">
+                    <button onclick="toggleDropdown('countrySelectContainer')" class="w-full flex items-center justify-between p-3 border-2 border-[#0066cc] rounded-lg bg-white hover:bg-slate-50 transition-all">
+                        <span class="text-sm text-[#1e3a5f]">Select Regions</span>
+                        <span class="bg-[#0066cc] text-white px-2 py-0.5 rounded text-xs mono" id="selectedCountryCount">All</span>
+                    </button>
+                    <div class="multi-select-dropdown" id="countryDropdown"></div>
+                </div>
+                <div class="flex flex-wrap gap-2 mt-2" id="selectedCountriesDisplay"></div>
+            </div>
+
+            <!-- Flow Direction -->
+            <div class="space-y-3">
+                <label class="text-xs font-bold text-[#1e3a5f] uppercase tracking-wider">Flow Direction</label>
+                <div class="flex gap-2">
+                    <button onclick="toggleFlow('all')" class="toggle-btn active flex-1 py-2 px-3 rounded-lg text-sm font-bold border-2 border-slate-200" id="flow-all">All</button>
+                    <button onclick="toggleFlow('inbound')" class="toggle-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold border-2 border-slate-200" id="flow-inbound">Inbound</button>
+                    <button onclick="toggleFlow('outbound')" class="toggle-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold border-2 border-slate-200" id="flow-outbound">Outbound</button>
+                </div>
+            </div>
+
+            <!-- Destination Selection -->
+            <div class="space-y-3">
+                <label class="text-xs font-bold text-[#1e3a5f] uppercase tracking-wider">Destination</label>
+                <div class="multi-select relative" id="destinationSelectContainer">
+                    <button onclick="toggleDropdown('destinationSelectContainer')" class="w-full flex items-center justify-between p-3 border-2 border-[#0066cc] rounded-lg bg-white hover:bg-slate-50 transition-all">
+                        <span class="text-sm text-[#1e3a5f]">Select Destinations</span>
+                        <span class="bg-[#0066cc] text-white px-2 py-0.5 rounded text-xs mono" id="selectedDestinationCount">All</span>
+                    </button>
+                    <div class="multi-select-dropdown" id="destinationDropdown"></div>
+                </div>
+            </div>
+
+            <!-- Time Period -->
+            <div class="space-y-3">
+                <label class="text-xs font-bold text-[#1e3a5f] uppercase tracking-wider">Forecast Period</label>
+                <select id="forecastPeriod" onchange="updateForecast()" class="w-full p-3 border-2 border-[#0066cc] rounded-lg bg-white text-sm text-[#1e3a5f]">
+                    <option value="3">Next 3 Months</option>
+                    <option value="6">Next 6 Months</option>
+                    <option value="12" selected>Next 12 Months</option>
+                    <option value="24">Next 24 Months</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scenario Presets -->
+    <section class="grid grid-cols-4 gap-4">
+        <div class="scenario-preset p-4 rounded-xl border-2 border-slate-200 bg-white cursor-pointer" onclick="loadPreset('conservative')">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xl">🛡️</div>
+                <div>
+                    <div class="font-bold text-[#1e3a5f]">Conservative</div>
+                    <div class="text-xs text-slate-500">-10% market growth</div>
+                </div>
+            </div>
+            <div class="text-xs text-slate-600 mt-2">Reduced marketing spend, focus on retention</div>
+        </div>
+        <div class="scenario-preset p-4 rounded-xl border-2 border-slate-200 bg-white cursor-pointer selected" onclick="loadPreset('baseline')">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-10 h-10 rounded-full bg-[#0066cc]/10 flex items-center justify-center text-xl">📊</div>
+                <div>
+                    <div class="font-bold text-[#1e3a5f]">Baseline</div>
+                    <div class="text-xs text-slate-500">Current trajectory</div>
+                </div>
+            </div>
+            <div class="text-xs text-slate-600 mt-2">Maintain current strategy and spend levels</div>
+        </div>
+        <div class="scenario-preset p-4 rounded-xl border-2 border-slate-200 bg-white cursor-pointer" onclick="loadPreset('aggressive')">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-10 h-10 rounded-full bg-[#2a9d8f]/10 flex items-center justify-center text-xl">🚀</div>
+                <div>
+                    <div class="font-bold text-[#1e3a5f]">Aggressive Growth</div>
+                    <div class="text-xs text-slate-500">+25% marketing boost</div>
+                </div>
+            </div>
+            <div class="text-xs text-slate-600 mt-2">Heavy investment in acquisition and new markets</div>
+        </div>
+        <div class="scenario-preset p-4 rounded-xl border-2 border-slate-200 bg-white cursor-pointer" onclick="loadPreset('recession')">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-10 h-10 rounded-full bg-[#e63946]/10 flex items-center justify-center text-xl">⚠️</div>
+                <div>
+                    <div class="font-bold text-[#1e3a5f]">Recession Plan</div>
+                    <div class="text-xs text-slate-500">Cost optimization</div>
+                </div>
+            </div>
+            <div class="text-xs text-slate-600 mt-2">Reduce fixed costs, maintain core operations</div>
+        </div>
+    </section>
+
+    <!-- Main Forecast Dashboard -->
+    <div class="grid grid-cols-3 gap-6">
+        
+        <!-- Left Column: Input Sliders -->
+        <div class="space-y-6">
+            <!-- Marketing Spend Slider -->
+            <div class="tf-card rounded-xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-bold text-[#1e3a5f] uppercase">Marketing Spend</h3>
+                    <span class="text-2xl font-bold text-[#0066cc] mono" id="marketingValue">$892K</span>
+                </div>
+                <div class="slider-container">
+                    <input type="range" min="500" max="1500" value="892" class="scenario-slider" id="marketingSlider" oninput="updateScenario('marketing', this.value)">
+                    <div class="flex justify-between text-xs text-slate-500 mt-2">
+                        <span>$500K</span>
+                        <span class="font-bold text-[#1e3a5f]">Current: $892K</span>
+                        <span>$1.5M</span>
+                    </div>
+                </div>
+                <div class="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-slate-600">Projected Impact on Enquiries:</span>
+                        <span class="font-bold text-[#2a9d8f] mono" id="marketingImpactEnquiries">+12.4%</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm mt-2">
+                        <span class="text-slate-600">Cost per Booking:</span>
+                        <span class="font-bold mono" id="marketingImpactCpb">$232</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing/Margin Slider -->
+            <div class="tf-card rounded-xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-bold text-[#1e3a5f] uppercase">Avg. Margin Target</h3>
+                    <span class="text-2xl font-bold text-[#0066cc] mono" id="marginValue">18.2%</span>
+                </div>
+                <div class="slider-container">
+                    <input type="range" min="10" max="30" value="18.2" step="0.1" class="scenario-slider" id="marginSlider" oninput="updateScenario('margin', this.value)">
+                    <div class="flex justify-between text-xs text-slate-500 mt-2">
+                        <span>10%</span>
+                        <span class="font-bold text-[#1e3a5f]">Current: 18.2%</span>
+                        <span>30%</span>
+                    </div>
+                </div>
+                <div class="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-slate-600">Price Competitiveness:</span>
+                        <span class="font-bold text-[#ffb703]" id="priceCompetitiveness">Market Rate</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm mt-2">
+                        <span class="text-slate-600">Est. Conversion Impact:</span>
+                        <span class="font-bold mono impact-negative" id="marginImpactConversion">-2.1%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conversion Rate Target -->
+            <div class="tf-card rounded-xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-bold text-[#1e3a5f] uppercase">Target Conversion Rate</h3>
+                    <span class="text-2xl font-bold text-[#0066cc] mono" id="conversionValue">17.5%</span>
+                </div>
+                <div class="slider-container">
+                    <input type="range" min="10" max="25" value="17.5" step="0.1" class="scenario-slider" id="conversionSlider" oninput="updateScenario('conversion', this.value)">
+                    <div class="flex justify-between text-xs text-slate-500 mt-2">
+                        <span>10%</span>
+                        <span class="font-bold text-[#1e3a5f]">Target: 17.5%</span>
+                        <span>25%</span>
+                    </div>
+                </div>
+                <div class="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div class="text-xs text-slate-600 mb-2">Required Improvements:</div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-slate-600">Response Time</span>
+                            <span class="font-bold text-[#2a9d8f]">-15%</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-slate-600">Quote Quality</span>
+                            <span class="font-bold text-[#2a9d8f]">+8%</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-slate-600">Follow-up Rate</span>
+                            <span class="font-bold text-[#2a9d8f]">+12%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operational Efficiency -->
+            <div class="tf-card rounded-xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-bold text-[#1e3a5f] uppercase">Operational Efficiency</h3>
+                    <span class="text-2xl font-bold text-[#0066cc] mono" id="efficiencyValue">+5%</span>
+                </div>
+                <div class="slider-container">
+                    <input type="range" min="-10" max="20" value="5" class="scenario-slider" id="efficiencySlider" oninput="updateScenario('efficiency', this.value)">
+                    <div class="flex justify-between text-xs text-slate-500 mt-2">
+                        <span>-10%</span>
+                        <span class="font-bold text-[#1e3a5f]">Current: +5%</span>
+                        <span>+20%</span>
+                    </div>
+                </div>
+                <div class="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-slate-600">Cost Reduction:</span>
+                        <span class="font-bold text-[#2a9d8f] mono" id="efficiencySavings">$45K</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center & Right: Results -->
+        <div class="col-span-2 space-y-6">
+            
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-4 gap-4">
+                <div class="metric-card rounded-xl p-4 border border-slate-200">
+                    <div class="text-xs text-slate-500 mb-1">Projected Revenue</div>
+                    <div class="text-2xl font-bold text-[#1e3a5f] mono" id="projectedRevenue">$5.24M</div>
+                    <div class="kpi-trend impact-positive mt-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                        <span>+12.4%</span>
+                    </div>
+                    <div class="confidence-indicator mt-2">
+                        <div class="confidence-fill" style="width: 78%"></div>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-1">78% confidence</div>
+                </div>
+
+                <div class="metric-card rounded-xl p-4 border border-slate-200" style="border-left-color: var(--tf-green);">
+                    <div class="text-xs text-slate-500 mb-1">Projected Bookings</div>
+                    <div class="text-2xl font-bold text-[#1e3a5f] mono" id="projectedBookings">4,847</div>
+                    <div class="kpi-trend impact-positive mt-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                        <span>+26.0%</span>
+                    </div>
+                    <div class="confidence-indicator mt-2">
+                        <div class="confidence-fill" style="width: 82%"></div>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-1">82% confidence</div>
+                </div>
+
+                <div class="metric-card rounded-xl p-4 border border-slate-200" style="border-left-color: var(--tf-yellow);">
+                    <div class="text-xs text-slate-500 mb-1">Projected Margin</div>
+                    <div class="text-2xl font-bold text-[#1e3a5f] mono" id="projectedMargin">19.4%</div>
+                    <div class="kpi-trend impact-positive mt-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                        <span>+1.2pp</span>
+                    </div>
+                    <div class="confidence-indicator mt-2">
+                        <div class="confidence-fill" style="width: 65%"></div>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-1">65% confidence</div>
+                </div>
+
+                <div class="metric-card rounded-xl p-4 border border-slate-200" style="border-left-color: var(--tf-red);">
+                    <div class="text-xs text-slate-500 mb-1">Marketing ROI</div>
+                    <div class="text-2xl font-bold text-[#1e3a5f] mono" id="projectedRoi">4.2x</div>
+                    <div class="kpi-trend impact-negative mt-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                        <span>-0.3x</span>
+                    </div>
+                    <div class="confidence-indicator mt-2">
+                        <div class="confidence-fill" style="width: 71%"></div>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-1">71% confidence</div>
+                </div>
+            </div>
+
+            <!-- Main Forecast Chart -->
+            <div class="tf-card rounded-xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-bold text-[#1e3a5f] uppercase">Revenue Forecast Projection</h3>
+                    <div class="flex gap-2">
+                        <button onclick="toggleChartView('revenue')" class="px-3 py-1 text-xs bg-[#0066cc] text-white rounded font-bold">Revenue</button>
+                        <button onclick="toggleChartView('bookings')" class="px-3 py-1 text-xs bg-slate-200 text-slate-600 rounded font-bold hover:bg-slate-300">Bookings</button>
+                        <button onclick="toggleChartView('margin')" class="px-3 py-1 text-xs bg-slate-200 text-slate-600 rounded font-bold hover:bg-slate-300">Margin</button>
+                    </div>
+                </div>
+                <div class="forecast-chart-container">
+                    <canvas id="forecastChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Waterfall Analysis -->
+            <div class="tf-card rounded-xl p-6">
+                <h3 class="text-sm font-bold text-[#1e3a5f] uppercase mb-4">Impact Waterfall: Baseline to Projected</h3>
+                <div class="h-64">
+                    <canvas id="waterfallChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Breakdown -->
+    <div class="grid grid-cols-2 gap-6">
+        <!-- Monthly Breakdown -->
+        <div class="tf-card rounded-xl p-6">
+            <h3 class="text-sm font-bold text-[#1e3a5f] uppercase mb-4">Monthly Forecast Breakdown</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-slate-100 text-[#1e3a5f]">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-bold">Month</th>
+                            <th class="px-4 py-3 text-right font-bold">Enquiries</th>
+                            <th class="px-4 py-3 text-right font-bold">Conv. Rate</th>
+                            <th class="px-4 py-3 text-right font-bold">Bookings</th>
+                            <th class="px-4 py-3 text-right font-bold">Revenue</th>
+                            <th class="px-4 py-3 text-right font-bold">Margin</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthlyBreakdown" class="divide-y divide-slate-200"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sensitivity Analysis -->
+        <div class="tf-card rounded-xl p-6">
+            <h3 class="text-sm font-bold text-[#1e3a5f] uppercase mb-4">Sensitivity Analysis</h3>
+            <div class="space-y-4">
+                <div class="breakdown-row p-3 rounded-lg border border-slate-200">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold text-[#1e3a5f] text-sm">If Marketing Spend -10%</span>
+                        <span class="text-xs text-slate-500">Revenue Impact</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="w-full bg-slate-200 rounded-full h-2 mr-4">
+                            <div class="bg-[#e63946] h-2 rounded-full" style="width: 65%"></div>
+                        </div>
+                        <span class="font-bold text-[#e63946] mono">-$420K</span>
+                    </div>
+                </div>
+
+                <div class="breakdown-row p-3 rounded-lg border border-slate-200">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold text-[#1e3a5f] text-sm">If Conversion Rate +2%</span>
+                        <span class="text-xs text-slate-500">Revenue Impact</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="w-full bg-slate-200 rounded-full h-2 mr-4">
+                            <div class="bg-[#2a9d8f] h-2 rounded-full" style="width: 85%"></div>
+                        </div>
+                        <span class="font-bold text-[#2a9d8f] mono">+$680K</span>
+                    </div>
+                </div>
+
+                <div class="breakdown-row p-3 rounded-lg border border-slate-200">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold text-[#1e3a5f] text-sm">If Margin Target +2pp</span>
+                        <span class="text-xs text-slate-500">Profit Impact</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="w-full bg-slate-200 rounded-full h-2 mr-4">
+                            <div class="bg-[#2a9d8f] h-2 rounded-full" style="width: 45%"></div>
+                        </div>
+                        <span class="font-bold text-[#2a9d8f] mono">+$320K</span>
+                    </div>
+                </div>
+
+                <div class="breakdown-row p-3 rounded-lg border border-slate-200">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold text-[#1e3a5f] text-sm">If Efficiency -5%</span>
+                        <span class="text-xs text-slate-500">Cost Impact</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="w-full bg-slate-200 rounded-full h-2 mr-4">
+                            <div class="bg-[#e63946] h-2 rounded-full" style="width: 35%"></div>
+                        </div>
+                        <span class="font-bold text-[#e63946] mono">-$180K</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 p-4 bg-[#f0f9ff] rounded-lg border border-[#0066cc]">
+                <div class="text-xs text-[#0066cc] font-bold mb-2">💡 Optimization Insight</div>
+                <p class="text-xs text-slate-600">Increasing conversion rate by 2% has 2.4x more impact on revenue than increasing marketing spend by 10%. Focus on sales training and quote quality.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="tf-card rounded-xl p-6">
+        <h3 class="text-sm font-bold text-[#1e3a5f] uppercase mb-4">Scenario Comparison</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-100 text-[#1e3a5f]">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-bold">Scenario</th>
+                        <th class="px-4 py-3 text-right font-bold">Marketing</th>
+                        <th class="px-4 py-3 text-right font-bold">Revenue</th>
+                        <th class="px-4 py-3 text-right font-bold">Bookings</th>
+                        <th class="px-4 py-3 text-right font-bold">Margin %</th>
+                        <th class="px-4 py-3 text-right font-bold">Net Profit</th>
+                        <th class="px-4 py-3 text-center font-bold">Probability</th>
+                    </tr>
+                </thead>
+                <tbody id="scenarioComparison" class="divide-y divide-slate-200">
+                    <tr class="breakdown-row">
+                        <td class="px-4 py-3 font-bold text-[#1e3a5f]">Current (Baseline)</td>
+                        <td class="px-4 py-3 text-right mono">$892K</td>
+                        <td class="px-4 py-3 text-right mono">$4.66M</td>
+                        <td class="px-4 py-3 text-right mono">3,847</td>
+                        <td class="px-4 py-3 text-right mono">18.2%</td>
+                        <td class="px-4 py-3 text-right mono">$848K</td>
+                        <td class="px-4 py-3 text-center"><span class="px-2 py-1 bg-slate-200 rounded text-xs font-bold">100%</span></td>
+                    </tr>
+                    <tr class="breakdown-row bg-[#f0f9ff]">
+                        <td class="px-4 py-3 font-bold text-[#0066cc]">Your Forecast</td>
+                        <td class="px-4 py-3 text-right mono font-bold" id="compareMarketing">$892K</td>
+                        <td class="px-4 py-3 text-right mono font-bold text-[#2a9d8f]" id="compareRevenue">$5.24M</td>
+                        <td class="px-4 py-3 text-right mono font-bold text-[#2a9d8f]" id="compareBookings">4,847</td>
+                        <td class="px-4 py-3 text-right mono font-bold" id="compareMargin">19.4%</td>
+                        <td class="px-4 py-3 text-right mono font-bold text-[#2a9d8f]" id="compareProfit">$1.02M</td>
+                        <td class="px-4 py-3 text-center"><span class="px-2 py-1 bg-[#0066cc] text-white rounded text-xs font-bold">ACTIVE</span></td>
+                    </tr>
+                    <tr class="breakdown-row">
+                        <td class="px-4 py-3 font-bold text-[#1e3a5f]">Best Case</td>
+                        <td class="px-4 py-3 text-right mono">$1.2M</td>
+                        <td class="px-4 py-3 text-right mono text-[#2a9d8f]">$6.1M</td>
+                        <td class="px-4 py-3 text-right mono text-[#2a9d8f]">5,420</td>
+                        <td class="px-4 py-3 text-right mono">21.0%</td>
+                        <td class="px-4 py-3 text-right mono text-[#2a9d8f]">$1.28M</td>
+                        <td class="px-4 py-3 text-center"><span class="px-2 py-1 bg-[#2a9d8f] text-white rounded text-xs font-bold">25%</span></td>
+                    </tr>
+                    <tr class="breakdown-row">
+                        <td class="px-4 py-3 font-bold text-[#1e3a5f]">Worst Case</td>
+                        <td class="px-4 py-3 text-right mono">$650K</td>
+                        <td class="px-4 py-3 text-right mono text-[#e63946]">$3.8M</td>
+                        <td class="px-4 py-3 text-right mono text-[#e63946]">2,980</td>
+                        <td class="px-4 py-3 text-right mono">16.5%</td>
+                        <td class="px-4 py-3 text-right mono text-[#e63946]">$627K</td>
+                        <td class="px-4 py-3 text-center"><span class="px-2 py-1 bg-[#e63946] text-white rounded text-xs font-bold">15%</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<!-- Toast Notification -->
+<div id="toast" class="fixed bottom-4 right-4 bg-white border-2 border-[#0066cc] px-6 py-4 rounded-lg shadow-xl transform translate-x-full transition-transform duration-300 z-50">
+    <div class="flex items-center gap-3">
+        <svg class="w-5 h-5 text-[#2a9d8f]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <span id="toastMessage" class="text-[#1e3a5f] font-bold">Action completed</span>
+    </div>
+</div>
+
+<script>
+// Data Models
+const countryData = {
+    us: { name: 'USA', type: 'Owned', baseEnquiries: 8420, baseBookings: 1347, conversion: 16.0, revenue: 1420000, marketing: 285000, margin: 18.5, destinations: ['Caribbean', 'Europe', 'Asia'] },
+    uk: { name: 'UK', type: 'Owned', baseEnquiries: 6234, baseBookings: 873, conversion: 14.0, revenue: 980000, marketing: 195000, margin: 17.8, destinations: ['Spain', 'USA', 'Dubai'] },
+    india: { name: 'India', type: 'Franchise', baseEnquiries: 5234, baseBookings: 890, conversion: 17.0, revenue: 445000, marketing: 89000, margin: 15.2, destinations: ['Thailand', 'Singapore', 'Europe'] },
+    thailand: { name: 'Thailand', type: 'Franchise', baseEnquiries: 1890, baseBookings: 155, conversion: 8.2, revenue: 186000, marketing: 52000, margin: 19.5, destinations: ['Japan', 'Korea', 'China'] },
+    singapore: { name: 'Singapore', type: 'Owned', baseEnquiries: 2120, baseBookings: 339, conversion: 16.0, revenue: 412000, marketing: 78000, margin: 20.1, destinations: ['Malaysia', 'Indonesia', 'Australia'] },
+    australia: { name: 'Australia', type: 'Owned', baseEnquiries: 3420, baseBookings: 445, conversion: 13.0, revenue: 680000, marketing: 142000, margin: 18.9, destinations: ['Bali', 'New Zealand', 'Fiji'] },
+    uae: { name: 'UAE', type: 'Franchise', baseEnquiries: 2890, baseBookings: 412, conversion: 14.3, revenue: 520000, marketing: 95000, margin: 16.8, destinations: ['Maldives', 'Seychelles', 'Mauritius'] }
+};
+
+const destinations = [
+    'Maldives', 'Thailand', 'Dubai', 'Singapore', 'Bali', 'Caribbean', 
+    'Europe', 'USA', 'Japan', 'Seychelles', 'Mauritius', 'Australia',
+    'New Zealand', 'Fiji', 'Malaysia', 'Indonesia', 'Korea', 'China', 'Vietnam'
+];
+
+// State
+let selectedCountries = Object.keys(countryData);
+let selectedDestinations = [...destinations];
+let selectedFlow = 'all';
+let currentScenario = {
+    marketing: 892,
+    margin: 18.2,
+    conversion: 17.5,
+    efficiency: 5
+};
+
+// Charts
+let forecastChart, waterfallChart;
+
+// Initialization
+document.addEventListener('DOMContentLoaded', function() {
+    initDropdowns();
+    initCharts();
+    updateForecast();
+    renderMonthlyBreakdown();
+});
+
+// Dropdown Initialization
+function initDropdowns() {
+    // Country dropdown
+    const countryDropdown = document.getElementById('countryDropdown');
+    Object.keys(countryData).forEach(code => {
+        const country = countryData[code];
+        const option = document.createElement('div');
+        option.className = 'multi-select-option selected';
+        option.onclick = () => toggleCountry(code, option);
+        option.innerHTML = `
+            <input type="checkbox" checked class="rounded border-[#0066cc] text-[#0066cc]">
+            <img src="https://flagcdn.com/w20/${code === 'us' ? 'us' : code === 'uk' ? 'gb' : code}.png" class="w-5 h-auto">
+            <span class="text-sm text-[#1e3a5f]">${country.name}</span>
+            <span class="text-xs text-slate-400 ml-auto">${country.type}</span>
+        `;
+        countryDropdown.appendChild(option);
+    });
+
+    // Destination dropdown
+    const destDropdown = document.getElementById('destinationDropdown');
+    destinations.forEach(dest => {
+        const option = document.createElement('div');
+        option.className = 'multi-select-option selected';
+        option.onclick = () => toggleDestination(dest, option);
+        option.innerHTML = `
+            <input type="checkbox" checked class="rounded border-[#0066cc] text-[#0066cc]">
+            <span class="text-sm text-[#1e3a5f]">${dest}</span>
+        `;
+        destDropdown.appendChild(option);
+    });
+}
+
+function toggleDropdown(containerId) {
+    const container = document.getElementById(containerId);
+    container.classList.toggle('active');
+}
+
+function toggleCountry(code, element) {
+    element.classList.toggle('selected');
+    const checkbox = element.querySelector('input');
+    checkbox.checked = !checkbox.checked;
+    
+    if (checkbox.checked) {
+        if (!selectedCountries.includes(code)) selectedCountries.push(code);
+    } else {
+        selectedCountries = selectedCountries.filter(c => c !== code);
+    }
+    
+    updateSelectionDisplay();
+    updateForecast();
+}
+
+function toggleDestination(dest, element) {
+    element.classList.toggle('selected');
+    const checkbox = element.querySelector('input');
+    checkbox.checked = !checkbox.checked;
+    
+    if (checkbox.checked) {
+        if (!selectedDestinations.includes(dest)) selectedDestinations.push(dest);
+    } else {
+        selectedDestinations = selectedDestinations.filter(d => d !== dest);
+    }
+    
+    updateSelectionDisplay();
+    updateForecast();
+}
+
+function toggleFlow(flow) {
+    selectedFlow = flow;
+    document.querySelectorAll('[id^="flow-"]').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('flow-' + flow).classList.add('active');
+    updateForecast();
+}
+
+function updateSelectionDisplay() {
+    document.getElementById('selectedCountryCount').textContent = selectedCountries.length === Object.keys(countryData).length ? 'All' : selectedCountries.length;
+    document.getElementById('selectedDestinationCount').textContent = selectedDestinations.length === destinations.length ? 'All' : selectedDestinations.length;
+    
+    const display = document.getElementById('selectedCountriesDisplay');
+    display.innerHTML = selectedCountries.slice(0, 3).map(code => `
+        <span class="px-2 py-1 bg-[#0066cc]/10 text-[#0066cc] rounded text-xs font-bold flex items-center gap-1">
+            <img src="https://flagcdn.com/w20/${code === 'us' ? 'us' : code === 'uk' ? 'gb' : code}.png" class="w-3 h-auto">
+            ${countryData[code].name}
+        </span>
+    `).join('') + (selectedCountries.length > 3 ? `<span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs">+${selectedCountries.length - 3} more</span>` : '');
+}
+
+// Scenario Management
+function updateScenario(type, value) {
+    currentScenario[type] = parseFloat(value);
+    
+    // Update displays
+    if (type === 'marketing') {
+        document.getElementById('marketingValue').textContent = '$' + value + 'K';
+        const impact = ((value - 892) / 892 * 1.5).toFixed(1);
+        document.getElementById('marketingImpactEnquiries').textContent = (impact >= 0 ? '+' : '') + impact + '%';
+        document.getElementById('marketingImpactCpb').textContent = '$' + Math.round(232 * (892 / value));
+    } else if (type === 'margin') {
+        document.getElementById('marginValue').textContent = value + '%';
+        const pricePosition = value > 20 ? 'Premium' : value > 16 ? 'Market Rate' : 'Competitive';
+        const priceColor = value > 20 ? '#e63946' : value > 16 ? '#ffb703' : '#2a9d8f';
+        const compEl = document.getElementById('priceCompetitiveness');
+        compEl.textContent = pricePosition;
+        compEl.style.color = priceColor;
+        
+        const convImpact = ((value - 18.2) * -0.8).toFixed(1);
+        const convEl = document.getElementById('marginImpactConversion');
+        convEl.textContent = (convImpact >= 0 ? '+' : '') + convImpact + '%';
+        convEl.className = 'font-bold mono ' + (convImpact >= 0 ? 'impact-positive' : 'impact-negative');
+    } else if (type === 'conversion') {
+        document.getElementById('conversionValue').textContent = value + '%';
+    } else if (type === 'efficiency') {
+        document.getElementById('efficiencyValue').textContent = (value >= 0 ? '+' : '') + value + '%';
+        const savings = Math.abs(value * 9).toFixed(0);
+        document.getElementById('efficiencySavings').textContent = '$' + savings + 'K';
+    }
+    
+    updateForecast();
+}
+
+function loadPreset(preset) {
+    document.querySelectorAll('.scenario-preset').forEach(p => p.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+    
+    const presets = {
+        conservative: { marketing: 750, margin: 19.5, conversion: 16.0, efficiency: 8 },
+        baseline: { marketing: 892, margin: 18.2, conversion: 17.5, efficiency: 5 },
+        aggressive: { marketing: 1200, margin: 17.0, conversion: 19.5, efficiency: 12 },
+        recession: { marketing: 600, margin: 20.0, conversion: 15.0, efficiency: 15 }
+    };
+    
+    const settings = presets[preset];
+    currentScenario = settings;
+    
+    // Update sliders
+    document.getElementById('marketingSlider').value = settings.marketing;
+    document.getElementById('marginSlider').value = settings.margin;
+    document.getElementById('conversionSlider').value = settings.conversion;
+    document.getElementById('efficiencySlider').value = settings.efficiency;
+    
+    // Trigger updates
+    ['marketing', 'margin', 'conversion', 'efficiency'].forEach(type => {
+        updateScenario(type, settings[type]);
+    });
+}
+
+function resetScenario() {
+    loadPreset('baseline');
+    document.querySelectorAll('.scenario-preset').forEach(p => p.classList.remove('selected'));
+    document.querySelector('.scenario-preset:nth-child(2)').classList.add('selected');
+    showToast('Scenario reset to baseline');
+}
+
+function saveScenario() {
+    showToast('Scenario saved successfully!');
+}
+
+// Forecast Calculations
+function calculateForecast() {
+    // Filter base data
+    let totalEnquiries = 0;
+    let totalBookings = 0;
+    let totalRevenue = 0;
+    let totalMarketing = 0;
+    
+    selectedCountries.forEach(code => {
+        const country = countryData[code];
+        totalEnquiries += country.baseEnquiries;
+        totalBookings += country.baseBookings;
+        totalRevenue += country.revenue;
+        totalMarketing += country.marketing;
+    });
+    
+    // Apply flow filter
+    if (selectedFlow === 'inbound') {
+        totalEnquiries *= 0.62;
+        totalBookings *= 0.62;
+        totalRevenue *= 0.62;
+    } else if (selectedFlow === 'outbound') {
+        totalEnquiries *= 0.38;
+        totalBookings *= 0.38;
+        totalRevenue *= 0.38;
+    }
+    
+    // Apply scenario multipliers
+    const marketingMultiplier = currentScenario.marketing / 892;
+    const enquiryLift = (marketingMultiplier - 1) * 1.5;
+    const adjustedEnquiries = totalEnquiries * (1 + enquiryLift);
+    
+    const conversionLift = (currentScenario.conversion - 15.4) / 15.4;
+    const adjustedBookings = adjustedEnquiries * (currentScenario.conversion / 100);
+    
+    const avgBookingValue = totalRevenue / totalBookings;
+    const adjustedRevenue = adjustedBookings * avgBookingValue * (1 + (currentScenario.margin - 18.2) / 100);
+    
+    const efficiencySavings = currentScenario.efficiency * 9000;
+    const netProfit = (adjustedRevenue * (currentScenario.margin / 100)) - (currentScenario.marketing * 1000) + efficiencySavings;
+    
+    return {
+        enquiries: Math.round(adjustedEnquiries),
+        bookings: Math.round(adjustedBookings),
+        revenue: adjustedRevenue,
+        marketing: currentScenario.marketing * 1000,
+        margin: currentScenario.margin,
+        profit: netProfit,
+        roi: (adjustedRevenue / (currentScenario.marketing * 1000)).toFixed(1)
+    };
+}
+
+function updateForecast() {
+    const forecast = calculateForecast();
+    
+    // Update KPI cards
+    document.getElementById('projectedRevenue').textContent = '$' + (forecast.revenue / 1000000).toFixed(2) + 'M';
+    document.getElementById('projectedBookings').textContent = forecast.bookings.toLocaleString();
+    document.getElementById('projectedMargin').textContent = forecast.margin.toFixed(1) + '%';
+    document.getElementById('projectedRoi').textContent = forecast.roi + 'x';
+    
+    // Update comparison table
+    document.getElementById('compareMarketing').textContent = '$' + currentScenario.marketing + 'K';
+    document.getElementById('compareRevenue').textContent = '$' + (forecast.revenue / 1000000).toFixed(2) + 'M';
+    document.getElementById('compareBookings').textContent = forecast.bookings.toLocaleString();
+    document.getElementById('compareMargin').textContent = forecast.margin.toFixed(1) + '%';
+    document.getElementById('compareProfit').textContent = '$' + (forecast.profit / 1000000).toFixed(2) + 'M';
+    
+    updateCharts(forecast);
+    renderMonthlyBreakdown(forecast);
+}
+
+// Charts
+function initCharts() {
+    // Main forecast chart
+    const ctx = document.getElementById('forecastChart').getContext('2d');
+    forecastChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            datasets: [{
+                label: 'Baseline',
+                data: [380, 395, 410, 425, 440, 455, 470, 485, 500, 515, 530, 545],
+                borderColor: '#94a3b8',
+                borderDash: [5, 5],
+                fill: false
+            }, {
+                label: 'Your Forecast',
+                data: [420, 445, 470, 495, 520, 545, 570, 595, 620, 645, 670, 695],
+                borderColor: '#0066cc',
+                backgroundColor: 'rgba(0,102,204,0.1)',
+                fill: true,
+                tension: 0.4
+            }, {
+                label: 'Best Case',
+                data: [480, 520, 560, 600, 640, 680, 720, 760, 800, 840, 880, 920],
+                borderColor: '#2a9d8f',
+                borderDash: [2, 2],
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: true, position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': $' + context.raw + 'K';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: value => '$' + value + 'K' }
+                }
+            }
+        }
+    });
+    
+    // Waterfall chart
+    const waterfallCtx = document.getElementById('waterfallChart').getContext('2d');
+    waterfallChart = new Chart(waterfallCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Baseline', 'Marketing', 'Conversion', 'Margin', 'Efficiency', 'Forecast'],
+            datasets: [{
+                data: [4.66, 0.42, 0.68, 0.32, 0.14, 5.24],
+                backgroundColor: [
+                    '#94a3b8',
+                    '#0066cc',
+                    '#2a9d8f',
+                    '#ffb703',
+                    '#2a9d8f',
+                    '#0066cc'
+                ],
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    ticks: { callback: value => '$' + value + 'M' }
+                }
+            }
+        }
+    });
+}
+
+function updateCharts(forecast) {
+    if (!forecastChart) return;
+    
+    // Update forecast line
+    const baseValue = 380;
+    const growthFactor = forecast.revenue / 4660000;
+    forecastChart.data.datasets[1].data = Array.from({length: 12}, (_, i) => 
+        Math.round(baseValue * growthFactor * (1 + i * 0.05))
+    );
+    forecastChart.update();
+    
+    // Update waterfall
+    const baseline = 4.66;
+    const marketingImpact = (currentScenario.marketing - 892) / 1000 * 1.5;
+    const conversionImpact = (currentScenario.conversion - 15.4) / 100 * baseline * 2;
+    const marginImpact = (currentScenario.margin - 18.2) / 100 * baseline;
+    const efficiencyImpact = currentScenario.efficiency * 0.03;
+    
+    waterfallChart.data.datasets[0].data = [
+        baseline,
+        marketingImpact,
+        conversionImpact,
+        marginImpact,
+        efficiencyImpact,
+        baseline + marketingImpact + conversionImpact + marginImpact + efficiencyImpact
+    ];
+    waterfallChart.update();
+}
+
+function toggleChartView(view) {
+    showToast('Switched to ' + view + ' view');
+    // Implementation would switch chart datasets
+}
+
+// Monthly Breakdown
+function renderMonthlyBreakdown(forecast) {
+    const tbody = document.getElementById('monthlyBreakdown');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    let html = '';
+    let cumulativeRevenue = 0;
+    
+    months.forEach((month, i) => {
+        const monthFactor = 0.08 + (i * 0.005); // Slight growth trend
+        const enquiries = Math.round(forecast.enquiries * monthFactor);
+        const bookings = Math.round(forecast.bookings * monthFactor);
+        const revenue = (forecast.revenue * monthFactor) / 1000000;
+        cumulativeRevenue += revenue;
+        
+        html += `
+            <tr class="breakdown-row hover:bg-slate-50">
+                <td class="px-4 py-3 font-bold text-[#1e3a5f]">${month} 2025</td>
+                <td class="px-4 py-3 text-right mono">${enquiries.toLocaleString()}</td>
+                <td class="px-4 py-3 text-right mono">${currentScenario.conversion.toFixed(1)}%</td>
+                <td class="px-4 py-3 text-right mono font-bold text-[#0066cc]">${bookings.toLocaleString()}</td>
+                <td class="px-4 py-3 text-right mono">$${revenue.toFixed(2)}M</td>
+                <td class="px-4 py-3 text-right mono text-[#2a9d8f]">${currentScenario.margin.toFixed(1)}%</td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+// Utilities
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toastMessage').textContent = message;
+    toast.classList.remove('translate-x-full');
+    setTimeout(() => toast.classList.add('translate-x-full'), 3000);
+}
+
+function exportForecastReport() {
+    showToast('Exporting forecast report...');
+    // Implementation would generate CSV/PDF
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.multi-select')) {
+        document.querySelectorAll('.multi-select').forEach(el => el.classList.remove('active'));
+    }
+});
+</script>
+
+</body>
+</html>

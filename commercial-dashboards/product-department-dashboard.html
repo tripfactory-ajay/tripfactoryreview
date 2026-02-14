@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory Product Department - Supplier Intelligence Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .supplier-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .supplier-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0, 102, 204, 0.15); border-color: #0066cc; }
+        .negotiation-badge { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 183, 3, 0.4); } 50% { opacity: 0.9; box-shadow: 0 0 0 10px rgba(255, 183, 3, 0); } }
+        .metric-tab { transition: all 0.2s; }
+        .metric-tab.active { background: #0066cc; color: white; border-color: #0066cc; }
+        .trend-up { color: #2a9d8f; }
+        .trend-down { color: #e63946; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .urgent-glow { box-shadow: 0 0 20px rgba(230, 57, 70, 0.3); }
+        .opportunity-glow { box-shadow: 0 0 20px rgba(42, 157, 143, 0.3); }
+        .sticky-header { position: sticky; top: 0; z-index: 50; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); }
+        .filter-chip { transition: all 0.2s; }
+        .filter-chip:hover { transform: scale(1.05); }
+        .data-row { transition: background 0.15s; }
+        .data-row:hover { background: #f8fafc; }
+        .expandable-section { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .expandable-section.expanded { max-height: 1000px; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+<!-- Sticky Header -->
+<header class="sticky-header border-b-2 border-[#0066cc] px-6 py-4 shadow-lg">
+    <div class="flex justify-between items-center max-w-[1920px] mx-auto">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-gradient-to-br from-[#0066cc] to-[#1e3a5f] rounded-xl flex items-center justify-center text-white text-2xl shadow-lg">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-[#1e3a5f]">Product Department</h1>
+                <p class="text-xs text-slate-500">Supplier Intelligence & Negotiation Command Center</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <!-- Global Filters -->
+            <div class="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
+                <select id="officeFilter" onchange="updateDashboard()" class="bg-white border border-slate-300 rounded-md px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#0066cc]">
+                    <option value="all">All Offices</option>
+                    <option value="uk">🇬🇧 UK Office</option>
+                    <option value="us">🇺🇸 US Office</option>
+                    <option value="india">🇮🇳 India Office</option>
+                    <option value="singapore">🇸🇬 Singapore</option>
+                </select>
+                
+                <select id="flowFilter" onchange="updateDashboard()" class="bg-white border border-slate-300 rounded-md px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#0066cc]">
+                    <option value="all">All Flows</option>
+                    <option value="inbound">Inbound Only</option>
+                    <option value="outbound">Outbound Only</option>
+                </select>
+                
+                <select id="countryFilter" onchange="updateDashboard()" class="bg-white border border-slate-300 rounded-md px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#0066cc]">
+                    <option value="all">All Countries</option>
+                    <option value="maldives">Maldives</option>
+                    <option value="thailand">Thailand</option>
+                    <option value="uae">UAE</option>
+                    <option value="uk">United Kingdom</option>
+                    <option value="usa">United States</option>
+                    <option value="singapore">Singapore</option>
+                    <option value="india">India</option>
+                </select>
+            </div>
+            
+            <div class="h-8 w-px bg-slate-300 mx-2"></div>
+            
+            <button onclick="exportNegotiationPack()" class="filter-chip px-4 py-2 bg-[#2a9d8f] text-white rounded-lg text-sm font-bold hover:bg-[#236c62] shadow-md flex items-center gap-2">
+                <i class="fas fa-file-export"></i> Export Pack
+            </button>
+            
+            <button onclick="window.location.href='home.html'" class="filter-chip px-4 py-2 border-2 border-[#0066cc] text-[#0066cc] rounded-lg text-sm font-bold hover:bg-[#0066cc] hover:text-white transition-all">
+                <i class="fas fa-arrow-left"></i> Back
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-[1920px] mx-auto p-6 space-y-6">
+
+    <!-- Executive KPI Cards -->
+    <div class="grid grid-cols-6 gap-4">
+        <div class="glass-panel rounded-xl p-5 shadow-lg border-l-4 border-[#0066cc] hover:shadow-xl transition-shadow">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-slate-500 font-bold uppercase">Hotel Partners</div>
+                <i class="fas fa-hotel text-[#0066cc] text-lg"></i>
+            </div>
+            <div class="text-3xl font-bold text-[#1e3a5f] mono" id="kpi-hotels">247</div>
+            <div class="flex items-center gap-1 text-xs text-green-600 font-bold mt-1">
+                <i class="fas fa-arrow-up"></i> +12 this month
+            </div>
+        </div>
+        
+        <div class="glass-panel rounded-xl p-5 shadow-lg border-l-4 border-[#2a9d8f] hover:shadow-xl transition-shadow">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-slate-500 font-bold uppercase">Airline Partners</div>
+                <i class="fas fa-plane text-[#2a9d8f] text-lg"></i>
+            </div>
+            <div class="text-3xl font-bold text-[#1e3a5f] mono" id="kpi-airlines">38</div>
+            <div class="flex items-center gap-1 text-xs text-green-600 font-bold mt-1">
+                <i class="fas fa-arrow-up"></i> +3 this month
+            </div>
+        </div>
+        
+        <div class="glass-panel rounded-xl p-5 shadow-lg border-l-4 border-[#ffb703] hover:shadow-xl transition-shadow">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-slate-500 font-bold uppercase">Room Nights (YTD)</div>
+                <i class="fas fa-bed text-[#ffb703] text-lg"></i>
+            </div>
+            <div class="text-3xl font-bold text-[#1e3a5f] mono" id="kpi-rooms">84.2K</div>
+            <div class="flex items-center gap-1 text-xs text-green-600 font-bold mt-1">
+                <i class="fas fa-arrow-up"></i> 18.4% YoY
+            </div>
+        </div>
+        
+        <div class="glass-panel rounded-xl p-5 shadow-lg border-l-4 border-purple-500 hover:shadow-xl transition-shadow">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-slate-500 font-bold uppercase">Seats Sold (YTD)</div>
+                <i class="fas fa-chair text-purple-500 text-lg"></i>
+            </div>
+            <div class="text-3xl font-bold text-[#1e3a5f] mono" id="kpi-seats">12.8K</div>
+            <div class="flex items-center gap-1 text-xs text-green-600 font-bold mt-1">
+                <i class="fas fa-arrow-up"></i> 14.2% YoY
+            </div>
+        </div>
+        
+        <div class="glass-panel rounded-xl p-5 shadow-lg border-l-4 border-red-500 hover:shadow-xl transition-shadow urgent-glow">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-slate-500 font-bold uppercase">Contracts Expiring</div>
+                <i class="fas fa-exclamation-triangle text-red-500 text-lg"></i>
+            </div>
+            <div class="text-3xl font-bold text-[#e63946] mono" id="kpi-expiring">14</div>
+            <div class="text-xs text-red-600 font-bold mt-1">Next 60 days</div>
+        </div>
+        
+        <div class="glass-panel rounded-xl p-5 shadow-lg border-l-4 border-[#1e3a5f] hover:shadow-xl transition-shadow">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-slate-500 font-bold uppercase">Negotiation Leverage</div>
+                <i class="fas fa-handshake text-[#1e3a5f] text-lg"></i>
+            </div>
+            <div class="text-3xl font-bold text-[#1e3a5f] mono" id="kpi-leverage">$2.4M</div>
+            <div class="text-xs text-slate-500 mt-1">Volume at stake</div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Grid -->
+    <div class="grid grid-cols-12 gap-6">
+
+        <!-- Left Column: Hotel Performance (8 cols) -->
+        <div class="col-span-8 space-y-6">
+            
+            <!-- Hotel Performance Tabs -->
+            <div class="glass-panel rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                <div class="flex border-b border-slate-200 bg-slate-50">
+                    <button onclick="switchHotelTab('sales')" class="metric-tab active flex-1 py-4 px-4 text-sm font-bold text-center border-b-2 border-transparent" id="hotel-tab-sales">
+                        <i class="fas fa-dollar-sign mr-2"></i>By Sales Volume
+                    </button>
+                    <button onclick="switchHotelTab('margin')" class="metric-tab flex-1 py-4 px-4 text-sm font-bold text-center text-slate-600 border-b-2 border-transparent" id="hotel-tab-margin">
+                        <i class="fas fa-percentage mr-2"></i>By Margin
+                    </button>
+                    <button onclick="switchHotelTab('rooms')" class="metric-tab flex-1 py-4 px-4 text-sm font-bold text-center text-slate-600 border-b-2 border-transparent" id="hotel-tab-rooms">
+                        <i class="fas fa-bed mr-2"></i>By Room Nights
+                    </button>
+                    <button onclick="switchHotelTab('growth')" class="metric-tab flex-1 py-4 px-4 text-sm font-bold text-center text-slate-600 border-b-2 border-transparent" id="hotel-tab-growth">
+                        <i class="fas fa-chart-line mr-2"></i>By Growth
+                    </button>
+                </div>
+
+                <div class="p-6">
+                    <!-- By Sales Volume -->
+                    <div id="hotel-content-sales" class="space-y-3">
+                        <!-- Marriott - Renewal Due -->
+                        <div class="supplier-card flex items-center justify-between p-4 bg-gradient-to-r from-yellow-50 to-white rounded-xl border-2 border-yellow-300" onclick="showSupplierDetail('marriott')">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 bg-red-800 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md">M</div>
+                                <div>
+                                    <div class="font-bold text-[#1e3a5f] text-lg">Marriott International</div>
+                                    <div class="text-xs text-slate-500 flex items-center gap-2">
+                                        <span class="px-2 py-0.5 bg-slate-200 rounded text-xs">42 properties</span>
+                                        <span class="px-2 py-0.5 bg-slate-200 rounded text-xs">Multi-brand</span>
+                                        <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">Global</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-6">
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-[#1e3a5f] mono">$1.24M</div>
+                                    <div class="text-xs text-slate-500">Sales YTD</div>
+                                    <div class="text-xs text-green-600 font-bold">↑ 12.3%</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xl font-bold text-[#2a9d8f]">18.2%</div>
+                                    <div class="text-xs text-slate-500">Margin</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xl font-bold text-[#1e3a5f] mono">2,840</div>
+                                    <div class="text-xs text-slate-500">Room nights</div>
+                                </div>
+                                <div class="flex flex-col gap-2">
+                                    <span class="negotiation-badge px-3 py-1 bg-[#ffb703] text-white text-xs font-bold rounded-full text-center">RENEWAL DUE</span>
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded text-center">45 days</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hilton -->
+                        <div class="supplier-card flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200" onclick="showSupplierDetail('hilton')">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 bg-blue-800 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md">H</div>
+                                <div>
+                                    <div class="font-bold text-[#1e3a5f] text-lg">Hilton Worldwide</div>
+                                    <div class="text-xs text-slate-500 flex items-center gap-2">
+                                        <span class="px-2 py-0.5 bg-slate-200 rounded text-xs">38 properties</span>
+                                        <span class="px-2 py-0.5 bg-slate-200 rounded text-xs">Luxury</span>
+                                        <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">UK/US</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-6">
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-[#1e3a5f] mono">$892K</div>
+                                    <div class="text-xs text-slate-500">Sales YTD</div>
+                                    <div class="text-xs text-green-600 font-bold">↑ 8.7%</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xl font-bold text-[#2a9d8f]">16.8%</div>
+                                    <div class="text-xs text-slate-500">Margin</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xl font-bold text-[#1e3a5f] mono">2,156</div>
+                                    <div class="text-xs text-slate-500">Room nights</div>
+                                </div>
+                                <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">SECURED 2025</span>
+                            </div>
+                        </div>
+
+                        <!-- Accor -->
+                        <div class="supplier-card flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200" onclick="showSupplierDetail('accor')">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 bg-red-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md">A</div>
+                                <div>
+                                    <div class="font-bold text-[#1e3a5f] text-lg">Accor Group</div>
+                                    <div class="text-xs text-slate-500 flex items-center gap-2">
+                                        <span class="px-2 py-0.5 bg-slate-200 rounded text-xs">56 properties</span>
+                                        <span class="px-2 py-0.5 bg-slate-200 rounded text-xs">Europe/Asia</span>
+                                        <span class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">Inbound</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-6">
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-[#1e3a5f] mono">$654K</div>
+                                    <div class="text-xs text-slate-500">Sales YTD</div>
+                                    <div class="text-xs text-red-600 font-bold">↓ 3.2%</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xl font-bold text-[#ffb703]">14.2%</div>
+                                    <div class="text-xs text-slate-500">Margin</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xl font-bold text-[#1e3a5f] mono">1,892</div>
+                                    <div class="text-xs text-slate-500">Room nights</div>
+                                </div>
+                                <span class="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">RATE REVIEW</span>
+                            </div>
+                        </div>
+
+                        <!-- Hyatt -->
+                        <div class="supplier-card flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200" onclick="showSupplierDetail('hyatt')">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 bg-green-700 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md">H</div>
+                                <div>
+                                    <div class="font-bold text-[#1e3a5f] text-lg">Hyatt Hotels</div>
+                                    <div class="text-xs text-slate-500 flex items-center gap-2">
+                                        <span class="px-2 py-0.5 bg-slate-200 rounded text-xs">24 properties</span>
+                                        <span class="px-2 py-0.5 bg-slate-200 rounded text-xs">Boutique</span>
+                                        <span class="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-xs">Outbound</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-6">
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-[#1e3a5f] mono">$428K</div>
+                                    <div class="text-xs text-slate-500">Sales YTD</div>
+                                    <div class="text-xs text-green-600 font-bold">↑ 24.5%</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xl font-bold text-[#2a9d8f]">19.4%</div>
+                                    <div class="text-xs text-slate-500">Margin</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xl font-bold text-[#1e3a5f] mono">987</div>
+                                    <div class="text-xs text-slate-500">Room nights</div>
+                                </div>
+                                <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">GROWING</span>
+                            </div>
+                        </div>
+
+                        <!-- IHG -->
+                        <div class="supplier-card flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200" onclick="showSupplierDetail('ihg')">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 bg-indigo-700 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md">I</div>
+                                <div>
+                                    <div class="font-bold text-[#1e3a5f] text-lg">IHG Hotels & Resorts</div>
+                                    <div class="text-xs text-slate-500 flex items-center gap-2">
+                                        <span class="px-2 py-0.5 bg-slate-200 rounded text-xs">31 properties</span>
+                                        <span class="px-2 py-0.5 bg-slate-200 rounded text-xs">Mid-scale</span>
+                                        <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">Global</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-6">
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-[#1e3a5f] mono">$385K</div>
+                                    <div class="text-xs text-slate-500">Sales YTD</div>
+                                    <div class="text-xs text-green-600 font-bold">↑ 6.1%</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xl font-bold text-[#2a9d8f]">15.3%</div>
+                                    <div class="text-xs text-slate-500">Margin</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xl font-bold text-[#1e3a5f] mono">1,245</div>
+                                    <div class="text-xs text-slate-500">Room nights</div>
+                                </div>
+                                <span class="px-3 py-1 bg-slate-200 text-slate-600 text-xs font-bold rounded-full">STABLE</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- By Margin (Hidden by default) -->
+                    <div id="hotel-content-margin" class="hidden space-y-3">
+                        <div class="supplier-card flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-white rounded-xl border-2 border-green-300">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 bg-teal-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">B</div>
+                                <div>
+                                    <div class="font-bold text-[#1e3a5f] text-lg">Boutique Hotels Maldives</div>
+                                    <div class="text-xs text-slate-500">12 properties • Independent</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-6">
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-[#1e3a5f] mono">$298K</div>
+                                    <div class="text-xs text-slate-500">Sales YTD</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-3xl font-bold text-green-600">24.8%</div>
+                                    <div class="text-xs text-slate-500">Margin</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xl font-bold text-[#1e3a5f] mono">456</div>
+                                    <div class="text-xs text-slate-500">Room nights</div>
+                                </div>
+                                <span class="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded-full">HIGH MARGIN</span>
+                            </div>
+                        </div>
+                        
+                        <div class="supplier-card flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 bg-green-700 rounded-lg flex items-center justify-center text-white font-bold text-xl">H</div>
+                                <div>
+                                    <div class="font-bold text-[#1e3a5f] text-lg">Hyatt Hotels</div>
+                                    <div class="text-xs text-slate-500">24 properties • Boutique</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-6">
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-[#1e3a5f] mono">$428K</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-[#2a9d8f]">19.4%</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xl font-bold text-[#1e3a5f] mono">987</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- By Room Nights (Hidden) -->
+                    <div id="hotel-content-rooms" class="hidden space-y-3">
+                        <div class="p-4 text-center text-slate-500">Data filtered by room night volume...</div>
+                    </div>
+
+                    <!-- By Growth (Hidden) -->
+                    <div id="hotel-content-growth" class="hidden space-y-3">
+                        <div class="p-4 text-center text-slate-500">Data sorted by YoY growth percentage...</div>
+                    </div>
+                </div>
+                
+                <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
+                    <span class="text-xs text-slate-500">Showing top 5 of 247 hotel partners</span>
+                    <button onclick="viewAllHotels()" class="text-[#0066cc] text-sm font-bold hover:underline">View All Hotels →</button>
+                </div>
+            </div>
+
+            <!-- Airlines Performance Section -->
+            <div class="glass-panel rounded-xl shadow-lg border border-slate-200 p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-[#1e3a5f] flex items-center gap-2">
+                        <i class="fas fa-plane-departure text-[#0066cc]"></i>
+                        Airline Partners Performance
+                    </h3>
+                    <div class="flex gap-2">
+                        <button onclick="switchAirlineView('sales')" class="px-3 py-1 text-xs font-bold rounded bg-[#0066cc] text-white">By Sales</button>
+                        <button onclick="switchAirlineView('seats')" class="px-3 py-1 text-xs font-bold rounded bg-slate-200 text-slate-600">By Seats</button>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Emirates -->
+                    <div class="supplier-card flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 bg-red-700 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
+                                <i class="fas fa-plane"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-[#1e3a5f] text-lg">Emirates</div>
+                                <div class="text-xs text-slate-500 flex items-center gap-2">
+                                    <span class="px-2 py-0.5 bg-slate-200 rounded">Dubai Hub</span>
+                                    <span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded">Premium</span>
+                                    <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded">Long-haul</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-6">
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-[#1e3a5f] mono">$2.1M</div>
+                                <div class="text-xs text-slate-500">Ticket sales YTD</div>
+                                <div class="text-xs text-green-600 font-bold">↑ 15.2%</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-[#1e3a5f] mono">3,420</div>
+                                <div class="text-xs text-slate-500">Seats sold</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-[#2a9d8f]">8.2%</div>
+                                <div class="text-xs text-slate-500">Commission</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-[#1e3a5f] mono">$178</div>
+                                <div class="text-xs text-slate-500">Avg yield</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Singapore Airlines -->
+                    <div class="supplier-card flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 bg-yellow-500 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
+                                <i class="fas fa-plane"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-[#1e3a5f] text-lg">Singapore Airlines</div>
+                                <div class="text-xs text-slate-500 flex items-center gap-2">
+                                    <span class="px-2 py-0.5 bg-slate-200 rounded">Asia Pacific</span>
+                                    <span class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded">5-star</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-6">
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-[#1e3a5f] mono">$1.8M</div>
+                                <div class="text-xs text-slate-500">Ticket sales YTD</div>
+                                <div class="text-xs text-green-600 font-bold">↑ 9.8%</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-[#1e3a5f] mono">2,890</div>
+                                <div class="text-xs text-slate-500">Seats sold</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-[#2a9d8f]">7.8%</div>
+                                <div class="text-xs text-slate-500">Commission</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-[#1e3a5f] mono">$195</div>
+                                <div class="text-xs text-slate-500">Avg yield</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Qatar Airways - Negotiation Priority -->
+                    <div class="supplier-card flex items-center justify-between p-4 bg-gradient-to-r from-yellow-50 to-white rounded-xl border-2 border-yellow-300">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 bg-purple-800 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
+                                <i class="fas fa-plane"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-[#1e3a5f] text-lg">Qatar Airways</div>
+                                <div class="text-xs text-slate-500 flex items-center gap-2">
+                                    <span class="px-2 py-0.5 bg-slate-200 rounded">Doha Hub</span>
+                                    <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded">Fast growing</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-6">
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-[#1e3a5f] mono">$1.4M</div>
+                                <div class="text-xs text-slate-500">Ticket sales YTD</div>
+                                <div class="text-xs text-green-600 font-bold">↑ 28.4%</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-[#1e3a5f] mono">2,340</div>
+                                <div class="text-xs text-slate-500">Seats sold</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-[#2a9d8f]">8.5%</div>
+                                <div class="text-xs text-slate-500">Commission</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-[#1e3a5f] mono">$168</div>
+                                <div class="text-xs text-slate-500">Avg yield</div>
+                            </div>
+                            <span class="negotiation-badge px-3 py-1 bg-[#ffb703] text-white text-xs font-bold rounded-full">NEGOTIATE</span>
+                        </div>
+                    </div>
+
+                    <!-- British Airways -->
+                    <div class="supplier-card flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
+                                <i class="fas fa-plane"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-[#1e3a5f] text-lg">British Airways</div>
+                                <div class="text-xs text-slate-500 flex items-center gap-2">
+                                    <span class="px-2 py-0.5 bg-slate-200 rounded">London Hub</span>
+                                    <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded">Europe</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-6">
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-[#1e3a5f] mono">$980K</div>
+                                <div class="text-xs text-slate-500">Ticket sales YTD</div>
+                                <div class="text-xs text-red-600 font-bold">↓ 2.1%</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-[#1e3a5f] mono">1,876</div>
+                                <div class="text-xs text-slate-500">Seats sold</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-[#2a9d8f]">7.2%</div>
+                                <div class="text-xs text-slate-500">Commission</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-[#1e3a5f] mono">$142</div>
+                                <div class="text-xs text-slate-500">Avg yield</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Destination Performance Matrix -->
+            <div class="glass-panel rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="text-xl font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                    <i class="fas fa-globe-americas text-[#0066cc]"></i>
+                    Top Destinations by Volume & Performance
+                </h3>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Maldives -->
+                    <div class="p-4 bg-gradient-to-br from-blue-50 to-white rounded-xl border border-blue-200 hover:shadow-md transition-shadow cursor-pointer" onclick="showDestinationDetail('maldives')">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">🏝️</span>
+                                <div>
+                                    <div class="font-bold text-[#1e3a5f] text-lg">Maldives</div>
+                                    <div class="text-xs text-slate-500">12 hotel partners</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded">TOP PERFORMER</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3 mb-3">
+                            <div class="text-center p-2 bg-white rounded-lg shadow-sm">
+                                <div class="text-lg font-bold text-[#1e3a5f] mono">$2.4M</div>
+                                <div class="text-xs text-slate-500">Sales</div>
+                            </div>
+                            <div class="text-center p-2 bg-white rounded-lg shadow-sm">
+                                <div class="text-lg font-bold text-[#1e3a5f] mono">18.5%</div>
+                                <div class="text-xs text-slate-500">Avg Margin</div>
+                            </div>
+                            <div class="text-center p-2 bg-white rounded-lg shadow-sm">
+                                <div class="text-lg font-bold text-[#1e3a5f] mono">4,240</div>
+                                <div class="text-xs text-slate-500">Room nights</div>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-600">
+                            <span class="font-bold">Top Hotel:</span> Conrad Maldives ($680K sales, 22% margin)
+                        </div>
+                    </div>
+
+                    <!-- Thailand -->
+                    <div class="p-4 bg-gradient-to-br from-orange-50 to-white rounded-xl border border-orange-200 hover:shadow-md transition-shadow cursor-pointer" onclick="showDestinationDetail('thailand')">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">🌴</span>
+                                <div>
+                                    <div class="font-bold text-[#1e3a5f] text-lg">Thailand</div>
+                                    <div class="text-xs text-slate-500">18 hotel partners</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">GROWING</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3 mb-3">
+                            <div class="text-center p-2 bg-white rounded-lg shadow-sm">
+                                <div class="text-lg font-bold text-[#1e3a5f] mono">$1.8M</div>
+                                <div class="text-xs text-slate-500">Sales</div>
+                            </div>
+                            <div class="text-center p-2 bg-white rounded-lg shadow-sm">
+                                <div class="text-lg font-bold text-[#1e3a5f] mono">16.2%</div>
+                                <div class="text-xs text-slate-500">Avg Margin</div>
+                            </div>
+                            <div class="text-center p-2 bg-white rounded-lg shadow-sm">
+                                <div class="text-lg font-bold text-[#1e3a5f] mono">3,680</div>
+                                <div class="text-xs text-slate-500">Room nights</div>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-600">
+                            <span class="font-bold">Top Hotel:</span> Marriott Bangkok ($420K sales, 18% margin)
+                        </div>
+                    </div>
+
+                    <!-- UAE -->
+                    <div class="p-4 bg-gradient-to-br from-yellow-50 to-white rounded-xl border border-yellow-200 hover:shadow-md transition-shadow cursor-pointer" onclick="showDestinationDetail('uae')">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">🏙️</span>
+                                <div>
+                                    <div class="font-bold text-[#1e3a5f] text-lg">UAE (Dubai)</div>
+                                    <div class="text-xs text-slate-500">15 hotel partners</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded">STABLE</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3 mb-3">
+                            <div class="text-center p-2 bg-white rounded-lg shadow-sm">
+                                <div class="text-lg font-bold text-[#1e3a5f] mono">$1.6M</div>
+                                <div class="text-xs text-slate-500">Sales</div>
+                            </div>
+                            <div class="text-center p-2 bg-white rounded-lg shadow-sm">
+                                <div class="text-lg font-bold text-[#1e3a5f] mono">14.8%</div>
+                                <div class="text-xs text-slate-500">Avg Margin</div>
+                            </div>
+                            <div class="text-center p-2 bg-white rounded-lg shadow-sm">
+                                <div class="text-lg font-bold text-[#1e3a5f] mono">2,940</div>
+                                <div class="text-xs text-slate-500">Room nights</div>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-600">
+                            <span class="font-bold">Top Hotel:</span> Atlantis Dubai ($380K sales, 15% margin)
+                        </div>
+                    </div>
+
+                    <!-- UK -->
+                    <div class="p-4 bg-gradient-to-br from-purple-50 to-white rounded-xl border border-purple-200 hover:shadow-md transition-shadow cursor-pointer" onclick="showDestinationDetail('uk')">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">🇬🇧</span>
+                                <div>
+                                    <div class="font-bold text-[#1e3a5f] text-lg">United Kingdom</div>
+                                    <div class="text-xs text-slate-500">22 hotel partners</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded">INBOUND</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3 mb-3">
+                            <div class="text-center p-2 bg-white rounded-lg shadow-sm">
+                                <div class="text-lg font-bold text-[#1e3a5f] mono">$1.2M</div>
+                                <div class="text-xs text-slate-500">Sales</div>
+                            </div>
+                            <div class="text-center p-2 bg-white rounded-lg shadow-sm">
+                                <div class="text-lg font-bold text-[#1e3a5f] mono">13.5%</div>
+                                <div class="text-xs text-slate-500">Avg Margin</div>
+                            </div>
+                            <div class="text-center p-2 bg-white rounded-lg shadow-sm">
+                                <div class="text-lg font-bold text-[#1e3a5f] mono">2,560</div>
+                                <div class="text-xs text-slate-500">Room nights</div>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-600">
+                            <span class="font-bold">Top Hotel:</span> Hilton London ($290K sales, 16% margin)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Negotiation & Analytics (4 cols) -->
+        <div class="col-span-4 space-y-6">
+
+            <!-- Priority Negotiations -->
+            <div class="glass-panel rounded-xl shadow-lg border border-slate-200 p-6 opportunity-glow">
+                <h3 class="text-lg font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                    Priority Negotiations
+                    <span class="ml-auto text-xs font-normal text-slate-500 bg-slate-100 px-2 py-1 rounded-full">3 urgent</span>
+                </h3>
+                
+                <div class="space-y-4">
+                    <!-- Urgent: Marriott -->
+                    <div class="p-4 bg-red-50 rounded-xl border border-red-200 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <div class="font-bold text-[#1e3a5f] flex items-center gap-2">
+                                    Marriott International
+                                    <span class="px-2 py-0.5 bg-red-500 text-white text-xs rounded">URGENT</span>
+                                </div>
+                                <div class="text-xs text-red-600 mt-1">Contract expires in 45 days</div>
+                            </div>
+                            <i class="fas fa-hotel text-red-400 text-xl"></i>
+                        </div>
+                        <div class="text-sm text-slate-600 mb-3">
+                            <div class="flex justify-between mb-1">
+                                <span>Volume at stake:</span>
+                                <span class="font-bold mono">$1.24M</span>
+                            </div>
+                            <div class="flex justify-between mb-1">
+                                <span>Target rate reduction:</span>
+                                <span class="font-bold text-green-600">-8%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Current margin:</span>
+                                <span class="font-bold">18.2%</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="openNegotiation('marriott')" class="flex-1 py-2 bg-[#0066cc] text-white rounded-lg text-xs font-bold hover:bg-[#0052a3] transition-colors">
+                                <i class="fas fa-handshake mr-1"></i> Open Negotiation
+                            </button>
+                            <button onclick="viewLeverage('marriott')" class="flex-1 py-2 border border-[#0066cc] text-[#0066cc] rounded-lg text-xs font-bold hover:bg-blue-50 transition-colors">
+                                <i class="fas fa-chart-bar mr-1"></i> View Leverage
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Medium: Qatar Airways -->
+                    <div class="p-4 bg-yellow-50 rounded-xl border border-yellow-200 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <div class="font-bold text-[#1e3a5f] flex items-center gap-2">
+                                    Qatar Airways
+                                    <span class="px-2 py-0.5 bg-yellow-500 text-white text-xs rounded">MEDIUM</span>
+                                </div>
+                                <div class="text-xs text-yellow-700 mt-1">Commission review due Q1</div>
+                            </div>
+                            <i class="fas fa-plane text-yellow-600 text-xl"></i>
+                        </div>
+                        <div class="text-sm text-slate-600 mb-3">
+                            <div class="flex justify-between mb-1">
+                                <span>Volume at stake:</span>
+                                <span class="font-bold mono">$1.4M</span>
+                            </div>
+                            <div class="flex justify-between mb-1">
+                                <span>Target commission:</span>
+                                <span class="font-bold text-green-600">+0.5%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Growth rate:</span>
+                                <span class="font-bold text-green-600">↑ 28.4%</span>
+                            </div>
+                        </div>
+                        <button onclick="openNegotiation('qatar')" class="w-full py-2 bg-[#0066cc] text-white rounded-lg text-xs font-bold hover:bg-[#0052a3] transition-colors">
+                            <i class="fas fa-file-alt mr-1"></i> Prepare Proposal
+                        </button>
+                    </div>
+
+                    <!-- Opportunity: Conrad Maldives -->
+                    <div class="p-4 bg-blue-50 rounded-xl border border-blue-200 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <div class="font-bold text-[#1e3a5f] flex items-center gap-2">
+                                    Conrad Maldives
+                                    <span class="px-2 py-0.5 bg-blue-500 text-white text-xs rounded">OPPORTUNITY</span>
+                                </div>
+                                <div class="text-xs text-blue-600 mt-1">Exclusive rate opportunity</div>
+                            </div>
+                            <i class="fas fa-gem text-blue-400 text-xl"></i>
+                        </div>
+                        <div class="text-sm text-slate-600 mb-3">
+                            <div class="flex justify-between mb-1">
+                                <span>Current volume:</span>
+                                <span class="font-bold mono">$680K</span>
+                            </div>
+                            <div class="flex justify-between mb-1">
+                                <span>Current margin:</span>
+                                <span class="font-bold text-green-600">22%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Room nights:</span>
+                                <span class="font-bold">340</span>
+                            </div>
+                        </div>
+                        <button onclick="openNegotiation('conrad')" class="w-full py-2 bg-[#0066cc] text-white rounded-lg text-xs font-bold hover:bg-[#0052a3] transition-colors">
+                            <i class="fas fa-comments mr-1"></i> Initiate Discussion
+                        </button>
+                    </div>
+                </div>
+                
+                <button onclick="viewAllNegotiations()" class="w-full mt-4 py-2 text-[#0066cc] text-sm font-bold hover:underline">
+                    View All 14 Negotiations →
+                </button>
+            </div>
+
+            <!-- Office Performance Breakdown -->
+            <div class="glass-panel rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="text-lg font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                    <i class="fas fa-building text-[#0066cc]"></i>
+                    Performance by Office
+                </h3>
+                
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🇬🇧</span>
+                            <div>
+                                <div class="font-bold text-[#1e3a5f] text-sm">UK Office</div>
+                                <div class="text-xs text-slate-500">Inbound focus</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-lg font-bold text-[#1e3a5f] mono">$1.8M</div>
+                            <div class="text-xs text-green-600">↑ 11.2%</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🇺🇸</span>
+                            <div>
+                                <div class="font-bold text-[#1e3a5f] text-sm">US Office</div>
+                                <div class="text-xs text-slate-500">Outbound focus</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-lg font-bold text-[#1e3a5f] mono">$2.1M</div>
+                            <div class="text-xs text-green-600">↑ 15.8%</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🇮🇳</span>
+                            <div>
+                                <div class="font-bold text-[#1e3a5f] text-sm">India Office</div>
+                                <div class="text-xs text-slate-500">Mixed flow</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-lg font-bold text-[#1e3a5f] mono">$980K</div>
+                            <div class="text-xs text-green-600">↑ 22.4%</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🇸🇬</span>
+                            <div>
+                                <div class="font-bold text-[#1e3a5f] text-sm">Singapore</div>
+                                <div class="text-xs text-slate-500">Asia hub</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-lg font-bold text-[#1e3a5f] mono">$1.4M</div>
+                            <div class="text-xs text-green-600">↑ 18.6%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="glass-panel rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="text-lg font-bold text-[#1e3a5f] mb-4">Flow Analysis</h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-slate-600">Inbound</span>
+                            <span class="font-bold text-[#1e3a5f]">62%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2">
+                            <div class="bg-[#0066cc] h-2 rounded-full" style="width: 62%"></div>
+                        </div>
+                        <div class="text-xs text-slate-500 mt-1">$3.8M revenue • 4,850 room nights</div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-slate-600">Outbound</span>
+                            <span class="font-bold text-[#1e3a5f]">38%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2">
+                            <div class="bg-[#2a9d8f] h-2 rounded-full" style="width: 38%"></div>
+                        </div>
+                        <div class="text-xs text-slate-500 mt-1">$2.3M revenue • 3,290 room nights</div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-slate-200">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-slate-600">Avg. margin inbound:</span>
+                        <span class="font-bold text-[#2a9d8f]">17.2%</span>
+                    </div>
+                    <div class="flex justify-between items-center mt-1">
+                        <span class="text-sm text-slate-600">Avg. margin outbound:</span>
+                        <span class="font-bold text-[#2a9d8f]">15.8%</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Detailed Data Table Section -->
+    <div class="glass-panel rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+        <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+            <h3 class="text-xl font-bold text-[#1e3a5f] flex items-center gap-2">
+                <i class="fas fa-table text-[#0066cc]"></i>
+                Detailed Supplier Performance Matrix
+            </h3>
+            <div class="flex gap-2">
+                <input type="text" placeholder="Search suppliers..." class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-[#0066cc]">
+                <button class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-sm font-bold hover:bg-slate-200">
+                    <i class="fas fa-download"></i> CSV
+                </button>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                    <tr>
+                        <th class="px-6 py-4 font-bold">Supplier</th>
+                        <th class="px-6 py-4 font-bold">Type</th>
+                        <th class="px-6 py-4 font-bold">Office</th>
+                        <th class="px-6 py-4 font-bold text-right">Sales YTD</th>
+                        <th class="px-6 py-4 font-bold text-right">Margin %</th>
+                        <th class="px-6 py-4 font-bold text-right">Room Nights</th>
+                        <th class="px-6 py-4 font-bold text-right">Seats</th>
+                        <th class="px-6 py-4 font-bold text-center">Status</th>
+                        <th class="px-6 py-4 font-bold text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    <tr class="data-row bg-yellow-50">
+                        <td class="px-6 py-4 font-bold text-[#1e3a5f]">Marriott International</td>
+                        <td class="px-6 py-4"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">Hotel</span></td>
+                        <td class="px-6 py-4">Global</td>
+                        <td class="px-6 py-4 text-right font-bold mono">$1,240,000</td>
+                        <td class="px-6 py-4 text-right font-bold text-[#2a9d8f]">18.2%</td>
+                        <td class="px-6 py-4 text-right mono">2,840</td>
+                        <td class="px-6 py-4 text-right mono">-</td>
+                        <td class="px-6 py-4 text-center"><span class="px-2 py-1 bg-yellow-400 text-white rounded-full text-xs font-bold">RENEWAL</span></td>
+                        <td class="px-6 py-4 text-center"><button class="text-[#0066cc] hover:underline text-xs font-bold">Negotiate</button></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td class="px-6 py-4 font-bold text-[#1e3a5f]">Emirates</td>
+                        <td class="px-6 py-4"><span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">Airline</span></td>
+                        <td class="px-6 py-4">Dubai</td>
+                        <td class="px-6 py-4 text-right font-bold mono">$2,100,000</td>
+                        <td class="px-6 py-4 text-right font-bold text-[#2a9d8f]">8.2%</td>
+                        <td class="px-6 py-4 text-right mono">-</td>
+                        <td class="px-6 py-4 text-right mono">3,420</td>
+                        <td class="px-6 py-4 text-center"><span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">ACTIVE</span></td>
+                        <td class="px-6 py-4 text-center"><button class="text-[#0066cc] hover:underline text-xs font-bold">Review</button></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td class="px-6 py-4 font-bold text-[#1e3a5f]">Hilton Worldwide</td>
+                        <td class="px-6 py-4"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">Hotel</span></td>
+                        <td class="px-6 py-4">UK/US</td>
+                        <td class="px-6 py-4 text-right font-bold mono">$892,000</td>
+                        <td class="px-6 py-4 text-right font-bold text-[#2a9d8f]">16.8%</td>
+                        <td class="px-6 py-4 text-right mono">2,156</td>
+                        <td class="px-6 py-4 text-right mono">-</td>
+                        <td class="px-6 py-4 text-center"><span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">SECURED</span></td>
+                        <td class="px-6 py-4 text-center"><button class="text-[#0066cc] hover:underline text-xs font-bold">View</button></td>
+                    </tr>
+                    <tr class="data-row bg-yellow-50">
+                        <td class="px-6 py-4 font-bold text-[#1e3a5f]">Qatar Airways</td>
+                        <td class="px-6 py-4"><span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">Airline</span></td>
+                        <td class="px-6 py-4">Doha</td>
+                        <td class="px-6 py-4 text-right font-bold mono">$1,400,000</td>
+                        <td class="px-6 py-4 text-right font-bold text-[#2a9d8f]">8.5%</td>
+                        <td class="px-6 py-4 text-right mono">-</td>
+                        <td class="px-6 py-4 text-right mono">2,340</td>
+                        <td class="px-6 py-4 text-center"><span class="px-2 py-1 bg-yellow-400 text-white rounded-full text-xs font-bold">NEGOTIATE</span></td>
+                        <td class="px-6 py-4 text-center"><button class="text-[#0066cc] hover:underline text-xs font-bold">Negotiate</button></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td class="px-6 py-4 font-bold text-[#1e3a5f]">Conrad Maldives</td>
+                        <td class="px-6 py-4"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">Hotel</span></td>
+                        <td class="px-6 py-4">Maldives</td>
+                        <td class="px-6 py-4 text-right font-bold mono">$680,000</td>
+                        <td class="px-6 py-4 text-right font-bold text-[#2a9d8f]">22.0%</td>
+                        <td class="px-6 py-4 text-right mono">340</td>
+                        <td class="px-6 py-4 text-right mono">-</td>
+                        <td class="px-6 py-4 text-center"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">OPPORTUNITY</span></td>
+                        <td class="px-6 py-4 text-center"><button class="text-[#0066cc] hover:underline text-xs font-bold">Contact</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
+            <span class="text-xs text-slate-500">Showing 5 of 285 suppliers</span>
+            <div class="flex gap-2">
+                <button class="px-3 py-1 border border-slate-300 rounded text-xs hover:bg-slate-100">Previous</button>
+                <button class="px-3 py-1 border border-slate-300 rounded text-xs hover:bg-slate-100">Next</button>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- Modal for Supplier Details -->
+<div id="supplierModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-gradient-to-r from-[#0066cc] to-[#1e3a5f] text-white rounded-t-2xl">
+            <h2 class="text-2xl font-bold" id="modalTitle">Supplier Details</h2>
+            <button onclick="closeModal()" class="text-white hover:text-slate-200 text-2xl">&times;</button>
+        </div>
+        <div class="p-6" id="modalContent">
+            <!-- Dynamic content loaded here -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // Global state
+    let currentFilters = {
+        office: 'all',
+        flow: 'all',
+        country: 'all'
+    };
+
+    // Tab switching functions
+    function switchHotelTab(tab) {
+        // Hide all content
+        document.getElementById('hotel-content-sales').classList.add('hidden');
+        document.getElementById('hotel-content-margin').classList.add('hidden');
+        document.getElementById('hotel-content-rooms').classList.add('hidden');
+        document.getElementById('hotel-content-growth').classList.add('hidden');
+        
+        // Remove active class from all tabs
+        document.getElementById('hotel-tab-sales').classList.remove('active');
+        document.getElementById('hotel-tab-margin').classList.remove('active');
+        document.getElementById('hotel-tab-rooms').classList.remove('active');
+        document.getElementById('hotel-tab-growth').classList.remove('active');
+        
+        // Show selected content and activate tab
+        document.getElementById(`hotel-content-${tab}`).classList.remove('hidden');
+        document.getElementById(`hotel-tab-${tab}`).classList.add('active');
+    }
+
+    function switchAirlineView(view) {
+        // Implementation for airline view switching
+        updateDashboard();
+    }
+
+    // Filter and update dashboard
+    function updateDashboard() {
+        currentFilters.office = document.getElementById('officeFilter').value;
+        currentFilters.flow = document.getElementById('flowFilter').value;
+        currentFilters.country = document.getElementById('countryFilter').value;
+        
+        // Simulate data update with loading effect
+        document.body.style.cursor = 'wait';
+        setTimeout(() => {
+            document.body.style.cursor = 'default';
+            // In real implementation, this would fetch new data based on filters
+            console.log('Updating dashboard with filters:', currentFilters);
+        }, 300);
+    }
+
+    // Supplier detail modal
+    function showSupplierDetail(supplier) {
+        const modal = document.getElementById('supplierModal');
+        const title = document.getElementById('modalTitle');
+        const content = document.getElementById('modalContent');
+        
+        const supplierData = {
+            'marriott': {
+                name: 'Marriott International',
+                stats: {
+                    sales:  I see the code was cut off at the end. Let me complete the JavaScript functions and close out the file properly so you have a fully functional dashboard.
+
+```html
+                    sales: '$1.24M',
+                    margin: '18.2%',
+                    rooms: '2,840',
+                    growth: '+12.3%',
+                    properties: 42,
+                    countries: ['USA', 'UK', 'UAE', 'Maldives', 'Thailand']
+                },
+                negotiation: {
+                    status: 'Renewal Due',
+                    daysLeft: 45,
+                    volumeAtStake: '$1.24M',
+                    targetReduction: '8%',
+                    currentRates: 'Expiring Q1 2025',
+                    leverage: 'High volume in Maldives & Dubai'
+                }
+            },
+            'hilton': {
+                name: 'Hilton Worldwide',
+                stats: {
+                    sales: '$892K',
+                    margin: '16.8%',
+                    rooms: '2,156',
+                    growth: '+8.7%',
+                    properties: 38,
+                    countries: ['UK', 'USA', 'Singapore']
+                },
+                negotiation: {
+                    status: 'Secured 2025',
+                    daysLeft: 'N/A',
+                    volumeAtStake: '$892K',
+                    targetReduction: 'N/A',
+                    currentRates: 'Locked until Dec 2025',
+                    leverage: 'Strong UK inbound performance'
+                }
+            }
+        };
+
+        const data = supplierData[supplier] || supplierData['marriott'];
+        
+        title.textContent = data.name;
+        content.innerHTML = `
+            <div class="grid grid-cols-2 gap-6 mb-6">
+                <div class="bg-slate-50 p-4 rounded-xl">
+                    <h3 class="font-bold text-[#1e3a5f] mb-3">Performance Metrics</h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between"><span class="text-slate-600">Sales YTD:</span><span class="font-bold mono">${data.stats.sales}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-600">Margin:</span><span class="font-bold text-[#2a9d8f]">${data.stats.margin}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-600">Room Nights:</span><span class="font-bold mono">${data.stats.rooms}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-600">Growth:</span><span class="font-bold text-green-600">${data.stats.growth}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-600">Properties:</span><span class="font-bold">${data.stats.properties}</span></div>
+                    </div>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+                    <h3 class="font-bold text-[#1e3a5f] mb-3">Negotiation Status</h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between"><span class="text-slate-600">Status:</span><span class="font-bold text-yellow-600">${data.negotiation.status}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-600">Days Left:</span><span class="font-bold text-red-600">${data.negotiation.daysLeft}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-600">Volume at Stake:</span><span class="font-bold mono">${data.negotiation.volumeAtStake}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-600">Target:</span><span class="font-bold text-green-600">${data.negotiation.targetReduction}</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="openNegotiation('${supplier}')" class="flex-1 py-3 bg-[#0066cc] text-white rounded-xl font-bold hover:bg-[#0052a3] transition-colors">
+                    <i class="fas fa-handshake mr-2"></i>Open Negotiation
+                </button>
+                <button onclick="exportSupplierReport('${supplier}')" class="flex-1 py-3 border-2 border-[#0066cc] text-[#0066cc] rounded-xl font-bold hover:bg-blue-50 transition-colors">
+                    <i class="fas fa-download mr-2"></i>Export Report
+                </button>
+            </div>
+        `;
+        
+        modal.classList.remove('hidden');
+    }
+
+    function showDestinationDetail(destination) {
+        const modal = document.getElementById('supplierModal');
+        document.getElementById('modalTitle').textContent = destination.charAt(0).toUpperCase() + destination.slice(1) + ' Performance';
+        document.getElementById('modalContent').innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-chart-area text-6xl text-[#0066cc] mb-4"></i>
+                <h3 class="text-xl font-bold text-[#1e3a5f] mb-2">Destination Analytics</h3>
+                <p class="text-slate-600">Detailed performance data for ${destination} would load here.</p>
+                <div class="mt-6 grid grid-cols-3 gap-4">
+                    <div class="p-4 bg-slate-50 rounded-lg">
+                        <div class="text-2xl font-bold text-[#1e3a5f]">$2.4M</div>
+                        <div class="text-xs text-slate-500">Total Sales</div>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-lg">
+                        <div class="text-2xl font-bold text-[#1e3a5f]">18.5%</div>
+                        <div class="text-xs text-slate-500">Avg Margin</div>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-lg">
+                        <div class="text-2xl font-bold text-[#1e3a5f]">12</div>
+                        <div class="text-xs text-slate-500">Active Partners</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('supplierModal').classList.add('hidden');
+    }
+
+    function openNegotiation(supplier) {
+        alert(`Opening negotiation interface for ${supplier}...\n\nThis would launch the negotiation workflow with:\n- Historical performance data\n- Market benchmarks\n- Suggested rate targets\n- Contract templates`);
+    }
+
+    function viewLeverage(supplier) {
+        alert(`Viewing leverage analysis for ${supplier}...\n\nThis would show:\n- Volume concentration analysis\n- Alternative supplier options\n- Market rate comparisons\n- Renewal risk assessment`);
+    }
+
+    function exportNegotiationPack() {
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generating...';
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-check mr-2"></i> Downloaded!';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+            }, 2000);
+        }, 1500);
+    }
+
+    function exportSupplierReport(supplier) {
+        alert(`Exporting detailed report for ${supplier}...`);
+    }
+
+    function viewAllHotels() {
+        alert('This would navigate to the full hotel directory with advanced filtering and sorting capabilities.');
+    }
+
+    function viewAllNegotiations() {
+        alert('This would open the comprehensive negotiation pipeline view with calendar integration and task management.');
+    }
+
+    // Close modal on outside click
+    window.onclick = function(event) {
+        const modal = document.getElementById('supplierModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    }
+
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('TripFactory Product Department Dashboard initialized');
+        // Add any initialization logic here
+    });
+</script>
+
+</body>
+</html>

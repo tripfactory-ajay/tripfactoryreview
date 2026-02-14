@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Factory - Action Plan Worksheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            font-size: 13px;
+            color: #333;
+        }
+        
+        .worksheet {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+        
+        .header-info {
+            text-align: right;
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+        
+        /* Compact Stats Row */
+        .stats-row {
+            display: flex;
+            background: #e8f0fe;
+            border-bottom: 2px solid #1e3c72;
+        }
+        
+        .stat-box {
+            flex: 1;
+            padding: 8px 15px;
+            text-align: center;
+            border-right: 1px solid #bcd3f7;
+        }
+        
+        .stat-box:last-child {
+            border-right: none;
+        }
+        
+        .stat-number {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #1e3c72;
+            line-height: 1;
+        }
+        
+        .stat-label {
+            font-size: 0.75em;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Section Styling */
+        .section {
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .section-header {
+            background: #f8f9fa;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-bottom: 1px solid #ddd;
+            transition: background 0.2s;
+        }
+        
+        .section-header:hover {
+            background: #e9ecef;
+        }
+        
+        .section-header h2 {
+            font-size: 1em;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .toggle-icon {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .section.collapsed .section-content {
+            display: none;
+        }
+        
+        .section-content {
+            padding: 15px;
+        }
+        
+        /* Table Styling */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+        
+        .data-table th {
+            background: #e9ecef;
+            padding: 8px 10px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 0.85em;
+            text-transform: uppercase;
+        }
+        
+        .data-table td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .data-table input {
+            width: 100%;
+            padding: 5px 8px;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        
+        .data-table input:focus {
+            outline: none;
+            border-color: #1e3c72;
+            background: #fff;
+        }
+        
+        .row-lead {
+            background: #d4edda !important;
+        }
+        
+        .row-lead td {
+            font-weight: 600;
+        }
+        
+        /* Timeline Compact */
+        .timeline-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .timeline-table th {
+            background: #e9ecef;
+            padding: 8px;
+            text-align: left;
+            font-size: 0.8em;
+            text-transform: uppercase;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .timeline-table td {
+            padding: 8px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+        
+        .date-cell {
+            white-space: nowrap;
+            font-weight: 600;
+            color: #1e3c72;
+            width: 120px;
+        }
+        
+        .checkbox-cell {
+            width: 30px;
+            text-align: center;
+        }
+        
+        .checkbox-cell input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .action-cell {
+            font-weight: 500;
+        }
+        
+        .notes-cell textarea {
+            width: 100%;
+            min-height: 40px;
+            padding: 5px;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 0.9em;
+        }
+        
+        .status-completed {
+            background: #d4edda;
+        }
+        
+        .status-progress {
+            background: #fff3cd;
+        }
+        
+        /* Meeting Notes Compact */
+        .meetings-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .meeting-box {
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .meeting-header {
+            background: #e9ecef;
+            padding: 6px 10px;
+            font-size: 0.85em;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .meeting-type {
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.8em;
+        }
+        
+        .type-mon { background: #e3f2fd; color: #1565c0; }
+        .type-wed { background: #f3e5f5; color: #7b1fa2; }
+        .type-fri { background: #e8f5e9; color: #2e7d32; }
+        .type-ceo { background: #fff3e0; color: #ef6c00; }
+        
+        .meeting-box input[type="date"] {
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            padding: 3px;
+            font-size: 0.85em;
+        }
+        
+        .meeting-box textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 8px;
+            border: none;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 0.9em;
+        }
+        
+        /* Dashboard Grid Compact */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 10px;
+        }
+        
+        .dashboard-card {
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            background: #fafafa;
+            transition: all 0.2s;
+        }
+        
+        .dashboard-card:hover {
+            border-color: #1e3c72;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .dashboard-card.signed-off {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        
+        .dashboard-card.rejected {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        
+        .category-tag {
+            font-size: 0.7em;
+            background: #6c757d;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .dashboard-name {
+            font-weight: 600;
+            font-size: 0.95em;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .status-buttons {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 8px;
+        }
+        
+        .status-btn {
+            flex: 1;
+            padding: 4px 8px;
+            border: 1px solid #ced4da;
+            background: white;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.75em;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .status-btn:hover {
+            background: #e9ecef;
+        }
+        
+        .status-btn.active {
+            color: white;
+            border-color: transparent;
+        }
+        
+        .status-btn.approve.active { background: #28a745; }
+        .status-btn.pending-btn.active { background: #ffc107; color: #000; }
+        .status-btn.reject.active { background: #dc3545; }
+        
+        .card-feedback textarea {
+            width: 100%;
+            min-height: 50px;
+            padding: 5px;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 0.85em;
+        }
+        
+        /* Progress Bar */
+        .progress-container {
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        /* Save Buttons */
+        .section-save {
+            background: #1e3c72;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        
+        .section-save:hover {
+            background: #2a5298;
+        }
+        
+        .save-indicator {
+            color: #28a745;
+            font-size: 0.8em;
+            margin-left: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .save-indicator.show {
+            opacity: 1;
+        }
+        
+        /* Summary Box */
+        .summary-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 10px 15px;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        @media print {
+            .section-content { display: block !important; }
+            .section-save { display: none; }
+            body { background: white; }
+            .worksheet { box-shadow: none; border: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="worksheet">
+        <!-- Header -->
+        <div class="header">
+            <h1>📊 Trip Factory Action Plan Worksheet</h1>
+            <div class="header-info">
+                <div>Period: 9-19 Feb 2026</div>
+                <div>Last Updated: <span id="lastUpdated">--</span></div>
+            </div>
+        </div>
+        
+        <!-- Compact Stats -->
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-number" id="totalDashboards">35</div>
+                <div class="stat-label">Dashboards</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="signedOffCount">0</div>
+                <div class="stat-label">Approved</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="pendingCount">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="rejectedCount">0</div>
+                <div class="stat-label">Rejected</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="teamSize">0/12</div>
+                <div class="stat-label">Team Hired</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="tasksDone">0/10</div>
+                <div class="stat-label">Tasks Done</div>
+            </div>
+        </div>
+        
+        <!-- Summary -->
+        <div class="summary-box">
+            <strong>Executive Summary:</strong> 5-day business review completed. Key finding: Staff need organisation and dashboards to empower ownership. 35 dashboards developed across 14 categories. Timeline: CEO review 13 Feb → Feedback 16 Feb → Manager showcase 17 Feb → Dev team request 18 Feb → Phase 1 dev begins. Vinay to sign off each dashboard below.
+        </div>
+        
+        <!-- Team Structure Section -->
+        <div class="section" id="teamSection">
+            <div class="section-header" onclick="toggleSection('teamSection')">
+                <h2>👥 Development Team Structure</h2>
+                <div>
+                    <span class="save-indicator" id="teamSaveInd">✓ Saved</span>
+                    <button class="section-save" onclick="saveSection('team', event)">Save Team</button>
+                    <span class="toggle-icon">▼</span>
+                </div>
+            </div>
+            <div class="section-content">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Role</th>
+                            <th style="width: 25%;">Name</th>
+                            <th style="width: 35%;">Email</th>
+                            <th>Contact Number</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="row-lead">
+                            <td>Lead</td>
+                            <td><input type="text" id="managerName" placeholder="IT Dev Manager Name"></td>
+                            <td><input type="email" id="managerEmail" placeholder="manager@tripfactory.com"></td>
+                            <td><input type="tel" id="managerPhone" placeholder="+XX XXX XXX XXXX"></td>
+                        </tr>
+                        <tr><td>Dev 1</td><td><input type="text" id="dev1Name"></td><td><input type="email" id="dev1Email"></td><td><input type="tel" id="dev1Phone"></td></tr>
+                        <tr><td>Dev 2</td><td><input type="text" id="dev2Name"></td><td><input type="email" id="dev2Email"></td><td><input type="tel" id="dev2Phone"></td></tr>
+                        <tr><td>Dev 3</td><td><input type="text" id="dev3Name"></td><td><input type="email" id="dev3Email"></td><td><input type="tel" id="dev3Phone"></td></tr>
+                        <tr><td>Dev 4</td><td><input type="text" id="dev4Name"></td><td><input type="email" id="dev4Email"></td><td><input type="tel" id="dev4Phone"></td></tr>
+                        <tr><td>Dev 5</td><td><input type="text" id="dev5Name"></td><td><input type="email" id="dev5Email"></td><td><input type="tel" id="dev5Phone"></td></tr>
+                        <tr><td>Dev 6</td><td><input type="text" id="dev6Name"></td><td><input type="email" id="dev6Email"></td><td><input type="tel" id="dev6Phone"></td></tr>
+                        <tr><td>Dev 7</td><td><input type="text" id="dev7Name"></td><td><input type="email" id="dev7Email"></td><td><input type="tel" id="dev7Phone"></td></tr>
+                        <tr><td>Dev 8</td><td><input type="text" id="dev8Name"></td><td><input type="email" id="dev8Email"></td><td><input type="tel" id="dev8Phone"></td></tr>
+                        <tr><td>Dev 9</td><td><input type="text" id="dev9Name"></td><td><input type="email" id="dev9Email"></td><td><input type="tel" id="dev9Phone"></td></tr>
+                        <tr><td>Dev 10</td><td><input type="text" id="dev10Name"></td><td><input type="email" id="dev10Email"></td><td><input type="tel" id="dev10Phone"></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Timeline Section -->
+        <div class="section" id="timelineSection">
+            <div class="section-header" onclick="toggleSection('timelineSection')">
+                <h2>📅 Timeline & Action Checklist</h2>
+                <div>
+                    <span class="save-indicator" id="timelineSaveInd">✓ Saved</span>
+                    <button class="section-save" onclick="saveSection('timeline', event)">Save Timeline</button>
+                    <span class="toggle-icon">▼</span>
+                </div>
+            </div>
+            <div class="section-content">
+                <table class="timeline-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th style="width: 30px;">✓</th>
+                            <th>Action Item</th>
+                            <th style="width: 40%;">Notes & Updates</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="row1">
+                            <td class="date-cell">Thu 13 Feb</td>
+                            <td class="checkbox-cell"><input type="checkbox" id="check1" onchange="updateRowStatus(1)"></td>
+                            <td class="action-cell">Dashboard walkthrough with CEO (Vinay)</td>
+                            <td class="notes-cell"><textarea id="notes1" placeholder="Meeting notes..."></textarea></td>
+                        </tr>
+                        <tr id="row2">
+                            <td class="date-cell">Mon 16 Feb</td>
+                            <td class="checkbox-cell"><input type="checkbox" id="check2" onchange="updateRowStatus(2)"></td>
+                            <td class="action-cell">CEO review & feedback session</td>
+                            <td class="notes-cell"><textarea id="notes2" placeholder="Vinay's feedback..."></textarea></td>
+                        </tr>
+                        <tr id="row3">
+                            <td class="date-cell">Tue 17 Feb</td>
+                            <td class="checkbox-cell"><input type="checkbox" id="check3" onchange="updateRowStatus(3)"></td>
+                            <td class="action-cell">Management showcase & priority lock</td>
+                            <td class="notes-cell"><textarea id="notes3" placeholder="Manager feedback..."></textarea></td>
+                        </tr>
+                        <tr id="row4">
+                            <td class="date-cell">Wed 18 Feb</td>
+                            <td class="checkbox-cell"><input type="checkbox" id="check4" onchange="updateRowStatus(4)"></td>
+                            <td class="action-cell">Request: IT Dev Manager + 10 developers</td>
+                            <td class="notes-cell"><textarea id="notes4" placeholder="Approval status..."></textarea></td>
+                        </tr>
+                        <tr id="row5">
+                            <td class="date-cell">Wed 18 Feb</td>
+                            <td class="checkbox-cell"><input type="checkbox" id="check5" onchange="updateRowStatus(5)"></td>
+                            <td class="action-cell">Establish Mon/Wed/Fri team cadence</td>
+                            <td class="notes-cell"><textarea id="notes5" placeholder="Meeting times..."></textarea></td>
+                        </tr>
+                        <tr id="row6">
+                            <td class="date-cell">Tue 17 Feb</td>
+                            <td class="checkbox-cell"><input type="checkbox" id="check6" onchange="updateRowStatus(6)"></td>
+                            <td class="action-cell">Phase 1 scope finalised (EOD)</td>
+                            <td class="notes-cell"><textarea id="notes6" placeholder="Final list..."></textarea></td>
+                        </tr>
+                        <tr id="row7">
+                            <td class="date-cell">17-21 Feb</td>
+                            <td class="checkbox-cell"><input type="checkbox" id="check7" onchange="updateRowStatus(7)"></td>
+                            <td class="action-cell">Phase 1 development sprint begins</td>
+                            <td class="notes-cell"><textarea id="notes7" placeholder="Sprint goals..."></textarea></td>
+                        </tr>
+                        <tr id="row8">
+                            <td class="date-cell">Ongoing</td>
+                            <td class="checkbox-cell"><input type="checkbox" id="check8" onchange="updateRowStatus(8)"></td>
+                            <td class="action-cell">Beta testing with select staff</td>
+                            <td class="notes-cell"><textarea id="notes8" placeholder="Beta feedback..."></textarea></td>
+                        </tr>
+                        <tr id="row9">
+                            <td class="date-cell">Post-Beta</td>
+                            <td class="checkbox-cell"><input type="checkbox" id="check9" onchange="updateRowStatus(9)"></td>
+                            <td class="action-cell">Staff training programme rollout</td>
+                            <td class="notes-cell"><textarea id="notes9" placeholder="Training schedule..."></textarea></td>
+                        </tr>
+                        <tr id="row10">
+                            <td class="date-cell">Final</td>
+                            <td class="checkbox-cell"><input type="checkbox" id="check10" onchange="updateRowStatus(10)"></td>
+                            <td class="action-cell">Live deployment across all departments</td>
+                            <td class="notes-cell"><textarea id="notes10" placeholder="Go-live date..."></textarea></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Meeting Notes Section -->
+        <div class="section" id="meetingsSection">
+            <div class="section-header" onclick="toggleSection('meetingsSection')">
+                <h2>📝 Weekly Meeting Notes</h2>
+                <div>
+                    <span class="save-indicator" id="meetingsSaveInd">✓ Saved</span>
+                    <button class="section-save" onclick="saveSection('meetings', event)">Save Meetings</button>
+                    <span class="toggle-icon">▼</span>
+                </div>
+            </div>
+            <div class="section-content">
+                <div class="meetings-grid">
+                    <div class="meeting-box">
+                        <div class="meeting-header">
+                            <span class="meeting-type type-mon">Monday Stand-up</span>
+                            <input type="date" id="meetingDate1">
+                        </div>
+                        <textarea id="meetingNotes1" placeholder="Attendees, key updates, blockers..."></textarea>
+                    </div>
+                    <div class="meeting-box">
+                        <div class="meeting-header">
+                            <span class="meeting-type type-wed">Wednesday Review</span>
+                            <input type="date" id="meetingDate2">
+                        </div>
+                        <textarea id="meetingNotes2" placeholder="Mid-week progress, technical challenges..."></textarea>
+                    </div>
+                    <div class="meeting-box">
+                        <div class="meeting-header">
+                            <span class="meeting-type type-fri">Friday Wrap-up</span>
+                            <input type="date" id="meetingDate3">
+                        </div>
+                        <textarea id="meetingNotes3" placeholder="Week achievements, next week priorities..."></textarea>
+                    </div>
+                    <div class="meeting-box">
+                        <div class="meeting-header">
+                            <span class="meeting-type type-ceo">CEO Check-in</span>
+                            <input type="date" id="meetingDate4">
+                        </div>
+                        <textarea id="meetingNotes4" placeholder="Vinay update, strategic decisions..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CEO Sign-off Section -->
+        <div class="section" id="ceoSection">
+            <div class="section-header" onclick="toggleSection('ceoSection')">
+                <h2>✅ CEO Dashboard Sign-off (Vinay)</h2>
+                <div>
+                    <span class="save-indicator" id="ceoSaveInd">✓ Saved</span>
+                    <button class="section-save" onclick="saveSection('ceo', event)">Save Reviews</button>
+                    <span class="toggle-icon">▼</span>
+                </div>
+            </div>
+            <div class="section-content">
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="ceoProgress" style="width: 0%">0% Approved</div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-grid" id="dashboardGrid">
+                    <!-- Generated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dashboard data
+        const dashboards = [
+            {id: 'ceo-dash', cat: 'Board', name: 'CEO Dashboard'},
+            {id: 'b2b-cmd', cat: 'Board', name: 'B2B Command Center'},
+            {id: 'global-biz', cat: 'Board', name: 'Global Business View'},
+            {id: 'global-pnl', cat: 'Board', name: 'Global P&L'},
+            {id: 'global-view', cat: 'Board', name: 'Global Overview'},
+            {id: 'buyer-mgmt', cat: 'Commercial', name: 'Buyer Management'},
+            {id: 'contracting', cat: 'Commercial', name: 'Contracting'},
+            {id: 'demo-dest', cat: 'Commercial', name: 'Demographics & Destinations'},
+            {id: 'global-heat', cat: 'Commercial', name: 'Global Heatmap'},
+            {id: 'margin-review', cat: 'Commercial', name: 'Margin Review'},
+            {id: 'partner-fund', cat: 'Commercial', name: 'Partner Funding'},
+            {id: 'predictive', cat: 'Commercial', name: 'Predictive Analytics'},
+            {id: 'product-dept', cat: 'Commercial', name: 'Product Department'},
+            {id: 'supplier-perf', cat: 'Commercial', name: 'Supplier Performance'},
+            {id: 'trip-points', cat: 'Commercial', name: 'Trip Points'},
+            {id: 'agent-personal', cat: 'Sales', name: 'Agent Personal'},
+            {id: 'customer-journey', cat: 'Sales', name: 'Customer Journey'},
+            {id: 'customer-profile', cat: 'Sales', name: 'Customer Profile'},
+            {id: 'enquiry-route', cat: 'Sales', name: 'Enquiry Routing'},
+            {id: 'field-manager', cat: 'Sales', name: 'Field Manager'},
+            {id: 'team-leader', cat: 'Sales', name: 'Team Leader'},
+            {id: 'escalation-action', cat: 'Operational', name: 'Escalation Action'},
+            {id: 'escalations', cat: 'Operational', name: 'Escalations Overview'},
+            {id: 'fleet-mgmt', cat: 'Operational', name: 'Fleet Management'},
+            {id: 'ticketing-cmd', cat: 'Operational', name: 'Ticketing Command'},
+            {id: 'travel-alerts', cat: 'Operational', name: 'Travel Alerts'},
+            {id: 'visa-mgmt', cat: 'Operational', name: 'Visa Management'},
+            {id: 'cashflow', cat: 'Finance', name: 'Business Cashflow'},
+            {id: 'currency-mgmt', cat: 'Finance', name: 'Currency Management'},
+            {id: 'finance-cmd', cat: 'Finance', name: 'Finance Command'},
+            {id: 'marketing-conv', cat: 'Marketing', name: 'Marketing Conversion'},
+            {id: 'marketing-spend', cat: 'Marketing', name: 'Marketing Spend'},
+            {id: 'api-health', cat: 'Technology', name: 'API Health'},
+            {id: 'data-quality', cat: 'Technology', name: 'Data Quality'},
+            {id: 'platform-perf', cat: 'Technology', name: 'Platform Performance'},
+            {id: 'org-chart', cat: 'HR', name: 'Company Org Chart'},
+            {id: 'tf-structure', cat: 'HR', name: 'Trip Factory Structure'},
+            {id: 'partner-prog', cat: 'Credit', name: 'Partner Programme'},
+            {id: 'voyager-club', cat: 'Credit', name: 'Voyager Club'},
+            {id: 'agent-intel', cat: 'Agent Tools', name: 'Agent Intelligence Hub'},
+            {id: 'knowledge-factory', cat: 'Agent Tools', name: 'Knowledge Factory'},
+            {id: 'agent-overview', cat: 'Agent Tools', name: 'Travel Agent Overview'},
+            {id: 'manager-daily', cat: 'Generic', name: 'Manager Daily'},
+            {id: 'staff-daily', cat: 'Generic', name: 'Staff Daily'},
+            {id: 'local-office', cat: 'Overseas', name: 'Local Office'},
+            {id: 'local-cmd', cat: 'Overseas', name: 'Local Office Command'},
+            {id: 'partner-connect', cat: 'Partner', name: 'Partner Connect'},
+            {id: 'dest-planner', cat: 'Product', name: 'Destination Planner'},
+            {id: 'product-launch', cat: 'Product', name: 'Product Launch Flow'},
+            {id: 'the-journey', cat: 'Branding', name: 'The Journey'}
+        ];
+        
+        // Generate dashboard cards
+        function generateDashboards() {
+            const grid = document.getElementById('dashboardGrid');
+            dashboards.forEach(d => {
+                const card = document.createElement('div');
+                card.className = 'dashboard-card';
+                card.setAttribute('data-id', d.id);
+                card.innerHTML = `
+                    <div class="card-header">
+                        <span class="category-tag">${d.cat}</span>
+                    </div>
+                    <div class="dashboard-name">${d.name}</div>
+                    <div class="status-buttons">
+                        <button class="status-btn approve" onclick="setDashboardStatus('${d.id}', 'signed-off', this)">✓</button>
+                        <button class="status-btn pending-btn" onclick="setDashboardStatus('${d.id}', 'pending', this)">⏳</button>
+                        <button class="status-btn reject" onclick="setDashboardStatus('${d.id}', 'rejected', this)">✗</button>
+                    </div>
+                    <div class="card-feedback">
+                        <textarea id="feedback-${d.id}" placeholder="Vinay's feedback..."></textarea>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+        
+        // Toggle section
+        function toggleSection(id) {
+            document.getElementById(id).classList.toggle('collapsed');
+        }
+        
+        // Update timeline row status
+        function updateRowStatus(rowNum) {
+            const checkbox = document.getElementById('check' + rowNum);
+            const row = document.getElementById('row' + rowNum);
+            if (checkbox.checked) {
+                row.classList.add('status-completed');
+                row.classList.remove('status-progress');
+            } else {
+                row.classList.remove('status-completed');
+                row.classList.add('status-progress');
+            }
+            updateStats();
+        }
+        
+        // Set dashboard status
+        function setDashboardStatus(id, status, btn) {
+            const card = document.querySelector(`[data-id="${id}"]`);
+            const buttons = card.querySelectorAll('.status-btn');
+            
+            buttons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            card.classList.remove('signed-off', 'rejected');
+            if (status !== 'pending') card.classList.add(status);
+            
+            updateProgress();
+            updateStats();
+        }
+        
+        // Update progress bar
+        function updateProgress() {
+            const approved = document.querySelectorAll('.dashboard-card.signed-off').length;
+            const total = dashboards.length;
+            const pct = Math.round((approved / total) * 100);
+            
+            document.getElementById('ceoProgress').style.width = pct + '%';
+            document.getElementById('ceoProgress').textContent = pct + '% Approved';
+        }
+        
+        // Update stats
+        function updateStats() {
+            const approved = document.querySelectorAll('.dashboard-card.signed-off').length;
+            const rejected = document.querySelectorAll('.dashboard-card.rejected').length;
+            const pending = dashboards.length - approved - rejected;
+            const tasksDone = document.querySelectorAll('.timeline-table input[type="checkbox"]:checked').length;
+            
+            let teamHired = 0;
+            for (let i = 1; i <= 10; i++) {
+                if (document.getElementById('dev' + i + 'Name').value) teamHired++;
+            }
+            if (document.getElementById('managerName').value) teamHired++;
+            
+            document.getElementById('signedOffCount').textContent = approved;
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('rejectedCount').textContent = rejected;
+            document.getElementById('teamSize').textContent = teamHired + '/12';
+            document.getElementById('tasksDone').textContent = tasksDone + '/10';
+        }
+        
+        // Save section
+        function saveSection(section, event) {
+            event.stopPropagation();
+            const data = JSON.parse(localStorage.getItem('tripFactoryWorksheet') || '{}');
+            
+            if (section === 'team') {
+                data.team = {};
+                for (let i = 1; i <= 10; i++) {
+                    data.team['dev' + i] = {
+                        name: document.getElementById('dev' + i + 'Name').value,
+                        email: document.getElementById('dev' + i + 'Email').value,
+                        phone: document.getElementById('dev' + i + 'Phone').value
+                    };
+                }
+                data.team.manager = {
+                    name: document.getElementById('managerName').value,
+                    email: document.getElementById('managerEmail').value,
+                    phone: document.getElementById('managerPhone').value
+                };
+            } else if (section === 'timeline') {
+                data.timeline = {};
+                for (let i = 1; i <= 10; i++) {
+                    data.timeline[i] = {
+                        checked: document.getElementById('check' + i).checked,
+                        notes: document.getElementById('notes' + i).value
+                    };
+                }
+            } else if (section === 'meetings') {
+                data.meetings = {};
+                for (let i = 1; i <= 4; i++) {
+                    data.meetings[i] = {
+                        date: document.getElementById('meetingDate' + i).value,
+                        notes: document.getElementById('meetingNotes' + i).value
+                    };
+                }
+            } else if (section === 'ceo') {
+                data.dashboards = {};
+                dashboards.forEach(d => {
+                    const card = document.querySelector(`[data-id="${d.id}"]`);
+                    let status = 'pending';
+                    if (card.classList.contains('signed-off')) status = 'signed-off';
+                    if (card.classList.contains('rejected')) status = 'rejected';
+                    data.dashboards[d.id] = {
+                        status: status,
+                        feedback: document.getElementById('feedback-' + d.id).value
+                    };
+                });
+            }
+            
+            localStorage.setItem('tripFactoryWorksheet', JSON.stringify(data));
+            document.getElementById(section + 'SaveInd').classList.add('show');
+            setTimeout(() => document.getElementById(section + 'SaveInd').classList.remove('show'), 2000);
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+        }
+        
+        // Load data
+        function loadData() {
+            const data = JSON.parse(localStorage.getItem('tripFactoryWorksheet') || '{}');
+            
+            if (data.team) {
+                for (let i = 1; i <= 10; i++) {
+                    if (data.team['dev' + i]) {
+                        document.getElementById('dev' + i + 'Name').value = data.team['dev' + i].name || '';
+                        document.getElementById('dev' + i + 'Email').value = data.team['dev' + i].email || '';
+                        document.getElementById('dev' + i + 'Phone').value = data.team['dev' + i].phone || '';
+                    }
+                }
+                if (data.team.manager) {
+                    document.getElementById('managerName').value = data.team.manager.name || '';
+                    document.getElementById('managerEmail').value = data.team.manager.email || '';
+                    document.getElementById('managerPhone').value = data.team.manager.phone || '';
+                }
+            }
+            
+            if (data.timeline) {
+                for (let i = 1; i <= 10; i++) {
+                    if (data.timeline[i]) {
+                        document.getElementById('check' + i).checked = data.timeline[i].checked;
+                        document.getElementById('notes' + i).value = data.timeline[i].notes || '';
+                        if (data.timeline[i].checked) updateRowStatus(i);
+                    }
+                }
+            }
+            
+            if (data.meetings) {
+                for (let i = 1; i <= 4; i++) {
+                    if (data.meetings[i]) {
+                        document.getElementById('meetingDate' + i).value = data.meetings[i].date || '';
+                        document.getElementById('meetingNotes' + i).value = data.meetings[i].notes || '';
+                    }
+                }
+            }
+            
+            if (data.dashboards) {
+                Object.keys(data.dashboards).forEach(id => {
+                    const card = document.querySelector(`[data-id="${id}"]`);
+                    if (card) {
+                        const status = data.dashboards[id].status;
+                        if (status !== 'pending') {
+                            card.classList.add(status);
+                            const btnClass = status === 'signed-off' ? 'approve' : 'reject';
+                            card.querySelector('.' + btnClass).classList.add('active');
+                        }
+                        document.getElementById('feedback-' + id).value = data.dashboards[id].feedback || '';
+                    }
+                });
+                updateProgress();
+            }
+            
+            updateStats();
+        }
+        
+        // Auto-save indicators
+        document.addEventListener('input', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                updateStats();
+            }
+        });
+        
+        // Init
+        generateDashboards();
+        loadData();
+    </script>
+</body>
+</html>

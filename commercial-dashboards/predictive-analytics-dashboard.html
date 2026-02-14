@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory - Predictive Analytics & Revenue Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .prediction-card { transition: all 0.3s; }
+        .prediction-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .ai-badge { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .risk-high { border-left: 4px solid #ef4444; background: linear-gradient(to right, #fef2f2, #ffffff); }
+        .risk-medium { border-left: 4px solid #f59e0b; background: linear-gradient(to right, #fffbeb, #ffffff); }
+        .risk-low { border-left: 4px solid #22c55e; background: linear-gradient(to right, #f0fdf4, #ffffff); }
+        .trend-up { color: #22c55e; }
+        .trend-down { color: #ef4444; }
+        .pulse-dot { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .filter-active { ring: 2px solid #0066cc; border-color: #0066cc; }
+        .updating { opacity: 0.6; transition: opacity 0.3s; }
+        .number-change { animation: numberFlash 0.5s; }
+        @keyframes numberFlash { 0% { transform: scale(1.2); color: #0066cc; } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-white border-b-2 border-[#0066cc] px-6 py-4 shadow-lg">
+    <div class="flex justify-between items-center max-w-[1920px] mx-auto">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-gradient-to-br from-[#0066cc] to-[#1e3a5f] rounded-xl flex items-center justify-center text-white text-2xl">
+                <i class="fas fa-brain"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-[#1e3a5f]">Predictive Analytics & Revenue Intelligence</h1>
+                <p class="text-xs text-slate-500 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-purple-500 rounded-full pulse-dot"></span>
+                    AI-Powered Forecasting • Real-time Filter Updates
+                </p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <button onclick="resetFilters()" class="px-3 py-2 text-slate-600 hover:text-[#0066cc] text-sm font-bold" title="Reset all filters">
+                <i class="fas fa-undo"></i> Reset
+            </button>
+            <button onclick="exportForecast()" class="px-4 py-2 bg-[#0066cc] text-white rounded-lg text-sm font-bold">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- Filter Bar -->
+<div class="bg-white border-b border-slate-200 px-6 py-4 shadow-sm">
+    <div class="max-w-[1920px] mx-auto flex flex-wrap items-center gap-4">
+        <span class="text-sm font-bold text-slate-700 uppercase tracking-wider">Filters:</span>
+        
+        <!-- Office Filter -->
+        <select id="officeFilter" onchange="updateDashboard()" class="filter-select border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0066cc] focus:border-[#0066cc]">
+            <option value="all">All Offices</option>
+            <option value="uk">🇬🇧 UK Office</option>
+            <option value="us">🇺🇸 US Office</option>
+            <option value="india">🇮🇳 India Office</option>
+            <option value="singapore">🇸🇬 Singapore</option>
+        </select>
+        
+        <!-- Flow Filter -->
+        <select id="flowFilter" onchange="updateDashboard()" class="filter-select border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0066cc] focus:border-[#0066cc]">
+            <option value="all">All Flows</option>
+            <option value="inbound">Inbound Only</option>
+            <option value="outbound">Outbound Only</option>
+        </select>
+        
+        <!-- Country Filter -->
+        <select id="countryFilter" onchange="updateDashboard()" class="filter-select border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0066cc] focus:border-[#0066cc]">
+            <option value="all">All Countries</option>
+            <option value="maldives">Maldives</option>
+            <option value="thailand">Thailand</option>
+            <option value="uae">UAE</option>
+            <option value="uk">United Kingdom</option>
+            <option value="usa">United States</option>
+            <option value="singapore">Singapore</option>
+            <option value="india">India</option>
+        </select>
+        
+        <!-- Product Type -->
+        <select id="productFilter" onchange="updateDashboard()" class="filter-select border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0066cc] focus:border-[#0066cc]">
+            <option value="all">All Products</option>
+            <option value="hotels">Hotels Only</option>
+            <option value="packages">Packages</option>
+            <option value="flights">Flights</option>
+            <option value="insurance">Add-ons (Insurance/Transfers)</option>
+        </select>
+        
+        <!-- Time Period -->
+        <select id="forecastPeriod" onchange="updateDashboard()" class="filter-select border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0066cc] focus:border-[#0066cc]">
+            <option value="30">Next 30 Days</option>
+            <option value="90" selected>Next 90 Days</option>
+            <option value="180">Next 6 Months</option>
+            <option value="365">Next 12 Months</option>
+        </select>
+        
+        <!-- Agent Performance Tier -->
+        <select id="agentTierFilter" onchange="updateDashboard()" class="filter-select border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0066cc] focus:border-[#0066cc]">
+            <option value="all">All Agent Tiers</option>
+            <option value="top">Top Performers (20%+ conv)</option>
+            <option value="average">Average (10-20%)</option>
+            <option value="new">New Hires (&lt;6 months)</option>
+            <option value="atrisk">At Risk (&lt;10%)</option>
+        </select>
+        
+        <div class="ml-auto flex items-center gap-2 text-sm text-slate-500">
+            <i class="fas fa-sync-alt" id="loadingIcon" style="display: none;"></i>
+            <span id="lastUpdated">Updated: Just now</span>
+        </div>
+    </div>
+</div>
+
+<main class="max-w-[1920px] mx-auto p-6 space-y-6" id="dashboardContent">
+
+    <!-- AI Insights Banner -->
+    <div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl p-6 text-white shadow-lg transition-all duration-500" id="aiBanner">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-robot text-3xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold mb-1">AI-Generated Insights</h2>
+                    <p class="text-purple-100 text-sm" id="aiSubtitle">Based on historical data, market trends, and predictive modeling</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="text-3xl font-bold mono" id="accuracyScore">94%</div>
+                <div class="text-sm text-purple-100">Forecast Accuracy</div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-3 gap-4 mt-6" id="aiInsights">
+            <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur transition-all hover:bg-opacity-20">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="font-bold">Revenue Opportunity</span>
+                </div>
+                <p class="text-sm" id="insight1">Maldives bookings predicted to surge +35% in March. Recommend increasing inventory by 20%.</p>
+            </div>
+            <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur transition-all hover:bg-opacity-20">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span class="font-bold">Risk Alert</span>
+                </div>
+                <p class="text-sm" id="insight2">India Office conversion rate trending down. 78% probability of missing Q1 target without intervention.</p>
+            </div>
+            <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur transition-all hover:bg-opacity-20">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-lightbulb"></i>
+                    <span class="font-bold">Optimization</span>
+                </div>
+                <p class="text-sm" id="insight3">Shift 15% marketing budget from Google Ads to Email. Projected ROI improvement: 2.3x</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Primary KPIs -->
+    <div class="grid grid-cols-6 gap-4" id="kpiSection">
+        <div class="prediction-card bg-white rounded-xl p-5 shadow-lg border-l-4 border-[#0066cc]">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-slate-500 font-bold uppercase">Predicted Revenue</div>
+                <span class="ai-badge text-white text-xs px-2 py-1 rounded-full font-bold">AI</span>
+            </div>
+            <div class="text-2xl font-bold text-[#1e3a5f] mono transition-all" id="predRevenue">£2.84M</div>
+            <div class="flex items-center gap-1 text-xs text-green-600 font-bold mt-1">
+                <i class="fas fa-arrow-up"></i> <span id="revenueGrowth">+18.5%</span>
+            </div>
+            <div class="mt-2 text-xs text-slate-400">Confidence: <span id="revenueConf">78%</span></div>
+        </div>
+        
+        <div class="prediction-card bg-white rounded-xl p-5 shadow-lg border-l-4 border-blue-500">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-slate-500 font-bold uppercase">Predicted Bookings</div>
+                <span class="ai-badge text-white text-xs px-2 py-1 rounded-full font-bold">AI</span>
+            </div>
+            <div class="text-2xl font-bold text-[#1e3a5f] mono transition-all" id="predBookings">684</div>
+            <div class="flex items-center gap-1 text-xs text-green-600 font-bold mt-1">
+                <i class="fas fa-arrow-up"></i> <span id="bookingGrowth">+22.3%</span>
+            </div>
+            <div class="mt-2 text-xs text-slate-400">Hotels: <span id="hotelPct">60%</span></div>
+        </div>
+        
+        <div class="prediction-card bg-white rounded-xl p-5 shadow-lg border-l-4 border-[#2a9d8f]">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-slate-500 font-bold uppercase">Avg Booking Value</div>
+                <span class="ai-badge text-white text-xs px-2 py-1 rounded-full font-bold">AI</span>
+            </div>
+            <div class="text-2xl font-bold text-[#1e3a5f] mono transition-all" id="predABV">£4,150</div>
+            <div class="flex items-center gap-1 text-xs text-red-600 font-bold mt-1">
+                <i class="fas fa-arrow-down"></i> <span id="abvChange">-3.2%</span>
+            </div>
+            <div class="mt-2 text-xs text-slate-400" id="abvReason">Shorter-haul trend</div>
+        </div>
+        
+        <div class="prediction-card bg-white rounded-xl p-5 shadow-lg border-l-4 border-purple-500">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-slate-500 font-bold uppercase">Conversion Forecast</div>
+                <span class="ai-badge text-white text-xs px-2 py-1 rounded-full font-bold">AI</span>
+            </div>
+            <div class="text-2xl font-bold text-[#1e3a5f] mono transition-all" id="predConv">19.2%</div>
+            <div class="flex items-center gap-1 text-xs text-green-600 font-bold mt-1">
+                <i class="fas fa-arrow-up"></i> <span id="convGrowth">+0.8%</span>
+            </div>
+            <div class="mt-2 text-xs text-slate-400">Target: 20%</div>
+        </div>
+        
+        <div class="prediction-card bg-white rounded-xl p-5 shadow-lg border-l-4 border-orange-500">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-slate-500 font-bold uppercase">Look-to-Book</div>
+                <i class="fas fa-search-dollar text-orange-500"></i>
+            </div>
+            <div class="text-2xl font-bold text-[#1e3a5f] mono transition-all" id="predLTB">18:1</div>
+            <div class="flex items-center gap-1 text-xs text-green-600 font-bold mt-1">
+                <i class="fas fa-arrow-down"></i> <span id="ltbImprove">-2.1</span>
+            </div>
+            <div class="mt-2 text-xs text-slate-400">Improving</div>
+        </div>
+        
+        <div class="prediction-card bg-white rounded-xl p-5 shadow-lg border-l-4 border-green-500">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-slate-500 font-bold uppercase">Revenue at Risk</div>
+                <i class="fas fa-shield-alt text-green-500"></i>
+            </div>
+            <div class="text-2xl font-bold text-[#1e3a5f] mono transition-all" id="riskAmount">£340K</div>
+            <div class="flex items-center gap-1 text-xs text-red-600 font-bold mt-1">
+                <i class="fas fa-exclamation-circle"></i> <span id="riskLevel">Medium</span>
+            </div>
+            <div class="mt-2 text-xs text-slate-400" id="riskDetail">India Office</div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-12 gap-6">
+        
+        <!-- Revenue Forecast Chart -->
+        <div class="col-span-8 bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-[#1e3a5f] flex items-center gap-2">
+                        <i class="fas fa-chart-area text-[#0066cc]"></i>
+                        Revenue Forecast vs Actual
+                    </h3>
+                    <p class="text-sm text-slate-500 mt-1">Solid = Actual | Dashed = AI Prediction | Shaded = Confidence Range</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="toggleScenario('conservative')" class="scenario-btn px-3 py-1 text-xs font-bold rounded bg-slate-200 text-slate-600 hover:bg-slate-300" id="btn-conservative">Conservative</button>
+                    <button onclick="toggleScenario('likely')" class="scenario-btn px-3 py-1 text-xs font-bold rounded bg-[#0066cc] text-white" id="btn-likely">Most Likely</button>
+                    <button onclick="toggleScenario('optimistic')" class="scenario-btn px-3 py-1 text-xs font-bold rounded bg-slate-200 text-slate-600 hover:bg-slate-300" id="btn-optimistic">Optimistic</button>
+                </div>
+            </div>
+            <canvas id="forecastChart" height="120"></canvas>
+            
+            <!-- Forecast Drivers -->
+            <div class="mt-6 grid grid-cols-4 gap-4" id="forecastDrivers">
+                <div class="p-3 bg-blue-50 rounded-lg border border-blue-200 transition-all">
+                    <div class="text-xs text-blue-600 font-bold uppercase mb-1">Primary Driver</div>
+                    <div class="text-sm font-bold text-[#1e3a5f]" id="driver1">Seasonal Demand</div>
+                    <div class="text-xs text-slate-500" id="driver1Val">+24% weight</div>
+                </div>
+                <div class="p-3 bg-purple-50 rounded-lg border border-purple-200 transition-all">
+                    <div class="text-xs text-purple-600 font-bold uppercase mb-1">Secondary</div>
+                    <div class="text-sm font-bold text-[#1e3a5f]" id="driver2">Marketing Spend</div>
+                    <div class="text-xs text-slate-500" id="driver2Val">+18% weight</div>
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg border border-green-200 transition-all">
+                    <div class="text-xs text-green-600 font-bold uppercase mb-1">Positive Factor</div>
+                    <div class="text-sm font-bold text-[#1e3a5f]" id="driver3">New Routes</div>
+                    <div class="text-xs text-slate-500" id="driver3Val">Singapore expansion</div>
+                </div>
+                <div class="p-3 bg-red-50 rounded-lg border border-red-200 transition-all">
+                    <div class="text-xs text-red-600 font-bold uppercase mb-1">Risk Factor</div>
+                    <div class="text-sm font-bold text-[#1e3a5f]" id="driver4">Economic Uncertainty</div>
+                    <div class="text-xs text-slate-500" id="driver4Val">-8% potential</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Management -->
+        <div class="col-span-4 space-y-4">
+            <h3 class="text-lg font-bold text-[#1e3a5f] flex items-center gap-2">
+                <i class="fas fa-shield-alt text-[#0066cc]"></i>
+                Risk Management
+                <span class="ml-auto text-xs font-normal text-slate-500 bg-slate-100 px-2 py-1 rounded-full" id="riskCount">3 active</span>
+            </h3>
+
+            <div id="riskContainer">
+                <!-- High Risk -->
+                <div class="risk-high p-4 rounded-xl border border-red-200 shadow-sm mb-3 transition-all" id="risk1">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                            <span class="font-bold text-red-700">High Risk</span>
+                        </div>
+                        <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded font-bold">ACTION</span>
+                    </div>
+                    <div class="font-bold text-[#1e3a5f] mb-1" id="risk1Title">India Office Performance</div>
+                    <div class="text-sm text-slate-600 mb-2" id="risk1Desc">78% probability of missing Q1 target by 15%</div>
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="text-slate-500">Impact:</span>
+                        <span class="font-bold text-red-600" id="risk1Impact">-£340K revenue</span>
+                    </div>
+                    <button onclick="viewMitigation('india')" class="mt-3 w-full py-2 bg-red-500 text-white rounded-lg text-xs font-bold hover:bg-red-600 transition-colors">
+                        View Mitigation Plan
+                    </button>
+                </div>
+
+                <!-- Medium Risk -->
+                <div class="risk-medium p-4 rounded-xl border border-yellow-200 shadow-sm mb-3 transition-all" id="risk2">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+                            <span class="font-bold text-yellow-700">Medium Risk</span>
+                        </div>
+                        <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded font-bold">MONITOR</span>
+                    </div>
+                    <div class="font-bold text-[#1e3a5f] mb-1" id="risk2Title">Maldives Inventory</div>
+                    <div class="text-sm text-slate-600 mb-2" id="risk2Desc">Peak season demand may exceed contracted rooms by 25%</div>
+                    <button onclick="viewMitigation('maldives')" class="mt-3 w-full py-2 bg-yellow-500 text-white rounded-lg text-xs font-bold hover:bg-yellow-600 transition-colors">
+                        Check Availability
+                    </button>
+                </div>
+
+                <!-- Opportunity -->
+                <div class="p-4 bg-blue-50 rounded-xl border border-blue-200 shadow-sm transition-all" id="opportunity1">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fas fa-rocket text-blue-600"></i>
+                        <span class="font-bold text-blue-700">Opportunity Detected</span>
+                    </div>
+                    <div class="font-bold text-[#1e3a5f] mb-1" id="oppTitle">Solo Traveler Segment</div>
+                    <div class="text-sm text-slate-600 mb-2" id="oppDesc">45% YoY growth predicted. Untapped market potential.</div>
+                    <button onclick="viewOpportunity('solo')" class="mt-2 w-full py-2 bg-blue-500 text-white rounded-lg text-xs font-bold hover:bg-blue-600 transition-colors">
+                        Explore Strategy
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demand Prediction by Destination -->
+    <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+        <h3 class="text-xl font-bold text-[#1e3a5f] mb-6 flex items-center gap-2">
+            <i class="fas fa-globe-americas text-[#0066cc]"></i>
+            Demand Forecast by Destination
+            <span class="ml-auto text-sm font-normal text-slate-500" id="demandPeriod">(Next 90 Days)</span>
+        </h3>
+        
+        <div class="grid grid-cols-4 gap-6" id="destinationGrid">
+            <!-- Maldives -->
+            <div class="destination-card p-4 bg-gradient-to-br from-blue-50 to-white rounded-xl border border-blue-200 transition-all hover:shadow-lg" data-dest="maldives">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-2xl">🏝️</span>
+                    <span class="font-bold text-[#1e3a5f]">Maldives</span>
+                    <span class="ml-auto text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-bold">HOT</span>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-600">Predicted Demand</span>
+                        <span class="font-bold text-green-600">+35%</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2">
+                        <div class="bg-green-500 h-2 rounded-full transition-all duration-1000" style="width: 85%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-500">
+                        <span>Current: 78%</span>
+                        <span>Target: 85%</span>
+                    </div>
+                    <div class="mt-3 p-2 bg-white rounded border border-blue-100">
+                        <div class="text-xs text-blue-800">
+                            <i class="fas fa-robot mr-1"></i>
+                            <span class="font-bold">AI Tip:</span> Increase inventory by 20%
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thailand -->
+            <div class="destination-card p-4 bg-gradient-to-br from-green-50 to-white rounded-xl border border-green-200 transition-all hover:shadow-lg" data-dest="thailand">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-2xl">🌴</span>
+                    <span class="font-bold text-[#1e3a5f]">Thailand</span>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-600">Predicted Demand</span>
+                        <span class="font-bold text-green-600">+18%</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2">
+                        <div class="bg-green-500 h-2 rounded-full transition-all duration-1000" style="width: 72%"></div>
+                    </div>
+                    <div class="mt-3 p-2 bg-white rounded border border-green-100">
+                        <div class="text-xs text-green-800">
+                            <i class="fas fa-robot mr-1"></i>
+                            <span class="font-bold">AI Tip:</span> Stable growth expected
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- UAE -->
+            <div class="destination-card p-4 bg-gradient-to-br from-yellow-50 to-white rounded-xl border border-yellow-200 transition-all hover:shadow-lg" data-dest="uae">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-2xl">🏙️</span>
+                    <span class="font-bold text-[#1e3a5f]">UAE</span>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-600">Predicted Demand</span>
+                        <span class="font-bold text-yellow-600">+5%</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2">
+                        <div class="bg-yellow-500 h-2 rounded-full transition-all duration-1000" style="width: 55%"></div>
+                    </div>
+                    <div class="mt-3 p-2 bg-white rounded border border-yellow-100">
+                        <div class="text-xs text-yellow-800">
+                            <i class="fas fa-robot mr-1"></i>
+                            <span class="font-bold">AI Tip:</span> Consider promotions
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- UK -->
+            <div class="destination-card p-4 bg-gradient-to-br from-purple-50 to-white rounded-xl border border-purple-200 transition-all hover:shadow-lg" data-dest="uk">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-2xl">🇬🇧</span>
+                    <span class="font-bold text-[#1e3a5f]">UK</span>
+                    <span class="ml-auto text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded font-bold">PREMIUM</span>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-600">Predicted Demand</span>
+                        <span class="font-bold text-green-600">+28%</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2">
+                        <div class="bg-green-500 h-2 rounded-full transition-all duration-1000" style="width: 80%"></div>
+                    </div>
+                    <div class="mt-3 p-2 bg-white rounded border border-purple-100">
+                        <div class="text-xs text-purple-800">
+                            <i class="fas fa-robot mr-1"></i>
+                            <span class="font-bold">AI Tip:</span> Premium segment growing
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scenario Simulator -->
+    <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+        <h3 class="text-xl font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+            <i class="fas fa-flask text-purple-600"></i>
+            Scenario Simulator
+            <span class="text-xs font-normal text-slate-500 bg-slate-100 px-2 py-1 rounded-full ml-2">INTERACTIVE</span>
+        </h3>
+        
+        <div class="grid grid-cols-3 gap-6">
+            <div class="space-y-4">
+                <h4 class="font-bold text-slate-700">Adjust Variables</h4>
+                
+                <div>
+                    <label class="text-sm text-slate-600 block mb-1">Marketing Budget Change</label>
+                    <input type="range" min="-20" max="50" value="0" class="w-full accent-[#0066cc]" id="marketingSlider" oninput="updateScenario()">
+                    <div class="flex justify-between text-xs text-slate-500">
+                        <span>-20%</span>
+                        <span id="marketingValue" class="font-bold text-[#0066cc]">0%</span>
+                        <span>+50%</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="text-sm text-slate-600 block mb-1">Conversion Rate Improvement</label>
+                    <input type="range" min="0" max="30" value="0" class="w-full accent-[#0066cc]" id="conversionSlider" oninput="updateScenario()">
+                    <div class="flex justify-between text-xs text-slate-500">
+                        <span>0%</span>
+                        <span id="conversionValue" class="font-bold text-[#0066cc]">0%</span>
+                        <span>+30%</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="text-sm text-slate-600 block mb-1">New Agent Hires</label>
+                    <select class="w-full border border-slate-300 rounded px-3 py-2 text-sm" id="hiringSelect" onchange="updateScenario()">
+                        <option value="0">No change</option>
+                        <option value="2">+2 agents</option>
+                        <option value="5">+5 agents</option>
+                        <option value="10">+10 agents</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                <h4 class="font-bold text-slate-700 mb-3">Projected Impact</h4>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-slate-600">Additional Revenue</span>
+                        <span class="text-xl font-bold text-green-600 mono" id="projectedRevenue">£0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-slate-600">Additional Bookings</span>
+                        <span class="text-lg font-bold text-[#1e3a5f] mono" id="projectedBookings">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-slate-600">ROI on Investment</span>
+                        <span class="text-lg font-bold text-purple-600 mono" id="projectedROI">0%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-purple-50 rounded-xl p-4 border border-purple-200">
+                <h4 class="font-bold text-purple-800 mb-3 flex items-center gap-2">
+                    <i class="fas fa-robot"></i>
+                    AI Recommendation
+                </h4>
+                <div id="aiRecommendation" class="text-sm text-purple-700">
+                    Adjust the sliders to see AI-generated recommendations based on your inputs and historical performance data.
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script>
+    // Global state
+    let currentFilters = {
+        office: 'all',
+        flow: 'all',
+        country: 'all',
+        product: 'all',
+        period: '90',
+        agentTier: 'all'
+    };
+    
+    let forecastChart = null;
+    
+    // Data sets for different filter combinations
+    const dataScenarios = {
+        default: {
+            revenue: '£2.84M', revenueGrowth: '+18.5%', revenueConf: '78%',
+            bookings: '684', bookingGrowth: '+22.3%', hotelPct: '60%',
+            abv: '£4,150', abvChange: '-3.2%', abvReason: 'Shorter-haul trend',
+            conversion: '19.2%', convGrowth: '+0.8%',
+            ltb: '18:1', ltbImprove: '-2.1',
+            riskAmount: '£340K', riskLevel: 'Medium', riskDetail: 'India Office',
+            accuracy: '94%',
+            insight1: 'Maldives bookings predicted to surge +35% in March. Recommend increasing inventory by 20%.',
+            insight2: 'India Office conversion rate trending down. 78% probability of missing Q1 target without intervention.',
+            insight3: 'Shift 15% marketing budget from Google Ads to Email. Projected ROI improvement: 2.3x',
+            drivers: ['Seasonal Demand', 'Marketing Spend', 'New Routes', 'Economic Uncertainty'],
+            driverValues: ['+24% weight', '+18% weight', 'Singapore expansion', '-8% potential']
+        },
+        uk: {
+            revenue: '£1.12M', revenueGrowth: '+24.2%', revenueConf: '82%',
+            bookings: '285', bookingGrowth: '+28.5%', hotelPct: '55%',
+            abv: '£3,920', abvChange: '+2.1%', abvReason: 'Premium bookings',
+            conversion: '24.2%', convGrowth: '+3.2%',
+            ltb: '14:1', ltbImprove: '-3.2',
+            riskAmount: '£85K', riskLevel: 'Low', riskDetail: 'Minimal exposure',
+            accuracy: '96%',
+            insight1: 'UK premium segment showing strong growth. Consider luxury package expansion.',
+            insight2: 'London office exceeding targets. Model for other offices.',
+            insight3: 'Inbound UK tourism recovering faster than expected. Increase capacity.',
+            drivers: ['Premium Demand', 'Inbound Recovery', 'Corporate Travel', 'Brexit Stability'],
+            driverValues: ['+32% weight', '+28% weight', 'Return to office', '+5% confidence']
+        },
+        india: {
+            revenue: '£680K', revenueGrowth: '-5.2%', revenueConf: '65%',
+            bookings: '198', bookingGrowth: '-8.1%', hotelPct: '70%',
+            abv: '£3,430', abvChange: '-12.5%', abvReason: 'Budget focus',
+            conversion: '12.1%', convGrowth: '-2.8%',
+            ltb: '42:1', ltbImprove: '+8.4',
+            riskAmount: '£340K', riskLevel: 'HIGH', riskDetail: 'Immediate action needed',
+            accuracy: '88%',
+            insight1: 'India Office requires immediate intervention. Conversion dropped 23% in 60 days.',
+            insight2: 'Agent training program showing no results. Consider leadership change.',
+            insight3: 'Shift budget to digital marketing. Traditional channels underperforming.',
+            drivers: ['Conversion Crisis', 'Agent Performance', 'Price Sensitivity', 'Competition'],
+            driverValues: ['-45% impact', 'Critical', 'High', 'Aggressive pricing']
+        },
+        inbound: {
+            revenue: '£1.92M', revenueGrowth: '+22.4%', revenueConf: '80%',
+            bookings: '456', bookingGrowth: '+26.8%', hotelPct: '45%',
+            abv: '£4,210', abvChange: '+1.8%', abvReason: 'Longer stays',
+            conversion: '21.4%', convGrowth: '+2.4%',
+            ltb: '16:1', ltbImprove: '-2.8',
+            riskAmount: '£120K', riskLevel: 'Low', riskDetail: 'Stable growth',
+            accuracy: '92%',
+            insight1: 'Inbound tourism recovering strongly. Maldives and Thailand leading.',
+            insight2: 'UK and US source markets exceeding 2019 levels.',
+            insight3: 'Extend average stay packages. 12+ night bookings up 35%.',
+            drivers: ['Tourism Recovery', 'Long-haul Return', 'Weak GBP', 'Experience Focus'],
+            driverValues: ['+35% growth', '+28% demand', 'UK advantage', 'Premium shift']
+        },
+        maldives: {
+            revenue: '£1.24M', revenueGrowth: '+35.2%', revenueConf: '85%',
+            bookings: '298', bookingGrowth: '+42.1%', hotelPct: '95%',
+            abv: '£4,160', abvChange: '+5.2%', abvReason: 'Luxury demand',
+            conversion: '26.8%', convGrowth: '+4.2%',
+            ltb: '12:1', ltbImprove: '-4.2',
+            riskAmount: '£180K', riskLevel: 'Medium', riskDetail: 'Inventory constraint',
+            accuracy: '91%',
+            insight1: 'Maldives demand exceeding supply. Secure additional room contracts urgently.',
+            insight2: 'Couples segment driving 68% of bookings. Target honeymoon market.',
+            insight3: 'Water villa upgrades generating 40% higher revenue. Push upsells.',
+            drivers: ['Supply Constraint', 'Honeymoon Demand', 'Luxury Shift', 'Flight Capacity'],
+            driverValues: ['Critical shortage', '+45% bookings', 'Premium preference', 'Limited seats']
+        }
+    };
+
+    // Initialize Chart
+    document.addEventListener('DOMContentLoaded', function() {
+        initChart();
+        updateDashboard();
+    });
+
+    function initChart() {
+        const ctx = document.getElementById('forecastChart').getContext('2d');
+        
+        const data = {
+            labels: ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan (F)', 'Feb (F)', 'Mar (F)', 'Apr (F)', 'May (F)', 'Jun (F)'],
+            datasets: [{
+                label: 'Actual Revenue',
+                data: [1.8, 2.1, 1.9, 2.3, 2.5, 2.4, null, null, null, null, null, null],
+                borderColor: '#0066cc',
+                backgroundColor: '#0066cc',
+                tension: 0.4,
+                pointRadius: 4
+            }, {
+                label: 'AI Forecast',
+                data: [null, null, null, null, null, 2.4, 2.6, 2.8, 3.1, 3.0, 2.9, 3.2],
+                borderColor: '#0066cc',
+                borderDash: [5, 5],
+                backgroundColor: '#0066cc',
+                tension: 0.4,
+                pointRadius: 4
+            }, {
+                label: 'Upper Bound',
+                data: [null, null, null, null, null, 2.4, 2.8, 3.0, 3.4, 3.3, 3.2, 3.5],
+                borderColor: 'rgba(0, 102, 204, 0.2)',
+                backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                tension: 0.4,
+                pointRadius: 0,
+                fill: false
+            }, {
+                label: 'Lower Bound',
+                data: [null, null, null, null, null, 2.4, 2.4, 2.6, 2.8, 2.7, 2.6, 2.9],
+                borderColor: 'rgba(0, 102, 204, 0.2)',
+                backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                tension: 0.4,
+                pointRadius: 0,
+                fill: '-1'
+            }]
+        };
+
+        forecastChart = new Chart(ctx, {
+            type: 'line',
+            data: data,
+            options: {
+                responsive: true,
+                animation: {
+                    duration: 1000,
+                    easing: 'easeInOutQuart'
+                },
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': £' + context.parsed.y + 'M';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Revenue (£M)' }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateDashboard() {
+        // Show loading state
+        document.getElementById('loadingIcon').style.display = 'inline-block';
+        document.getElementById('dashboardContent').classList.add('updating');
+        
+        // Get filter values
+        currentFilters.office = document.getElementById('officeFilter').value;
+        currentFilters.flow = document.getElementById('flowFilter').value;
+        currentFilters.country = document.getElementById('countryFilter').value;
+        currentFilters.product = document.getElementById('productFilter').value;
+        currentFilters.period = document.getElementById('forecastPeriod').value;
+        currentFilters.agentTier = document.getElementById('agentTierFilter').value;
+        
+        // Determine which data set to use
+        let dataKey = 'default';
+        if (currentFilters.office !== 'all') dataKey = currentFilters.office;
+        else if (currentFilters.flow !== 'all') dataKey = currentFilters.flow;
+        else if (currentFilters.country !== 'all') dataKey = currentFilters.country;
+        
+        const data = dataScenarios[dataKey] || dataScenarios.default;
+        
+        // Simulate API delay
+        setTimeout(() => {
+            updateKPIs(data);
+            updateInsights(data);
+            updateChartData(dataKey);
+            updateDrivers(data);
+            updateRiskVisibility();
+            
+            // Update last updated time
+            document.getElementById('lastUpdated').textContent = 'Updated: Just now';
+            document.getElementById('loadingIcon').style.display = 'none';
+            document.getElementById('dashboardContent').classList.remove('updating');
+        }, 600);
+    }
+
+    function updateKPIs(data) {
+        animateValue('predRevenue', data.revenue);
+        animateValue('revenueGrowth', data.revenueGrowth);
+        document.getElementById('revenueConf').textContent = data.revenueConf;
+        
+        animateValue('predBookings', data.bookings);
+        animateValue('bookingGrowth', data.bookingGrowth);
+        document.getElementById('hotelPct').textContent = data.hotelPct;
+        
+        animateValue('predABV', data.abv);
+        animateValue('abvChange', data.abvChange);
+        document.getElementById('abvReason').textContent = data.abvReason;
+        
+        animateValue('predConv', data.conversion);
+        animateValue('convGrowth', data.convGrowth);
+        
+        animateValue('predLTB', data.ltb);
+        animateValue('ltbImprove', data.ltbImprove);
+        
+        animateValue('riskAmount', data.riskAmount);
+        animateValue('riskLevel', data.riskLevel);
+        document.getElementById('riskDetail').textContent = data.riskDetail;
+        
+        animateValue('accuracyScore', data.accuracy);
+    }
+
+    function animateValue(elementId, newValue) {
+        const element = document.getElementById(elementId);
+        element.classList.add('number-change');
+        element.textContent = newValue;
+        setTimeout(() => element.classList.remove('number-change'), 500);
+    }
+
+    function updateInsights(data) {
+        document.getElementById('insight1').textContent = data.insight1;
+        document.getElementById('insight2').textContent = data.insight2;
+        document.getElementById('insight3').textContent = data.insight3;
+    }
+
+    function updateDrivers(data) {
+        for (let i = 0; i < 4; i++) {
+            document.getElementById(`driver${i+1}`).textContent = data.drivers[i];
+            document.getElementById(`driver${i+1}Val`).textContent = data.driverValues[i];
+        }
+    }
+
+    function updateChartData(scenario) {
+        if (!forecastChart) return;
+        
+        // Update chart data based on scenario
+        const scenarios = {
+            default: {
+                forecast: [null, null, null, null, null, 2.4, 2.6, 2.8, 3.1, 3.0, 2.9, 3.2],
+                upper: [null, null, null, null, null, 2.4, 2.8, 3.0, 3.4, 3.3, 3.2, 3.5],
+                lower: [null, null, null, null, null, 2.4, 2.4, 2.6, 2.8, 2.7, 2.6, 2.9]
+            },
+            uk: {
+                forecast: [null, null, null, null, null, 2.4, 2.8, 3.0, 3.2, 3.1, 3.0, 3.3],
+                upper: [null, null, null, null, null, 2.4, 3.0, 3.2, 3.5, 3.4, 3.3, 3.6],
+                lower: [null, null, null, null, null, 2.4, 2.6, 2.8, 2.9, 2.8, 2.7, 3.0]
+            },
+            india: {
+                forecast: [null, null, null, null, null, 2.4, 2.2, 2.1, 2.0, 1.9, 1.8, 1.8],
+                upper: [null, null, null, null, null, 2.4, 2.4, 2.3, 2.2, 2.1, 2.0, 2.0],
+                lower: [null, null, null, null, null, 2.4, 2.0, 1.9, 1.8, 1.7, 1.6, 1.6]
+            },
+            inbound: {
+                forecast: [null, null, null, null, null, 2.4, 2.9, 3.1, 3.4, 3.3, 3.2, 3.5],
+                upper: [null, null, null, null, null, 2.4, 3.1, 3.3, 3.7, 3.6, 3.5, 3.8],
+                lower: [null, null, null, null, null, 2.4, 2.7, 2.9, 3.1, 3.0, 2.9, 3.2]
+            },
+            maldives: {
+                forecast: [null, null, null, null, null, 2.4, 3.2, 3.5, 3.8, 3.6, 3.4, 3.6],
+                upper: [null, null, null, null, null, 2.4, 3.5, 3.8, 4.2, 4.0, 3.8, 4.0],
+                lower: [null, null, null, null, null, 2.4, 2.9, 3.2, 3.4, 3.2, 3.0, 3.2]
+            }
+        };
+        
+        const s = scenarios[scenario] || scenarios.default;
+        forecastChart.data.datasets[1].data = s.forecast;
+        forecastChart.data.datasets[2].data = s.upper;
+        forecastChart.data.datasets[3].data = s.lower;
+        forecastChart.update();
+    }
+
+    function updateRiskVisibility() {
+        // Show/hide destination cards based on country filter
+        const country = currentFilters.country;
+        const cards = document.querySelectorAll('.destination-card');
+        
+        cards.forEach(card => {
+            if (country === 'all' || card.dataset.dest === country) {
+                card.style.display = 'block';
+                card.style.opacity = '1';
+            } else {
+                card.style.opacity = '0.3';
+            }
+        });
+    }
+
+    function toggleScenario(scenario) {
+        // Update button styles
+        document.querySelectorAll('.scenario-btn').forEach(btn => {
+            btn.classList.remove('bg-[#0066cc]', 'text-white');
+            btn.classList.add('bg-slate-200', 'text-slate-600');
+        });
+        document.getElementById(`btn-${scenario}`).classList.remove('bg-slate-200', 'text-slate-600');
+        document.getElementById(`btn-${scenario}`).classList.add('bg-[#0066cc]', 'text-white');
+        
+        // Update chart
+        const scenarios = {
+            conservative: { multiplier: 0.85 },
+            likely: { multiplier: 1 },
+            optimistic: { multiplier: 1.15 }
+        };
+        
+        const s = scenarios[scenario];
+        const baseForecast = [2.4, 2.6, 2.8, 3.1, 3.0, 2.9, 3.2];
+        const newForecast = baseForecast.map(v => (v * s.multiplier).toFixed(1));
+        
+        forecastChart.data.datasets[1].data = [null, null, null, null, null, ...newForecast];
+        forecastChart.update();
+    }
+
+    function updateScenario() {
+        const marketing = parseInt(document.getElementById('marketingSlider').value);
+        const conversion = parseInt(document.getElementById('conversionSlider').value);
+        const hiring = parseInt(document.getElementById('hiringSelect').value);
+        
+        document.getElementById('marketingValue').textContent = (marketing > 0 ? '+' : '') + marketing + '%';
+        document.getElementById('conversionValue').textContent = '+' + conversion + '%';
+        
+        // Calculate projections
+        const baseRevenue = 2.84;
+        const marketingImpact = baseRevenue * (marketing / 100) * 2.5;
+        const conversionImpact = baseRevenue * (conversion / 100);
+        const hiringImpact = hiring * 0.15;
+        
+        const totalRevenue = (marketingImpact + conversionImpact + hiringImpact);
+        const totalBookings = Math.round(totalRevenue * 1000000 / 4150);
+        const investment = (marketing > 0 ? baseRevenue * 1000000 * (marketing / 100) : 0) + (hiring * 50000);
+        const roi = investment > 0 ? ((totalRevenue * 1000000 - investment) / investment * 100).toFixed(1) : 0;
+        
+        document.getElementById('projectedRevenue').textContent = '£' + totalRevenue.toFixed(2) + 'M';
+        document.getElementById('projectedBookings').textContent = totalBookings.toLocaleString();
+        document.getElementById('projectedROI').textContent = roi + '%';
+        
+        // AI Recommendation
+        let rec = "";
+        if (conversion > 15) {
+            rec = "High conversion improvement potential. Focus on agent training before increasing marketing spend.";
+        } else if (marketing > 20) {
+            rec = "Large marketing increase recommended only if conversion rate is optimized first.";
+        } else if (hiring > 5) {
+            rec = "New agents will take 30-45 days to ramp up. Consider phased hiring.";
+        } else {
+            rec = "Balanced approach. Monitor conversion rates weekly and adjust accordingly.";
+        }
+        document.getElementById('aiRecommendation').textContent = rec;
+    }
+
+    function resetFilters() {
+        document.getElementById('officeFilter').value = 'all';
+        document.getElementById('flowFilter').value = 'all';
+        document.getElementById('countryFilter').value = 'all';
+        document.getElementById('productFilter').value = 'all';
+        document.getElementById('forecastPeriod').value = '90';
+        document.getElementById('agentTierFilter').value = 'all';
+        updateDashboard();
+    }
+
+    function viewMitigation(risk) {
+        alert('Opening mitigation strategy for ' + risk + '...\n\nDetailed action plan with timeline, responsible parties, and expected outcomes.');
+    }
+
+    function viewOpportunity(opp) {
+        alert('Exploring ' + opp + ' opportunity...\n\nMarket analysis, competitive landscape, and recommended go-to-market strategy.');
+    }
+
+    function exportForecast() {
+        alert('Exporting comprehensive forecast report...\n\nIncludes: Predictions, confidence intervals, risk assessments, and scenario comparisons.');
+    }
+</script>
+
+</body>
+</html>

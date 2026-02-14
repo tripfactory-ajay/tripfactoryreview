@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Points Management Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f7fa; color: #1e293b; }
+        .header { background: white; border-bottom: 1px solid #e2e8f0; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .logo { width: 40px; height: 40px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 20px; }
+        .header-title h1 { font-size: 20px; font-weight: 600; color: #0f172a; margin-bottom: 2px; }
+        .header-title p { font-size: 12px; color: #64748b; }
+        .header-right { display: flex; gap: 12px; align-items: center; }
+        .tab-group { display: flex; background: #f1f5f9; border-radius: 6px; padding: 4px; }
+        .tab { padding: 6px 16px; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .tab.active { background: white; color: #1d4ed8; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .tab:not(.active) { color: #64748b; }
+        .btn { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
+        .btn-primary { background: #1d4ed8; color: white; }
+        .btn-secondary { background: white; border: 1px solid #e2e8f0; color: #475569; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .filters-bar { background: white; border-bottom: 1px solid #e2e8f0; padding: 12px 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .filter-label { font-size: 12px; color: #64748b; font-weight: 500; }
+        .filter-select { padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white; color: #334155; cursor: pointer; }
+        .dashboard-container { padding: 24px; max-width: 1600px; margin: 0 auto; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .alert-exposure { background: linear-gradient(135deg, #fef3c7, #fde68a); border: 1px solid #f59e0b; border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+        .alert-icon { width: 48px; height: 48px; background: #f59e0b; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; }
+        .alert-content h3 { font-size: 16px; font-weight: 600; color: #92400e; margin-bottom: 4px; }
+        .alert-content p { font-size: 13px; color: #b45309; }
+        .alert-action { margin-left: auto; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .kpi-card { background: white; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; transition: transform 0.2s, box-shadow 0.2s; }
+        .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+        .kpi-card.exposure { border-left: 4px solid #dc2626; }
+        .kpi-card.revenue { border-left: 4px solid #15803d; }
+        .kpi-card.utilisation { border-left: 4px solid #3b82f6; }
+        .kpi-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; }
+        .kpi-label { font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .kpi-icon.red { background: #fee2e2; color: #dc2626; }
+        .kpi-icon.green { background: #dcfce7; color: #15803d; }
+        .kpi-icon.blue { background: #dbeafe; color: #1d4ed8; }
+        .kpi-icon.orange { background: #ffedd5; color: #c2410c; }
+        .kpi-icon.purple { background: #f3e8ff; color: #7c3aed; }
+        .kpi-value { font-size: 28px; font-weight: 700; color: #0f172a; margin-bottom: 4px; transition: opacity 0.2s; }
+        .kpi-subtext { font-size: 12px; color: #64748b; }
+        .kpi-trend { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; margin-top: 8px; }
+        .trend-up { color: #15803d; }
+        .trend-down { color: #dc2626; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
+        .card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
+        .card-header { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 14px; font-weight: 600; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+        .card-title i { color: #3b82f6; }
+        .card-actions { display: flex; gap: 8px; }
+        .card-action { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; border: none; background: #f1f5f9; color: #475569; }
+        .card-action.active { background: #dbeafe; color: #1d4ed8; }
+        .card-body { padding: 20px; }
+        .col-6 { grid-column: span 6; }
+        .col-4 { grid-column: span 4; }
+        .col-8 { grid-column: span 8; }
+        .col-12 { grid-column: span 12; }
+        .exposure-waterfall { display: flex; flex-direction: column; gap: 12px; }
+        .exposure-item { display: flex; align-items: center; gap: 12px; }
+        .exposure-bar-container { flex: 1; height: 36px; background: #f1f5f9; border-radius: 6px; overflow: hidden; }
+        .exposure-bar { height: 100%; border-radius: 6px; display: flex; align-items: center; padding: 0 12px; color: white; font-weight: 600; font-size: 12px; transition: width 0.6s ease; }
+        .exposure-bar.flights { background: linear-gradient(90deg, #3b82f6, #1d4ed8); }
+        .exposure-bar.hotels { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
+        .exposure-bar.tours { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .exposure-label { min-width: 100px; font-size: 13px; font-weight: 600; color: #334155; }
+        .exposure-value { min-width: 70px; text-align: right; font-size: 13px; font-weight: 700; color: #0f172a; }
+        .exposure-pct { min-width: 40px; text-align: right; font-size: 11px; color: #64748b; }
+        .service-breakdown { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .service-box { padding: 16px; border-radius: 10px; text-align: center; }
+        .service-box.flights { background: #eff6ff; border: 1px solid #dbeafe; }
+        .service-box.hotels { background: #faf5ff; border: 1px solid #f3e8ff; }
+        .service-box.tours { background: #fffbeb; border: 1px solid #fef3c7; }
+        .service-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 18px; }
+        .service-box.flights .service-icon { background: #3b82f6; color: white; }
+        .service-box.hotels .service-icon { background: #8b5cf6; color: white; }
+        .service-box.tours .service-icon { background: #f59e0b; color: white; }
+        .service-name { font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 4px; }
+        .service-credit { font-size: 20px; font-weight: 700; color: #0f172a; transition: opacity 0.2s; }
+        .service-bookings { font-size: 11px; color: #64748b; margin-top: 4px; }
+        .partner-table { width: 100%; border-collapse: collapse; }
+        .partner-table th, .partner-table td { padding: 10px; text-align: left; font-size: 12px; border-bottom: 1px solid #f1f5f9; }
+        .partner-table th { font-weight: 600; color: #64748b; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; background: #f8fafc; }
+        .partner-name { display: flex; align-items: center; gap: 8px; }
+        .partner-logo { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: white; }
+        .status-badge { padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+        .status-secured { background: #dcfce7; color: #15803d; }
+        .status-at-risk { background: #fee2e2; color: #dc2626; }
+        .status-pending { background: #fef3c7; color: #d97706; }
+        .agent-list { display: flex; flex-direction: column; gap: 10px; }
+        .agent-row { display: flex; align-items: center; gap: 10px; padding: 10px; background: #f8fafc; border-radius: 8px; border-left: 3px solid; }
+        .agent-row.high { border-left-color: #10b981; }
+        .agent-row.medium { border-left-color: #f59e0b; }
+        .agent-row.low { border-left-color: #ef4444; }
+        .agent-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #1d4ed8); display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: 600; }
+        .agent-info { flex: 1; }
+        .agent-name { font-size: 13px; font-weight: 600; color: #0f172a; }
+        .agent-meta { font-size: 11px; color: #64748b; }
+        .agent-credits { text-align: right; }
+        .credit-amount { font-size: 13px; font-weight: 700; color: #0f172a; }
+        .credit-status { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+        .credit-status.active { background: #dcfce7; color: #15803d; }
+        .credit-status.dormant { background: #fee2e2; color: #dc2626; }
+        .credit-status.warning { background: #fef3c7; color: #d97706; }
+        .roi-comparison { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .roi-box { padding: 14px; border-radius: 10px; text-align: center; }
+        .roi-box.with-credits { background: linear-gradient(135deg, #dcfce7, #bbf7d0); border: 1px solid #86efac; }
+        .roi-box.without-credits { background: #f1f5f9; border: 1px solid #e2e8f0; }
+        .roi-label { font-size: 11px; color: #64748b; font-weight: 600; margin-bottom: 6px; }
+        .roi-value { font-size: 22px; font-weight: 700; color: #0f172a; }
+        .roi-subtext { font-size: 10px; color: #64748b; margin-top: 4px; }
+        .roi-delta { font-size: 13px; font-weight: 700; color: #15803d; margin-top: 6px; }
+        .chart-container { position: relative; height: 220px; }
+        .metric-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+        .metric-row:last-child { border-bottom: none; }
+        .metric-label { font-size: 12px; color: #64748b; }
+        .metric-value { font-size: 13px; font-weight: 700; color: #0f172a; }
+        .insight-card { background: #eff6ff; border: 1px solid #dbeafe; border-radius: 8px; padding: 12px; margin-top: 12px; }
+        .insight-title { font-size: 11px; font-weight: 600; color: #1d4ed8; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .insight-text { font-size: 12px; color: #334155; line-height: 1.4; }
+        @media (max-width: 1200px) { .col-4, .col-6, .col-8, .col-3 { grid-column: span 12; } }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div class="logo">TF</div>
+            <div class="header-title">
+                <h1>Trip Points Management Dashboard</h1>
+                <p>Credit Exposure, Utilisation & Partner Risk Management</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="tab-group">
+                <div class="tab active" data-tab="overview">Overview</div>
+                <div class="tab" data-tab="exposure">Exposure</div>
+                <div class="tab" data-tab="agents">Agents</div>
+                <div class="tab" data-tab="partners">Partners</div>
+            </div>
+            <button class="btn btn-secondary"><i class="fas fa-download"></i> Export</button>
+        </div>
+    </div>
+
+    <div class="filters-bar">
+        <span class="filter-label">FILTERS:</span>
+        <select class="filter-select" id="periodFilter">
+            <option value="month">This Month</option>
+            <option value="quarter">Last 3 Months</option>
+            <option value="half">Last 6 Months</option>
+            <option value="year">YTD</option>
+        </select>
+        <select class="filter-select" id="serviceFilter">
+            <option value="all">All Services</option>
+            <option value="flights">Flights</option>
+            <option value="hotels">Hotels</option>
+            <option value="tours">Tours</option>
+        </select>
+        <button class="btn btn-secondary" style="margin-left: auto;" onclick="resetDashboard()"><i class="fas fa-undo"></i> Reset</button>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- OVERVIEW TAB - COMPLETE DATA -->
+        <div id="overview" class="tab-content active">
+            <div class="alert-exposure">
+                <div class="alert-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="alert-content">
+                    <h3>Credit Exposure Alert</h3>
+                    <p>Current outstanding credit exposure: <strong id="alertExposure">$485,000</strong>. 
+                    Emirates & Marriott partnerships need immediate rate renegotiation. 
+                    <strong id="alertAgents">12</strong> agents have dormant credits >60 days.</p>
+                </div>
+                <div class="alert-action">
+                    <button class="btn btn-warning"><i class="fas fa-handshake"></i> Negotiate Rates</button>
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card exposure">
+                    <div class="kpi-header">
+                        <span class="kpi-label">Total Credit Exposure</span>
+                        <div class="kpi-icon red"><i class="fas fa-wallet"></i></div>
+                    </div>
+                    <div class="kpi-value" id="kpiExposure">$485K</div>
+                    <div class="kpi-subtext">Outstanding credits issued</div>
+                    <div class="kpi-trend trend-down"><i class="fas fa-arrow-up"></i> <span id="kpiExposureTrend">+12.5%</span> vs last month</div>
+                </div>
+
+                <div class="kpi-card revenue">
+                    <div class="kpi-header">
+                        <span class="kpi-label">Credit-Driven Revenue</span>
+                        <div class="kpi-icon green"><i class="fas fa-chart-line"></i></div>
+                    </div>
+                    <div class="kpi-value" id="kpiRevenue">$2.4M</div>
+                    <div class="kpi-subtext">Bookings using credits</div>
+                    <div class="kpi-trend trend-up"><i class="fas fa-arrow-up"></i> <span id="kpiRevenueTrend">+28%</span> vs non-credit</div>
+                </div>
+
+                <div class="kpi-card utilisation">
+                    <div class="kpi-header">
+                        <span class="kpi-label">Credit Utilisation Rate</span>
+                        <div class="kpi-icon blue"><i class="fas fa-sync-alt"></i></div>
+                    </div>
+                    <div class="kpi-value" id="kpiUtilisation">68.4%</div>
+                    <div class="kpi-subtext">Credits redeemed vs issued</div>
+                    <div class="kpi-trend trend-up"><i class="fas fa-arrow-up"></i> <span id="kpiUtilTrend">+5.2%</span> this month</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-label">Net Margin Impact</span>
+                        <div class="kpi-icon orange"><i class="fas fa-percentage"></i></div>
+                    </div>
+                    <div class="kpi-value" id="kpiMargin">-2.1%</div>
+                    <div class="kpi-subtext">After partner discounts</div>
+                    <div class="kpi-trend trend-up"><i class="fas fa-arrow-up"></i> Recovered <span id="kpiRecovered">2.9%</span></div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-label">Avg Booking Value</span>
+                        <div class="kpi-icon purple"><i class="fas fa-tag"></i></div>
+                    </div>
+                    <div class="kpi-value" id="kpiAbv">$4,850</div>
+                    <div class="kpi-subtext">With credits vs $3,200 without</div>
+                    <div class="kpi-trend trend-up"><i class="fas fa-arrow-up"></i> <span id="kpiAbvTrend">+51%</span> higher</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-label">Dormant Credits</span>
+                        <div class="kpi-icon red"><i class="fas fa-clock"></i></div>
+                    </div>
+                    <div class="kpi-value" id="kpiDormant">$124K</div>
+                    <div class="kpi-subtext">Unused >60 days</div>
+                    <div class="kpi-trend trend-down"><i class="fas fa-exclamation-circle"></i> Action needed</div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card col-6">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-chart-pie"></i> Credit Exposure by Service Type</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="service-breakdown">
+                            <div class="service-box flights">
+                                <div class="service-icon"><i class="fas fa-plane"></i></div>
+                                <div class="service-name">Flights</div>
+                                <div class="service-credit" id="flightExposure">$242K</div>
+                                <div class="service-bookings">50% of exposure</div>
+                            </div>
+                            <div class="service-box hotels">
+                                <div class="service-icon"><i class="fas fa-hotel"></i></div>
+                                <div class="service-name">Hotels</div>
+                                <div class="service-credit" id="hotelExposure">$182K</div>
+                                <div class="service-bookings">38% of exposure</div>
+                            </div>
+                            <div class="service-box tours">
+                                <div class="service-icon"><i class="fas fa-map-marked-alt"></i></div>
+                                <div class="service-name">Tours</div>
+                                <div class="service-credit" id="tourExposure">$61K</div>
+                                <div class="service-bookings">12% of exposure</div>
+                            </div>
+                        </div>
+
+                        <div class="exposure-waterfall">
+                            <div class="exposure-item">
+                                <span class="exposure-label">Emirates</span>
+                                <div class="exposure-bar-container"><div class="exposure-bar flights" style="width: 85%;">$85,400</div></div>
+                                <span class="exposure-value">$85.4K</span>
+                                <span class="exposure-pct">18%</span>
+                            </div>
+                            <div class="exposure-item">
+                                <span class="exposure-label">Marriott</span>
+                                <div class="exposure-bar-container"><div class="exposure-bar hotels" style="width: 72%;">$72,800</div></div>
+                                <span class="exposure-value">$72.8K</span>
+                                <span class="exposure-pct">15%</span>
+                            </div>
+                            <div class="exposure-item">
+                                <span class="exposure-label">Singapore Air</span>
+                                <div class="exposure-bar-container"><div class="exposure-bar flights" style="width: 65%;">$65,200</div></div>
+                                <span class="exposure-value">$65.2K</span>
+                                <span class="exposure-pct">13%</span>
+                            </div>
+                            <div class="exposure-item">
+                                <span class="exposure-label">Hilton</span>
+                                <div class="exposure-bar-container"><div class="exposure-bar hotels" style="width: 58%;">$58,400</div></div>
+                                <span class="exposure-value">$58.4K</span>
+                                <span class="exposure-pct">12%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card col-6">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-shield-alt"></i> Partner Discount Status</div>
+                    </div>
+                    <div class="card-body">
+                        <table class="partner-table">
+                            <thead>
+                                <tr><th>Partner</th><th>Our Credit</th><th>Partner Disc.</th><th>Status</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><div class="partner-name"><div class="partner-logo" style="background: #dc2626;">EK</div><span>Emirates</span></div></td>
+                                    <td>5%</td><td>3%</td><td><span class="status-badge status-at-risk">-2%</span></td>
+                                </tr>
+                                <tr>
+                                    <td><div class="partner-name"><div class="partner-logo" style="background: #8b5cf6;">MR</div><span>Marriott</span></div></td>
+                                    <td>5%</td><td>4%</td><td><span class="status-badge status-at-risk">-1%</span></td>
+                                </tr>
+                                <tr>
+                                    <td><div class="partner-name"><div class="partner-logo" style="background: #f59e0b;">SQ</div><span>Singapore Air</span></div></td>
+                                    <td>5%</td><td>6%</td><td><span class="status-badge status-secured">+1%</span></td>
+                                </tr>
+                                <tr>
+                                    <td><div class="partner-name"><div class="partner-logo" style="background: #3b82f6;">HL</div><span>Hilton</span></div></td>
+                                    <td>5%</td><td>5%</td><td><span class="status-badge status-secured">0%</span></td>
+                                </tr>
+                                <tr>
+                                    <td><div class="partner-name"><div class="partner-logo" style="background: #10b981;">TT</div><span>Thai Tours</span></div></td>
+                                    <td>5%</td><td>7%</td><td><span class="status-badge status-secured">+2%</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="insight-card">
+                            <div class="insight-title"><i class="fas fa-lightbulb"></i> Partner Optimisation Insight</div>
+                            <div class="insight-text">Emirates flight credits ($85K exposure) are often paired with Marriott stays. <strong>Action:</strong> Negotiate 6% commission from Marriott on bundles to offset 5% flight credit cost. Potential recovery: <strong>$5,100/month</strong>.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid" style="margin-top: 20px;">
+                <div class="card col-6">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-trophy"></i> Top Credit Utilisers</div>
+                        <div class="card-actions"><button class="card-action active">This Month</button><button class="card-action">All Time</button></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="agent-list">
+                            <div class="agent-row high">
+                                <div class="agent-avatar">PS</div>
+                                <div class="agent-info"><div class="agent-name">Priya Sharma</div><div class="agent-meta">Mumbai • 142 bookings</div></div>
+                                <div class="agent-credits"><div class="credit-amount">$48,500</div><span class="credit-status active">94% used</span></div>
+                            </div>
+                            <div class="agent-row high">
+                                <div class="agent-avatar">RK</div>
+                                <div class="agent-info"><div class="agent-name">Rajesh Kumar</div><div class="agent-meta">Delhi • 128 bookings</div></div>
+                                <div class="agent-credits"><div class="credit-amount">$42,200</div><span class="credit-status active">89% used</span></div>
+                            </div>
+                            <div class="agent-row medium">
+                                <div class="agent-avatar">SR</div>
+                                <div class="agent-info"><div class="agent-name">Sneha Reddy</div><div class="agent-meta">Hyderabad • 98 bookings</div></div>
+                                <div class="agent-credits"><div class="credit-amount">$35,800</div><span class="credit-status active">76% used</span></div>
+                            </div>
+                            <div class="agent-row medium">
+                                <div class="agent-avatar">AP</div>
+                                <div class="agent-info"><div class="agent-name">Amit Patel</div><div class="agent-meta">Ahmedabad • 87 bookings</div></div>
+                                <div class="agent-credits"><div class="credit-amount">$28,400</div><span class="credit-status warning">68% used</span></div>
+                            </div>
+                        </div>
+
+                        <div class="insight-card" style="background: #f0fdf4; border-color: #bbf7d0;">
+                            <div class="insight-title" style="color: #15803d;"><i class="fas fa-check-circle"></i> High Performer Insight</div>
+                            <div class="insight-text">Priya Sharma drives 20% of all credit-utilised bookings with 65% higher repeat rate. <strong>Recommendation:</strong> Increase her credit limit by 25%.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card col-6">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-exclamation-circle"></i> Dormant Credits - Action Required</div>
+                        <div class="card-actions"><button class="btn btn-danger" style="padding: 4px 12px; font-size: 11px;">Send Reminders</button></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="agent-list">
+                            <div class="agent-row low">
+                                <div class="agent-avatar">ND</div>
+                                <div class="agent-info"><div class="agent-name">Nikhil Desai</div><div class="agent-meta">Chennai • Last used: 78 days ago</div></div>
+                                <div class="agent-credits"><div class="credit-amount">$18,400</div><span class="credit-status dormant">12% used</span></div>
+                            </div>
+                            <div class="agent-row low">
+                                <div class="agent-avatar">RK</div>
+                                <div class="agent-info"><div class="agent-name">Ritu Kapoor</div><div class="agent-meta">Jaipur • Last used: 65 days ago</div></div>
+                                <div class="agent-credits"><div class="credit-amount">$15,200</div><span class="credit-status dormant">8% used</span></div>
+                            </div>
+                            <div class="agent-row low">
+                                <div class="agent-avatar">AB</div>
+                                <div class="agent-info"><div class="agent-name">Arun Banerjee</div><div class="agent-meta">Kolkata • Last used: 82 days ago</div></div>
+                                <div class="agent-credits"><div class="credit-amount">$14,800</div><span class="credit-status dormant">18% used</span></div>
+                            </div>
+                            <div class="agent-row low">
+                                <div class="agent-avatar">SM</div>
+                                <div class="agent-info"><div class="agent-name">Sanjay Malhotra</div><div class="agent-meta">Bangalore • Last used: 71 days ago</div></div>
+                                <div class="agent-credits"><div class="credit-amount">$12,600</div><span class="credit-status dormant">22% used</span></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 12px; padding: 12px; background: #fef2f2; border-radius: 8px; border-left: 4px solid #dc2626;">
+                            <div style="font-size: 12px; color: #991b1b; font-weight: 600; margin-bottom: 4px;"><i class="fas fa-info-circle"></i> Recovery Strategy</div>
+                            <div style="font-size: 12px; color: #7f1d1d; line-height: 1.4;">$71,200 in dormant credits across 12 agents. Send targeted offers: "Use $500 credit by month-end and receive additional $100 bonus credit." Expected recovery: 40%.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid" style="margin-top: 20px;">
+                <div class="card col-8">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-chart-line"></i> Credit Issuance vs Utilisation Trends</div>
+                        <div class="card-actions"><button class="card-action active">6 Months</button><button class="card-action">1 Year</button></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container"><canvas id="trendChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="card col-4">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-calculator"></i> Credit Programme ROI</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="roi-comparison">
+                            <div class="roi-box with-credits">
+                                <div class="roi-label">With Credits</div>
+                                <div class="roi-value">$4.2M</div>
+                                <div class="roi-subtext">Revenue (6 months)</div>
+                                <div class="roi-delta">+38%</div>
+                            </div>
+                            <div class="roi-box without-credits">
+                                <div class="roi-label">Without Credits</div>
+                                <div class="roi-value">$3.1M</div>
+                                <div class="roi-subtext">Revenue (6 months)</div>
+                                <div class="roi-delta" style="color: #64748b;">Baseline</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 16px;">
+                            <div class="metric-row"><span class="metric-label">Credit Cost</span><span class="metric-value" style="color: #dc2626;">-$485K</span></div>
+                            <div class="metric-row"><span class="metric-label">Partner Discounts</span><span class="metric-value" style="color: #15803d;">+$342K</span></div>
+                            <div class="metric-row"><span class="metric-label">Additional Revenue</span><span class="metric-value" style="color: #15803d;">+$1.1M</span></div>
+                            <div class="metric-row"><span class="metric-label">Net Benefit</span><span class="metric-value" style="color: #15803d; font-size: 16px;">+$957K</span></div>
+                        </div>
+
+                        <div style="margin-top: 12px; text-align: center; padding: 10px; background: #f0fdf4; border-radius: 8px;">
+                            <div style="font-size: 22px; font-weight: 700; color: #15803d;">197%</div>
+                            <div style="font-size: 11px; color: #64748b;">Return on Credit Investment</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid" style="margin-top: 20px;">
+                <div class="card col-12">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-box-open"></i> Bundle Optimisation Opportunities</div>
+                        <div class="card-actions"><button class="card-action active">High Impact</button><button class="card-action">Medium</button><button class="card-action">All</button></div>
+                    </div>
+                    <div class="card-body">
+                        <table class="partner-table">
+                            <thead>
+                                <tr><th>Bundle Combination</th><th>Current Volume</th><th>Credit Given</th><th>Partner Discount</th><th>Net Margin</th><th>Opportunity</th><th>Action</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><div class="partner-name"><div class="partner-logo" style="background: #3b82f6;">✈️</div><div><div style="font-weight: 600;">Emirates + Marriott</div><div style="font-size: 11px; color: #64748b;">Dubai Packages</div></div></div></td>
+                                    <td>$420K/mo</td><td style="color: #dc2626; font-weight: 600;">-$21K</td><td style="color: #15803d; font-weight: 600;">+$16.8K</td><td style="color: #dc2626; font-weight: 600;">-1.0%</td>
+                                    <td><span style="color: #dc2626; font-weight: 600;">High Risk</span><div style="font-size: 11px; color: #64748b;">Negotiate Marriott to 6%</div></td>
+                                    <td><button class="btn btn-primary" style="padding: 4px 12px; font-size: 11px;">Contact Partner</button></td>
+                                </tr>
+                                <tr>
+                                    <td><div class="partner-name"><div class="partner-logo" style="background: #8b5cf6;">🏨</div><div><div style="font-weight: 600;">Singapore Air + Hilton</div><div style="font-size: 11px; color: #64748b;">Singapore Packages</div></div></div></td>
+                                    <td>$280K/mo</td><td style="color: #dc2626; font-weight: 600;">-$14K</td><td style="color: #15803d; font-weight: 600;">+$15.4K</td><td style="color: #15803d; font-weight: 600;">+0.5%</td>
+                                    <td><span style="color: #15803d; font-weight: 600;">Profitable</span><div style="font-size: 11px; color: #64748b;">Promote this bundle</div></td>
+                                    <td><button class="btn btn-secondary" style="padding: 4px 12px; font-size: 11px;">View Details</button></td>
+                                </tr>
+                                <tr>
+                                    <td><div class="partner-name"><div class="partner-logo" style="background: #10b981;">🏝️</div><div><div style="font-weight: 600;">Maldives Resorts + Emirates</div><div style="font-size: 11px; color: #64748b;">Luxury Packages</div></div></div></td>
+                                    <td>$650K/mo</td><td style="color: #dc2626; font-weight: 600;">-$32.5K</td><td style="color: #15803d; font-weight: 600;">+$39K</td><td style="color: #15803d; font-weight: 600;">+1.0%</td>
+                                    <td><span style="color: #15803d; font-weight: 600;">Highly Profitable</span><div style="font-size: 11px; color: #64748b;">Increase marketing push</div></td>
+                                    <td><button class="btn btn-secondary" style="padding: 4px 12px; font-size: 11px;">Scale Up</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EXPOSURE TAB -->
+        <div id="exposure" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="card col-12">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-chart-line"></i> Detailed Credit Exposure Analysis</div></div>
+                    <div class="card-body">
+                        <div class="chart-container"><canvas id="exposureDetailChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="card col-6">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-exclamation-triangle"></i> High Risk Exposures</div></div>
+                    <div class="card-body">
+                        <div class="exposure-waterfall">
+                            <div class="exposure-item">
+                                <span class="exposure-label">Emirates</span>
+                                <div class="exposure-bar-container"><div class="exposure-bar flights" style="width: 95%; background: linear-gradient(90deg, #dc2626, #ef4444);">$95,200 - CRITICAL</div></div>
+                                <span class="exposure-value">$95.2K</span>
+                            </div>
+                            <div class="exposure-item">
+                                <span class="exposure-label">Marriott</span>
+                                <div class="exposure-bar-container"><div class="exposure-bar hotels" style="width: 82%; background: linear-gradient(90deg, #dc2626, #ef4444);">$82,400 - HIGH</div></div>
+                                <span class="exposure-value">$82.4K</span>
+                            </div>
+                            <div class="exposure-item">
+                                <span class="exposure-label">Qatar Airways</span>
+                                <div class="exposure-bar-container"><div class="exposure-bar flights" style="width: 68%; background: linear-gradient(90deg, #f59e0b, #fbbf24);">$68,600 - MEDIUM</div></div>
+                                <span class="exposure-value">$68.6K</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card col-6">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-check-circle"></i> Well Managed Exposures</div></div>
+                    <div class="card-body">
+                        <div class="exposure-waterfall">
+                            <div class="exposure-item">
+                                <span class="exposure-label">Thai Tours</span>
+                                <div class="exposure-bar-container"><div class="exposure-bar tours" style="width: 45%;">$45,200 - GOOD</div></div>
+                                <span class="exposure-value">$45.2K</span>
+                            </div>
+                            <div class="exposure-item">
+                                <span class="exposure-label">Singapore Air</span>
+                                <div class="exposure-bar-container"><div class="exposure-bar flights" style="width: 52%;">$52,800 - GOOD</div></div>
+                                <span class="exposure-value">$52.8K</span>
+                            </div>
+                            <div class="exposure-item">
+                                <span class="exposure-label">Hilton</span>
+                                <div class="exposure-bar-container"><div class="exposure-bar hotels" style="width: 48%;">$48,200 - GOOD</div></div>
+                                <span class="exposure-value">$48.2K</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AGENTS TAB -->
+        <div id="agents" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="card col-12">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-users"></i> Agent Performance Matrix</div></div>
+                    <div class="card-body">
+                        <div class="chart-container"><canvas id="agentChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="card col-6">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-trophy"></i> All Agents - Credit Utilisation</div></div>
+                    <div class="card-body">
+                        <div class="agent-list">
+                            <div class="agent-row high">
+                                <div class="agent-avatar">PS</div>
+                                <div class="agent-info"><div class="agent-name">Priya Sharma</div><div class="agent-meta">Mumbai • 142 bookings • Tier: Platinum</div></div>
+                                <div class="agent-credits"><div class="credit-amount">$48,500</div><span class="credit-status active">94% used</span></div>
+                            </div>
+                            <div class="agent-row high">
+                                <div class="agent-avatar">RK</div>
+                                <div class="agent-info"><div class="agent-name">Rajesh Kumar</div><div class="agent-meta">Delhi • 128 bookings • Tier: Gold</div></div>
+                                <div class="agent-credits"><div class="credit-amount">$42,200</div><span class="credit-status active">89% used</span></div>
+                            </div>
+                            <div class="agent-row medium">
+                                <div class="agent-avatar">SR</div>
+                                <div class="agent-info"><div class="agent-name">Sneha Reddy</div><div class="agent-meta">Hyderabad • 98 bookings • Tier: Gold</div></div>
+                                <div class="agent-credits"><div class="credit-amount">$35,800</div><span class="credit-status active">76% used</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card col-6">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-exclamation-circle"></i> Dormant & At-Risk Agents</div></div>
+                    <div class="card-body">
+                        <div class="agent-list">
+                            <div class="agent-row low">
+                                <div class="agent-avatar">ND</div>
+                                <div class="agent-info"><div class="agent-name">Nikhil Desai</div><div class="agent-meta">Chennai • Last used: 78 days • Risk: HIGH</div></div>
+                                <div class="agent-credits"><div class="credit-amount">$18,400</div><span class="credit-status dormant">12% used</span></div>
+                            </div>
+                            <div class="agent-row low">
+                                <div class="agent-avatar">RK</div>
+                                <div class="agent-info"><div class="agent-name">Ritu Kapoor</div><div class="agent-meta">Jaipur • Last used: 65 days • Risk: HIGH</div></div>
+                                <div class="agent-credits"><div class="credit-amount">$15,200</div><span class="credit-status dormant">8% used</span></div>
+                            </div>
+                            <div class="agent-row low">
+                                <div class="agent-avatar">AB</div>
+                                <div class="agent-info"><div class="agent-name">Arun Banerjee</div><div class="agent-meta">Kolkata • Last used: 82 days • Risk: CRITICAL</div></div>
+                                <div class="agent-credits"><div class="credit-amount">$14,800</div><span class="credit-status dormant">18% used</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PARTNERS TAB -->
+        <div id="partners" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="card col-12">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-handshake"></i> Negotiation Priority List</div></div>
+                    <div class="card-body">
+                        <div class="exposure-waterfall">
+                            <div class="exposure-item">
+                                <span class="exposure-label">Marriott</span>
+                                <div class="exposure-bar-container"><div class="exposure-bar hotels" style="width: 95%; background: linear-gradient(90deg, #dc2626, #ef4444);">URGENT - Negotiate to 6%</div></div>
+                                <span class="exposure-value">-$4.2K/mo</span>
+                            </div>
+                            <div class="exposure-item">
+                                <span class="exposure-label">Emirates</span>
+                                <div class="exposure-bar-container"><div class="exposure-bar flights" style="width: 85%; background: linear-gradient(90deg, #f59e0b, #fbbf24);">TARGET - Negotiate to 5%</div></div>
+                                <span class="exposure-value">-$8.4K/mo</span>
+                            </div>
+                            <div class="exposure-item">
+                                <span class="exposure-label">Qatar Airways</span>
+                                <div class="exposure-bar-container"><div class="exposure-bar flights" style="width: 65%; background: linear-gradient(90deg, #f59e0b, #fbbf24);">TARGET - Negotiate to 5%</div></div>
+                                <span class="exposure-value">-$2.1K/mo</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card col-6">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-box-open"></i> All Bundle Combinations</div></div>
+                    <div class="card-body">
+                        <table class="partner-table">
+                            <thead><tr><th>Bundle</th><th>Volume</th><th>Net Margin</th><th>Status</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><div class="partner-name"><div class="partner-logo" style="background: #3b82f6;">✈️</div><span>Emirates + Marriott</span></div></td>
+                                    <td>$420K/mo</td><td style="color: #dc2626; font-weight: 600;">-1.0%</td><td><span class="status-badge status-at-risk">At Risk</span></td>
+                                </tr>
+                                <tr>
+                                    <td><div class="partner-name"><div class="partner-logo" style="background: #8b5cf6;">🏨</div><span>Singapore Air + Hilton</span></div></td>
+                                    <td>$280K/mo</td><td style="color: #15803d; font-weight: 600;">+0.5%</td><td><span class="status-badge status-secured">Profitable</span></td>
+                                </tr>
+                                <tr>
+                                    <td><div class="partner-name"><div class="partner-logo" style="background: #10b981;">🏝️</div><span>Maldives + Emirates</span></div></td>
+                                    <td>$650K/mo</td><td style="color: #15803d; font-weight: 600;">+1.0%</td><td><span class="status-badge status-secured">Highly Profitable</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card col-6">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-lightbulb"></i> Partner Optimisation Insights</div></div>
+                    <div class="card-body">
+                        <div class="insight-card">
+                            <div class="insight-title"><i class="fas fa-exclamation-triangle"></i> Immediate Action Required</div>
+                            <div class="insight-text">Marriott currently offers only 4% discount vs our 5% credit. Negotiate to 6% on Dubai bundles to recover $5,100/month.</div>
+                        </div>
+                        <div class="insight-card" style="margin-top: 12px; background: #f0fdf4; border-color: #bbf7d0;">
+                            <div class="insight-title" style="color: #15803d;"><i class="fas fa-check-circle"></i> Opportunity</div>
+                            <div class="insight-text">Maldives packages are highly profitable (+1.0% margin). Increase marketing spend by 20% to drive more volume.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data for different time periods
+        const periodData = {
+            month: {
+                exposure: '$485K', exposureTrend: '+12.5%', revenue: '$2.4M', revenueTrend: '+28%',
+                utilisation: '68.4%', utilTrend: '+5.2%', margin: '-2.1%', recovered: '2.9%',
+                abv: '$4,850', abvTrend: '+51%', dormant: '$124K',
+                alertExposure: '$485,000', alertAgents: '12',
+                flightExp: '$242K', hotelExp: '$182K', tourExp: '$61K'
+            },
+            quarter: {
+                exposure: '$1.2M', exposureTrend: '+8.3%', revenue: '$6.8M', revenueTrend: '+32%',
+                utilisation: '71.2%', utilTrend: '+3.8%', margin: '-1.8%', recovered: '3.2%',
+                abv: '$4,620', abvTrend: '+48%', dormant: '$298K',
+                alertExposure: '$1,200,000', alertAgents: '28',
+                flightExp: '$620K', hotelExp: '$428K', tourExp: '$152K'
+            },
+            half: {
+                exposure: '$2.1M', exposureTrend: '+15.2%', revenue: '$12.4M', revenueTrend: '+35%',
+                utilisation: '69.8%', utilTrend: '+4.5%', margin: '-1.9%', recovered: '3.1%',
+                abv: '$4,780', abvTrend: '+49%', dormant: '$456K',
+                alertExposure: '$2,100,000', alertAgents: '45',
+                flightExp: '$1.1M', hotelExp: '$720K', tourExp: '$280K'
+            },
+            year: {
+                exposure: '$3.8M', exposureTrend: '+22.4%', revenue: '$24.6M', revenueTrend: '+41%',
+                utilisation: '72.5%', utilTrend: '+6.2%', margin: '-1.5%', recovered: '3.5%',
+                abv: '$4,950', abvTrend: '+53%', dormant: '$680K',
+                alertExposure: '$3,800,000', alertAgents: '67',
+                flightExp: '$1.9M', hotelExp: '$1.4M', tourExp: '$500K'
+            }
+        };
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.getElementById(this.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Period filter
+        document.getElementById('periodFilter').addEventListener('change', function() {
+            const data = periodData[this.value];
+            updateValue('kpiExposure', data.exposure);
+            updateValue('kpiExposureTrend', data.exposureTrend);
+            updateValue('kpiRevenue', data.revenue);
+            updateValue('kpiRevenueTrend', data.revenueTrend);
+            updateValue('kpiUtilisation', data.utilisation);
+            updateValue('kpiUtilTrend', data.utilTrend);
+            updateValue('kpiMargin', data.margin);
+            updateValue('kpiRecovered', data.recovered);
+            updateValue('kpiAbv', data.abv);
+            updateValue('kpiAbvTrend', data.abvTrend);
+            updateValue('kpiDormant', data.dormant);
+            updateValue('alertExposure', data.alertExposure);
+            updateValue('alertAgents', data.alertAgents);
+            updateValue('flightExposure', data.flightExp);
+            updateValue('hotelExposure', data.hotelExp);
+            updateValue('tourExposure', data.tourExp);
+        });
+
+        function updateValue(id, value) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.style.opacity = '0.5';
+                setTimeout(() => {
+                    el.textContent = value;
+                    el.style.opacity = '1';
+                }, 150);
+            }
+        }
+
+        function resetDashboard() {
+            document.getElementById('periodFilter').value = 'month';
+            document.getElementById('serviceFilter').value = 'all';
+            document.getElementById('periodFilter').dispatchEvent(new Event('change'));
+        }
+
+        // Initialise charts when page loads
+        window.onload = function() {
+            // Trend Chart
+            const trendCtx = document.getElementById('trendChart');
+            if (trendCtx) {
+                new Chart(trendCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        datasets: [{
+                            label: 'Credits Issued',
+                            data: [380, 420, 395, 450, 485, 520],
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 4
+                        }, {
+                            label: 'Credits Utilised',
+                            data: [280, 320, 310, 380, 420, 480],
+                            backgroundColor: '#10b981',
+                            borderRadius: 4
+                        }, {
+                            label: 'Outstanding',
+                            data: [100, 100, 85, 70, 65, 40],
+                            backgroundColor: '#f59e0b',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'top', align: 'end' } },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { callback: function(value) { return '$' + value + 'K'; } }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Exposure Detail Chart
+            const expCtx = document.getElementById('exposureDetailChart');
+            if (expCtx) {
+                new Chart(expCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                        datasets: [{
+                            label: 'Flight Credits',
+                            data: [85, 92, 88, 95],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }, {
+                            label: 'Hotel Credits',
+                            data: [72, 75, 78, 82],
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'top', align: 'end' } }
+                    }
+                });
+            }
+
+            // Agent Chart
+            const agentCtx = document.getElementById('agentChart');
+            if (agentCtx) {
+                new Chart(agentCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Priya S', 'Rajesh K', 'Sneha R', 'Amit P', 'Vikram M'],
+                        datasets: [{
+                            label: 'Credits Used',
+                            data: [48500, 42200, 35800, 28400, 22100],
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 4
+                        }, {
+                            label: 'Credits Available',
+                            data: [3100, 5200, 11300, 13600, 13500],
+                            backgroundColor: '#e2e8f0',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'top', align: 'end' } },
+                        scales: {
+                            y: {
+                                ticks: { callback: function(value) { return '$' + (value/1000) + 'K'; } }
+                            }
+                        }
+                    }
+                });
+            }
+        };
+    </script>
+</body>
+</html>

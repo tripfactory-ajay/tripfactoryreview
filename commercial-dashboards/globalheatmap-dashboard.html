@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory - Global Market Intelligence Map</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        #map {
+            height: 100%;
+            width: 100%;
+            background: #0f172a;
+            z-index: 1;
+        }
+        
+        .map-container {
+            position: relative;
+            height: 700px;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Custom Marker Styles with Pulse Animation */
+        .custom-div-icon {
+            background: transparent;
+            border: none;
+        }
+        
+        .marker-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .marker-pulse {
+            position: absolute;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+        
+        .marker-core {
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        
+        .marker-core:hover {
+            transform: scale(1.2);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+        }
+        
+        /* Owned Office - Green */
+        .marker-owned .marker-core {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        }
+        .marker-owned .marker-pulse {
+            background: rgba(34, 197, 94, 0.4);
+        }
+        
+        /* Franchise - Yellow/Orange */
+        .marker-franchise .marker-core {
+            background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+        }
+        .marker-franchise .marker-pulse {
+            background: rgba(245, 158, 11, 0.4);
+        }
+        
+        /* Destination - Red */
+        .marker-destination .marker-core {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border: 2px solid white;
+        }
+        .marker-destination .marker-pulse {
+            background: rgba(239, 68, 68, 0.4);
+        }
+        
+        /* Heat Levels - Dynamic Sizing */
+        .heat-high .marker-core { width: 32px; height: 32px; }
+        .heat-high .marker-pulse { width: 32px; height: 32px; }
+        
+        .heat-medium .marker-core { width: 26px; height: 26px; }
+        .heat-medium .marker-pulse { width: 26px; height: 26px; }
+        
+        .heat-low .marker-core { width: 20px; height: 20px; }
+        .heat-low .marker-pulse { width: 20px; height: 20px; }
+        
+        /* Connection Lines */
+        .connection-line {
+            stroke: #2dd4bf;
+            stroke-width: 3;
+            fill: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            filter: drop-shadow(0 0 4px rgba(45, 212, 191, 0.5));
+        }
+        
+        .connection-line.active {
+            opacity: 0.7;
+            stroke-dasharray: 10, 10;
+            animation: dash 20s linear infinite;
+        }
+        
+        @keyframes dash {
+            to { stroke-dashoffset: -200; }
+        }
+        
+        /* Flow Direction Arrows */
+        .flow-arrow {
+            fill: #2dd4bf;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .flow-arrow.active {
+            opacity: 0.8;
+            animation: pulse-arrow 2s infinite;
+        }
+        
+        @keyframes pulse-arrow {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        
+        /* Custom Popup Styling */
+        .custom-popup .leaflet-popup-content-wrapper {
+            background: rgba(15, 23, 42, 0.95);
+            color: white;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .custom-popup .leaflet-popup-tip {
+            background: rgba(15, 23, 42, 0.95);
+        }
+        
+        .custom-popup .leaflet-popup-content {
+            margin: 12px 16px;
+        }
+        
+        /* Legend Styling */
+        .map-legend {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        /* Stats Overlay */
+        .stats-overlay {
+            background: linear-gradient(135deg, rgba(30, 58, 95, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Toggle Buttons */
+        .flow-toggle {
+            transition: all 0.3s;
+        }
+        .flow-toggle.active {
+            background: #0066cc;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 102, 204, 0.4);
+        }
+        
+        /* Info Panel */
+        .info-panel {
+            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        
+        /* Progress Bar Animation */
+        .progress-fill {
+            transition: width 1s ease-out;
+        }
+        
+        /* Ranking Item Hover */
+        .ranking-item {
+            transition: all 0.3s;
+        }
+        .ranking-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        /* Destination Heat Cards */
+        .heat-card {
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .heat-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        /* SVG Overlay for Connections */
+        .svg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 500;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+<!-- Header -->
+<header class="bg-white border-b-2 border-[#0066cc] px-6 py-4 shadow-lg z-50 relative">
+    <div class="flex justify-between items-center max-w-[1920px] mx-auto">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-gradient-to-br from-[#0066cc] to-[#1e3a5f] rounded-xl flex items-center justify-center text-white text-2xl">
+                <i class="fas fa-globe-americas"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-[#1e3a5f]">Global Market Intelligence Map</h1>
+                <p class="text-xs text-slate-500">Real-time geographic performance visualization</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <!-- Flow Toggle -->
+            <div class="flex bg-slate-100 rounded-lg p-1">
+                <button onclick="setFlow('all')" class="flow-toggle active px-4 py-2 rounded-md text-sm font-bold" id="flow-all">All Flows</button>
+                <button onclick="setFlow('inbound')" class="flow-toggle px-4 py-2 rounded-md text-sm font-bold text-slate-600" id="flow-inbound">Inbound</button>
+                <button onclick="setFlow('outbound')" class="flow-toggle px-4 py-2 rounded-md text-sm font-bold text-slate-600" id="flow-outbound">Outbound</button>
+            </div>
+            
+            <!-- View Toggle -->
+            <div class="flex bg-slate-100 rounded-lg p-1">
+                <button onclick="setView('volume')" class="flow-toggle active px-4 py-2 rounded-md text-sm font-bold" id="view-volume">Volume</button>
+                <button onclick="setView('margin')" class="flow-toggle px-4 py-2 rounded-md text-sm font-bold text-slate-600" id="view-margin">Margin</button>
+                <button onclick="setView('efficiency')" class="flow-toggle px-4 py-2 rounded-md text-sm font-bold text-slate-600" id="view-efficiency">Efficiency</button>
+            </div>
+            
+            <button onclick="window.location.href='home.html'" class="px-4 py-2 bg-[#0066cc] text-white rounded-lg text-sm font-bold hover:bg-[#1e3a5f] transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Back
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-[1920px] mx-auto p-6 grid grid-cols-4 gap-6">
+
+    <!-- Map Area -->
+    <div class="col-span-3">
+        <div class="map-container relative bg-slate-900">
+            <!-- The Map -->
+            <div id="map"></div>
+            
+            <!-- SVG Overlay for Connection Lines -->
+            <svg class="svg-overlay" id="connectionOverlay"></svg>
+            
+            <!-- Stats Overlay (Top Right) -->
+            <div class="absolute top-4 right-4 stats-overlay text-white p-4 rounded-xl z-[1000] min-w-[220px]">
+                <div class="text-xs text-slate-400 mb-1 uppercase tracking-wider">Global Performance</div>
+                <div class="text-2xl font-bold mono mb-1" id="globalRevenue">$18.4M</div>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="text-green-400"><i class="fas fa-arrow-up"></i> 12.4%</span>
+                    <span class="text-slate-400">vs last month</span>
+                </div>
+                <div class="mt-3 pt-3 border-t border-slate-700 space-y-2">
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Active Offices</span>
+                        <span class="font-bold text-white">7</span>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Markets Served</span>
+                        <span class="font-bold text-white">42</span>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Avg Margin</span>
+                        <span class="font-bold text-green-400">22.8%</span>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Flow Balance</span>
+                        <span class="font-bold text-blue-400">58% In</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Legend (Bottom Left) -->
+            <div class="absolute bottom-4 left-4 map-legend text-white p-4 rounded-xl z-[1000]">
+                <div class="text-sm font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-layer-group"></i> Legend
+                </div>
+                <div class="space-y-3 text-xs">
+                    <div class="flex items-center gap-2">
+                        <div class="relative w-4 h-4">
+                            <div class="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>
+                            <div class="absolute inset-0 bg-green-500 rounded-full border-2 border-white"></div>
+                        </div>
+                        <span>Owned Office (High Perf)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="relative w-4 h-4">
+                            <div class="absolute inset-0 bg-yellow-500 rounded-full"></div>
+                            <div class="absolute inset-0 bg-yellow-500 rounded-full border-2 border-white"></div>
+                        </div>
+                        <span>Franchise Partner</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-4 h-4 rounded-full bg-red-500 border-2 border-white"></div>
+                        <span>Top Destination</span>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-slate-700">
+                        <div class="text-xs text-slate-400 mb-2">Performance Heat (Marker Size)</div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 rounded-full bg-green-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                            <span class="text-slate-400 ml-2">High → Low</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Layer Control (Bottom Right) -->
+            <div class="absolute bottom-4 right-4 map-legend text-white p-3 rounded-xl z-[1000]">
+                <div class="flex items-center gap-4">
+                    <label class="flex items-center gap-2 text-xs cursor-pointer hover:text-blue-400 transition">
+                        <input type="checkbox" checked onchange="toggleLayer('offices')" class="rounded accent-blue-500">
+                        <span>Offices</span>
+                    </label>
+                    <label class="flex items-center gap-2 text-xs cursor-pointer hover:text-blue-400 transition">
+                        <input type="checkbox" checked onchange="toggleLayer('destinations')" class="rounded accent-blue-500">
+                        <span>Destinations</span>
+                    </label>
+                    <label class="flex items-center gap-2 text-xs cursor-pointer hover:text-blue-400 transition">
+                        <input type="checkbox" onchange="toggleLayer('connections')" class="rounded accent-blue-500">
+                        <span>Flow Lines</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Side Panel -->
+    <div class="space-y-4 h-[700px] overflow-y-auto pr-2">
+        
+        <!-- Selected Location Details -->
+        <div class="info-panel rounded-xl p-6 shadow-lg" id="locationPanel">
+            <div class="flex items-center gap-3 mb-4">
+                <img src="https://flagcdn.com/w80/gb.png" id="locationFlag" class="w-16 h-auto rounded-lg shadow-md border border-slate-200">
+                <div>
+                    <h3 class="text-xl font-bold text-[#1e3a5f]" id="locationName">United Kingdom</h3>
+                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-bold mt-1">
+                        <i class="fas fa-building"></i> Owned Office
+                    </span>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Key Metrics -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <div class="text-xs text-slate-500 mb-1">Revenue (MTD)</div>
+                        <div class="text-lg font-bold text-[#1e3a5f] mono" id="locationRevenue">$2.84M</div>
+                        <div class="text-xs text-green-600 mt-1"><i class="fas fa-arrow-up"></i> 8.2%</div>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <div class="text-xs text-slate-500 mb-1">Net Margin</div>
+                        <div class="text-lg font-bold text-[#22c55e] mono" id="locationMargin">24.2%</div>
+                        <div class="text-xs text-green-600 mt-1"><i class="fas fa-arrow-up"></i> 1.4%</div>
+                    </div>
+                </div>
+
+                <!-- Efficiency Gauge -->
+                <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-slate-600">Cost Efficiency</span>
+                        <span class="font-bold text-[#1e3a5f]" id="efficiencyScore">78%</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                        <div class="progress-fill bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full" style="width: 0%" id="efficiencyBar"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-400 mt-1">
+                        <span>Operating Cost: $420K</span>
+                        <span>Contribution: $1.24M</span>
+                    </div>
+                </div>
+
+                <!-- Flow Distribution -->
+                <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div class="text-xs font-bold text-slate-500 uppercase mb-3">Flow Distribution</div>
+                    <div class="flex h-8 rounded-lg overflow-hidden">
+                        <div class="bg-green-500 flex items-center justify-center text-white text-xs font-bold transition-all duration-500" style="width: 0%" id="inboundBar">
+                            <span id="inboundText">65%</span>
+                        </div>
+                        <div class="bg-blue-500 flex items-center justify-center text-white text-xs font-bold transition-all duration-500" style="width: 0%" id="outboundBar">
+                            <span id="outboundText">35%</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-2">
+                        <span class="text-green-600 font-bold"><i class="fas fa-arrow-down"></i> Inbound</span>
+                        <span class="text-blue-600 font-bold"><i class="fas fa-arrow-up"></i> Outbound</span>
+                    </div>
+                </div>
+
+                <!-- Top Destinations -->
+                <div>
+                    <div class="text-xs font-bold text-slate-500 uppercase mb-3 flex items-center gap-2">
+                        <i class="fas fa-map-marker-alt text-[#0066cc]"></i> Top Destinations Sold
+                    </div>
+                    <div class="space-y-2" id="topDestinations">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="viewOfficeDetails()" class="p-2 bg-[#0066cc] text-white rounded-lg text-xs font-bold hover:bg-[#0052a3] transition-colors flex items-center justify-center gap-1">
+                        <i class="fas fa-chart-bar"></i> Full Report
+                    </button>
+                    <button onclick="viewAgentPerformance()" class="p-2 bg-white border border-[#0066cc] text-[#0066cc] rounded-lg text-xs font-bold hover:bg-blue-50 transition-colors flex items-center justify-center gap-1">
+                        <i class="fas fa-users"></i> Agents
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Rankings -->
+        <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+            <h4 class="text-sm font-bold text-[#1e3a5f] uppercase mb-4 flex items-center gap-2">
+                <i class="fas fa-trophy text-yellow-500"></i> Office Rankings
+            </h4>
+            <div class="space-y-3" id="rankingsList">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+    </div>
+
+</main>
+
+<!-- Bottom Analysis Charts -->
+<section class="max-w-[1920px] mx-auto px-6 pb-6 grid grid-cols-3 gap-6">
+
+    <!-- Scatter Plot: Revenue vs Margin -->
+    <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+        <h4 class="text-sm font-bold text-[#1e3a5f] uppercase mb-4 flex items-center gap-2">
+            <i class="fas fa-chart-scatter text-[#0066cc]"></i> Cost Efficiency Analysis
+        </h4>
+        <div class="h-48">
+            <canvas id="efficiencyChart"></canvas>
+        </div>
+        <div class="mt-3 text-xs text-slate-500 text-center">
+            Bubble size = Efficiency score | Green = Owned, Orange = Franchise
+        </div>
+    </div>
+
+    <!-- Destination Heat Grid -->
+    <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+        <h4 class="text-sm font-bold text-[#1e3a5f] uppercase mb-4 flex items-center gap-2">
+            <i class="fas fa-fire text-orange-500"></i> Destination Demand Heat
+        </h4>
+        <div class="grid grid-cols-4 gap-3" id="destinationGrid">
+            <!-- Populated dynamically -->
+        </div>
+    </div>
+
+    <!-- Flow Analysis -->
+    <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+        <h4 class="text-sm font-bold text-[#1e3a5f] uppercase mb-4 flex items-center gap-2">
+            <i class="fas fa-exchange-alt text-[#0066cc]"></i> Global Flow Analysis
+        </h4>
+        <div class="h-48">
+            <canvas id="flowChart"></canvas>
+        </div>
+        <div class="mt-3 flex justify-center gap-4 text-xs">
+            <span class="flex items-center gap-1"><div class="w-3 h-3 bg-green-500 rounded"></div> Inbound (58%)</span>
+            <span class="flex items-center gap-1"><div class="w-3 h-3 bg-blue-500 rounded"></div> Outbound (35%)</span>
+            <span class="flex items-center gap-1"><div class="w-3 h-3 bg-purple-500 rounded"></div> Internal (7%)</span>
+        </div>
+    </div>
+
+</section>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+// Comprehensive Office and Destination Data
+const locations = {
+    offices: [
+        { 
+            id: 'uk', name: 'United Kingdom', city: 'London', 
+            lat: 51.5074, lng: -0.1278, 
+            type: 'owned', revenue: 2.84, revenueStr: '$2.84M', margin: 24.2, 
+            efficiency: 78, inbound: 65, outbound: 35,
+            destinations: [
+                { name: 'Spain', share: 34, code: 'es', revenue: '$968K' },
+                { name: 'USA', share: 28, code: 'us', revenue: '$795K' },
+                { name: 'Dubai', share: 22, code: 'ae', revenue: '$625K' }
+            ],
+            flag: 'gb'
+        },
+        { 
+            id: 'us', name: 'United States', city: 'New York', 
+            lat: 40.7128, lng: -74.0060, 
+            type: 'owned', revenue: 4.20, revenueStr: '$4.20M', margin: 28.4, 
+            efficiency: 85, inbound: 45, outbound: 55,
+            destinations: [
+                { name: 'Caribbean', share: 42, code: 'caribbean', revenue: '$1.76M' },
+                { name: 'Europe', share: 31, code: 'eu', revenue: '$1.30M' },
+                { name: 'Asia', share: 18, code: 'asia', revenue: '$756K' }
+            ],
+            flag: 'us'
+        },
+        { 
+            id: 'india', name: 'India', city: 'Mumbai', 
+            lat: 19.0760, lng: 72.8777, 
+            type: 'franchise', revenue: 1.80, revenueStr: '$1.80M', margin: 19.8, 
+            efficiency: 68, inbound: 25, outbound: 75,
+            destinations: [
+                { name: 'Thailand', share: 38, code: 'th', revenue: '$684K' },
+                { name: 'Singapore', share: 29, code: 'sg', revenue: '$522K' },
+                { name: 'Dubai', share: 21, code: 'ae', revenue: '$378K' }
+            ],
+            flag: 'in'
+        },
+        { 
+            id: 'singapore', name: 'Singapore', city: 'Singapore', 
+            lat: 1.3521, lng: 103.8198, 
+            type: 'owned', revenue: 1.40, revenueStr: '$1.40M', margin: 22.8, 
+            efficiency: 80, inbound: 60, outbound: 40,
+            destinations: [
+                { name: 'Malaysia', share: 35, code: 'my', revenue: '$490K' },
+                { name: 'Indonesia', share: 28, code: 'id', revenue: '$392K' },
+                { name: 'Thailand', share: 22, code: 'th', revenue: '$308K' }
+            ],
+            flag: 'sg'
+        },
+        { 
+            id: 'uae', name: 'UAE', city: 'Dubai', 
+            lat: 25.2048, lng: 55.2708, 
+            type: 'franchise', revenue: 1.20, revenueStr: '$1.20M', margin: 18.5, 
+            efficiency: 69, inbound: 55, outbound: 45,
+            destinations: [
+                { name: 'Maldives', share: 42, code: 'mv', revenue: '$504K' },
+                { name: 'Seychelles', share: 28, code: 'sc', revenue: '$336K' },
+                { name: 'Mauritius', share: 18, code: 'mu', revenue: '$216K' }
+            ],
+            flag: 'ae'
+        },
+        { 
+            id: 'thailand', name: 'Thailand', city: 'Bangkok', 
+            lat: 13.7563, lng: 100.5018, 
+            type: 'franchise', revenue: 0.62, revenueStr: '$620K', margin: 12.1, 
+            efficiency: 52, inbound: 80, outbound: 20,
+            destinations: [
+                { name: 'Japan', share: 38, code: 'jp', revenue: '$236K' },
+                { name: 'Korea', share: 31, code: 'kr', revenue: '$192K' },
+                { name: 'China', share: 22, code: 'cn', revenue: '$136K' }
+            ],
+            flag: 'th'
+        },
+        { 
+            id: 'australia', name: 'Australia', city: 'Sydney', 
+            lat: -33.8688, lng: 151.2093, 
+            type: 'owned', revenue: 0.98, revenueStr: '$980K', margin: 21.2, 
+            efficiency: 72, inbound: 70, outbound: 30,
+            destinations: [
+                { name: 'Bali', share: 45, code: 'id', revenue: '$441K' },
+                { name: 'New Zealand', share: 32, code: 'nz', revenue: '$314K' },
+                { name: 'Fiji', share: 15, code: 'fj', revenue: '$147K' }
+            ],
+            flag: 'au'
+        }
+    ],
+    
+    destinations: [
+        { name: 'Maldives', lat: 3.2028, lng: 73.2207, revenue: 4.2, growth: '+35%', emoji: '🏝️', color: 'from-red-500 to-red-600' },
+        { name: 'Thailand', lat: 15.8700, lng: 100.9925, revenue: 3.8, growth: '+18%', emoji: '🌴', color: 'from-orange-500 to-orange-600' },
+        { name: 'Dubai', lat: 25.2048, lng: 55.2708, revenue: 3.1, growth: '+5%', emoji: '🏙️', color: 'from-yellow-500 to-yellow-600' },
+        { name: 'Spain', lat: 40.4637, lng: -3.7492, revenue: 2.9, growth: '+12%', emoji: '🌞', color: 'from-green-500 to-green-600' },
+        { name: 'USA', lat: 37.0902, lng: -95.7129, revenue: 2.4, growth: '+8%', emoji: '🗽', color: 'from-blue-500 to-blue-600' },
+        { name: 'Singapore', lat: 1.3521, lng: 103.8198, revenue: 1.8, growth: '+22%', emoji: '🏙️', color: 'from-indigo-500 to-indigo-600' },
+        { name: 'Bali', lat: -8.4095, lng: 115.1889, revenue: 1.6, growth: '+28%', emoji: '🏖️', color: 'from-purple-500 to-purple-600' },
+        { name: 'Sri Lanka', lat: 7.8731, lng: 80.7718, revenue: 0.98, growth: '+15%', emoji: '🐘', color: 'from-pink-500 to-pink-600' }
+    ]
+};
+
+// Connection matrix (which offices connect to which)
+const connections = [
+    { from: 'uk', to: 'us', strength: 0.8 },
+    { from: 'uk', to: 'india', strength: 0.6 },
+    { from: 'uk', to: 'singapore', strength: 0.7 },
+    { from: 'us', to: 'india', strength: 0.5 },
+    { from: 'india', to: 'singapore', strength: 0.9 },
+    { from: 'singapore', to: 'australia', strength: 0.6 },
+    { from: 'singapore', to: 'thailand', strength: 0.7 },
+    { from: 'uae', to: 'india', strength: 0.5 },
+    { from: 'uae', to: 'uk', strength: 0.4 },
+    { from: 'australia', to: 'singapore', strength: 0.6 }
+];
+
+let map;
+let officeMarkers = [];
+let destinationMarkers = [];
+let currentFlow = 'all';
+let currentView = 'volume';
+let connectionsVisible = false;
+
+// Initialize Map
+document.addEventListener('DOMContentLoaded', function() {
+    initMap();
+    initCharts();
+    populateRankings();
+    populateDestinationGrid();
+    showLocationDetails('uk'); // Show UK by default
+    
+    // Animate initial progress bars
+    setTimeout(() => {
+        document.getElementById('efficiencyBar').style.width = '78%';
+        document.getElementById('inboundBar').style.width = '65%';
+        document.getElementById('outboundBar').style.width = '35%';
+        document.getElementById('inboundText').textContent = '65%';
+        document.getElementById('outboundText').textContent = '35%';
+    }, 500);
+});
+
+function initMap() {
+    // Create map centered on world view
+    map = L.map('map', {
+        center: [25, 10],
+        zoom: 2.5,
+        minZoom: 2,
+        maxZoom: 10,
+        zoomControl: false,
+        attributionControl: false,
+        worldCopyJump: true
+    });
+
+    // Add dark theme tile layer (CartoDB Dark Matter)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 20
+    }).addTo(map);
+
+    // Add zoom control to bottom right
+    L.control.zoom({
+        position: 'bottomright'
+    }).addTo(map);
+
+    // Add office markers
+    locations.offices.forEach(office => {
+        const marker = createOfficeMarker(office);
+        officeMarkers.push({ id: office.id, marker: marker, data: office });
+    });
+
+    // Add destination markers
+    locations.destinations.forEach(dest => {
+        const marker = createDestinationMarker(dest);
+        destinationMarkers.push({ name: dest.name, marker: marker, data: dest });
+    });
+
+    // Initialize connection lines (hidden by default)
+    initConnectionLines();
+}
+
+function createOfficeMarker(office) {
+    const heatLevel = getHeatLevel(office.efficiency);
+    const size = getMarkerSize(office, currentView);
+    
+    const html = `
+        <div class="marker-container marker-${office.type} heat-${heatLevel}" style="width: ${size}px; height: ${size}px;">
+            <div class="marker-pulse" style="width: ${size}px; height: ${size}px;"></div>
+            <div class="marker-core" style="width: ${size * 0.8}px; height: ${size * 0.8}px;"></div>
+        </div>
+    `;
+    
+    const icon = L.divIcon({
+        className: 'custom-div-icon',
+        html: html,
+        iconSize: [size, size],
+        iconAnchor: [size/2, size/2]
+    });
+
+    const marker = L.marker([office.lat, office.lng], { icon: icon })
+        .addTo(map)
+        .bindPopup(createOfficePopup(office), {
+            className: 'custom-popup',
+            closeButton: false,
+            offset: [0, -10]
+        });
+
+    marker.on('click', () => showLocationDetails(office.id));
+    marker.on('mouseover', () => marker.openPopup());
+    marker.on('mouseout', () => marker.closePopup());
+
+    return marker;
+}
+
+function createDestinationMarker(dest) {
+    const html = `
+        <div class="marker-container marker-destination heat-high" style="width: 24px; height: 24px;">
+            <div class="marker-pulse" style="width: 24px; height: 24px;"></div>
+            <div class="marker-core" style="width: 20px; height: 20px;"></div>
+        </div>
+    `;
+    
+    const icon = L.divIcon({
+        className: 'custom-div-icon',
+        html: html,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+    });
+
+    const marker = L.marker([dest.lat, dest.lng], { icon: icon })
+        .addTo(map)
+        .bindPopup(`
+            <div class="text-center min-w-[120px]">
+                <div class="text-2xl mb-1">${dest.emoji}</div>
+                <div class="font-bold text-lg">${dest.name}</div>
+                <div class="text-green-400 font-bold">$${dest.revenue}M</div>
+                <div class="text-xs text-slate-400">${dest.growth} vs last month</div>
+            </div>
+        `, {
+            className: 'custom-popup',
+            closeButton: false
+        });
+
+    marker.on('mouseover', () => marker.openPopup());
+    marker.on('mouseout', () => marker.closePopup());
+
+    return marker;
+}
+
+function createOfficePopup(office) {
+    const typeLabel = office.type === 'owned' ? 'Owned Office' : 'Franchise Partner';
+    const typeColor = office.type === 'owned' ? 'text-green-400' : 'text-yellow-400';
+    const typeIcon = office.type === 'owned' ? 'fa-building' : 'fa-handshake';
+    
+    return `
+        <div class="text-center min-w-[160px]">
+            <div class="font-bold text-lg mb-1">${office.name}</div>
+            <div class="text-xs ${typeColor} mb-2"><i class="fas ${typeIcon} mr-1"></i>${typeLabel}</div>
+            <div class="text-2xl font-bold text-white mb-1">${office.revenueStr}</div>
+            <div class="text-sm text-green-400">${office.margin}% margin</div>
+            <div class="text-xs text-slate-400 mt-2">Efficiency: ${office.efficiency}%</div>
+            <div class="text-xs text-blue-400 mt-1">Click for details</div>
+        </div>
+    `;
+}
+
+function getHeatLevel(efficiency) {
+    if (efficiency >= 80) return 'high';
+    if (efficiency >= 65) return 'medium';
+    return 'low';
+}
+
+function getMarkerSize(office, view) {
+    let scale = 1;
+    
+    if (view === 'volume') {
+        // Scale based on revenue (0.6M to 4.2M range)
+        scale = 0.5 + (office.revenue / 5);
+    } else if (view === 'margin') {
+        // Scale based on margin (12% to 30% range)
+        scale = 0.5 + (office.margin / 40);
+    } else if (view === 'efficiency') {
+        // Scale based on efficiency (50 to 100 range)
+        scale = 0.5 + (office.efficiency / 100);
+    }
+    
+    // Base size 24px, scaled
+    return Math.max(20, Math.min(40, 24 * scale));
+}
+
+function initConnectionLines() {
+    const svg = document.getElementById('connectionOverlay');
+    
+    connections.forEach((conn, index) => {
+        const fromOffice = locations.offices.find(o => o.id === conn.from);
+        const toOffice = locations.offices.find(o => o.id === conn.to);
+        
+        if (!fromOffice || !toOffice) return;
+        
+        // Create path element
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('class', 'connection-line');
+        path.setAttribute('id', `connection-${index}`);
+        path.setAttribute('data-from', conn.from);
+        path.setAttribute('data-to', conn.to);
+        svg.appendChild(path);
+        
+        // Create arrow marker
+        const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        arrow.setAttribute('class', 'flow-arrow');
+        arrow.setAttribute('r', '4');
+        arrow.setAttribute('id', `arrow-${index}`);
+        svg.appendChild(arrow);
+    });
+    
+    // Update lines on map move
+    map.on('move zoom', updateConnectionLines);
+    setTimeout(updateConnectionLines, 500); // Initial draw
+}
+
+function updateConnectionLines() {
+    if (!connectionsVisible) return;
+    
+    const svg = document.getElementById('connectionOverlay');
+    const mapPane = document.querySelector('.leaflet-map-pane');
+    const transform = window.getComputedStyle(mapPane).transform;
+    
+    connections.forEach((conn, index) => {
+        const fromOffice = locations.offices.find(o => o.id === conn.from);
+        const toOffice = locations.offices.find(o => o.id === conn.to);
+        
+        if (!fromOffice || !toOffice) return;
+        
+        const fromPoint = map.latLngToContainerPoint([fromOffice.lat, fromOffice.lng]);
+        const toPoint = map.latLngToContainerPoint([toOffice.lat, toOffice.lng]);
+        
+        // Create curved path
+        const midX = (fromPoint.x + toPoint.x) / 2;
+        const midY = (fromPoint.y + toPoint.y) / 2 - 30; // Curve upward
+        
+        const path = document.getElementById(`connection-${index}`);
+        const arrow = document.getElementById(`arrow-${index}`);
+        
+        if (path && arrow) {
+            const d = `M ${fromPoint.x} ${fromPoint.y} Q ${midX} ${midY} ${toPoint.x} ${toPoint.y}`;
+            path.setAttribute('d', d);
+            
+            // Position arrow at middle of curve
+            arrow.setAttribute('cx', midX);
+            arrow.setAttribute('cy', midY);
+        }
+    });
+}
+
+function showLocationDetails(locationId) {
+    const office = locations.offices.find(o => o.id === locationId);
+    if (!office) return;
+
+    // Update flag with fallback
+    const flagCode = office.flag || locationId;
+    document.getElementById('locationFlag').src = `https://flagcdn.com/w80/${flagCode}.png`;
+    
+    // Update text content
+    document.getElementById('locationName').textContent = office.name;
+    document.getElementById('locationRevenue').textContent = office.revenueStr;
+    document.getElementById('locationMargin').textContent = office.margin + '%';
+    document.getElementById('efficiencyScore').textContent = office.efficiency + '%';
+    
+    // Animate progress bars
+    document.getElementById('efficiencyBar').style.width = '0%';
+    setTimeout(() => {
+        document.getElementById('efficiencyBar').style.width = office.efficiency + '%';
+    }, 100);
+    
+    // Update flow bars
+    document.getElementById('inboundBar').style.width = '0%';
+    document.getElementById('outboundBar').style.width = '0%';
+    setTimeout(() => {
+        document.getElementById('inboundBar').style.width = office.inbound + '%';
+        document.getElementById('inboundText').textContent = office.inbound + '%';
+        document.getElementById('outboundBar').style.width = office.outbound + '%';
+        document.getElementById('outboundText').textContent = office.outbound + '%';
+    }, 100);
+
+    // Update type badge
+    const typeBadge = document.querySelector('#locationPanel .inline-flex');
+    if (office.type === 'owned') {
+        typeBadge.className = 'inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-bold mt-1';
+        typeBadge.innerHTML = '<i class="fas fa-building"></i> Owned Office';
+    } else {
+        typeBadge.className = 'inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-bold mt-1';
+        typeBadge.innerHTML = '<i class="fas fa-handshake"></i> Franchise Partner';
+    }
+
+    // Update destinations list
+    const destContainer = document.getElementById('topDestinations');
+    destContainer.innerHTML = office.destinations.map(d => `
+        <div class="flex items-center justify-between p-2 bg-white rounded-lg border border-slate-200 hover:shadow-md transition-shadow cursor-pointer" onclick="focusOnDestination('${d.code}')">
+            <div class="flex items-center gap-2">
+                <img src="https://flagcdn.com/w20/${d.code}.png" class="w-5 rounded shadow" onerror="this.style.display='none'">
+                <span class="text-sm font-bold text-[#1e3a5f]">${d.name}</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-20 bg-slate-200 rounded-full h-1.5">
+                    <div class="bg-[#0066cc] h-1.5 rounded-full transition-all duration-500" style="width: 0%" data-width="${d.share}%"></div>
+                </div>
+                <span class="text-xs font-bold text-[#0066cc]">${d.share}%</span>
+            </div>
+        </div>
+    `).join('');
+    
+    // Animate destination bars
+    setTimeout(() => {
+        destContainer.querySelectorAll('[data-width]').forEach(bar => {
+            bar.style.width = bar.getAttribute('data-width');
+        });
+    }, 100);
+
+    // Pan map to location with smooth animation
+    map.flyTo([office.lat, office.lng], 5, {
+        duration: 1.5,
+        easeLinearity: 0.25
+    });
+}
+
+function populateRankings() {
+    // Sort offices by margin
+    const sorted = [...locations.offices].sort((a, b) => b.margin - a.margin);
+    
+    const container = document.getElementById('rankingsList');
+    container.innerHTML = sorted.map((office, index) => {
+        const rankColors = ['text-yellow-600 bg-yellow-50 border-yellow-200', 'text-blue-600 bg-blue-50 border-blue-200', 'text-slate-600 bg-slate-50 border-slate-200'];
+        const rankColor = rankColors[Math.min(index, 2)];
+        const isLow = office.margin < 15;
+        const marginColor = isLow ? 'text-red-500' : 'text-green-500';
+        
+        return `
+            <div class="ranking-item flex items-center justify-between p-3 ${rankColor} rounded-lg border cursor-pointer" onclick="focusOnLocation('${office.id}')">
+                <div class="flex items-center gap-3">
+                    <span class="text-lg font-bold ${rankColor.split(' ')[0]}">${index + 1}</span>
+                    <img src="https://flagcdn.com/w20/${office.flag}.png" class="w-6 rounded shadow" onerror="this.src='https://flagcdn.com/w20/un.png'">
+                    <div>
+                        <div class="text-sm font-bold text-[#1e3a5f]">${office.name}</div>
+                        <div class="text-xs text-slate-500">${office.city}</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm font-bold ${marginColor}">${office.margin}%</div>
+                    <div class="text-xs text-slate-400">${office.revenueStr}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function populateDestinationGrid() {
+    const container = document.getElementById('destinationGrid');
+    container.innerHTML = locations.destinations.map(dest => `
+        <div class="heat-card p-3 bg-gradient-to-br ${dest.color} rounded-lg text-center text-white" onclick="filterByDestination('${dest.name}')">
+            <div class="text-2xl mb-1">${dest.emoji}</div>
+            <div class="text-xs font-bold truncate">${dest.name}</div>
+            <div class="text-lg font-bold mono">$${dest.revenue}M</div>
+            <div class="text-[10px] opacity-90">${dest.growth}</div>
+        </div>
+    `).join('');
+}
+
+function focusOnLocation(locationId) {
+    showLocationDetails(locationId);
+}
+
+function focusOnDestination(destCode) {
+    // Highlight related offices
+    const relatedOffices = locations.offices.filter(o => 
+        o.destinations.some(d => d.code === destCode)
+    );
+    
+    // Dim unrelated offices
+    officeMarkers.forEach(({ marker, data }) => {
+        const isRelated = relatedOffices.some(o => o.id === data.id);
+        marker.setOpacity(isRelated ? 1 : 0.3);
+    });
+    
+    // Show alert with details
+    const dest = locations.destinations.find(d => 
+        d.name.toLowerCase() === destCode.toLowerCase() || 
+        d.code === destCode
+    );
+    
+    if (dest) {
+        alert(`${dest.emoji} ${dest.name}\nRevenue: $${dest.revenue}M\nGrowth: ${dest.growth}\n\n${relatedOffices.length} offices actively selling this destination.`);
+    }
+    
+    // Reset after 3 seconds
+    setTimeout(() => {
+        officeMarkers.forEach(({ marker }) => marker.setOpacity(1));
+    }, 3000);
+}
+
+function setFlow(flow) {
+    currentFlow = flow;
+    
+    // Update buttons
+    document.querySelectorAll('[id^="flow-"]').forEach(btn => {
+        btn.classList.remove('active');
+        btn.classList.add('text-slate-600');
+    });
+    document.getElementById('flow-' + flow).classList.add('active');
+    document.getElementById('flow-' + flow).classList.remove('text-slate-600');
+    
+    // Update markers based on flow
+    officeMarkers.forEach(({ marker, data }) => {
+        let opacity = 1;
+        
+        if (flow === 'inbound') {
+            opacity = data.inbound >= 50 ? 1 : 0.3;
+        } else if (flow === 'outbound') {
+            opacity = data.outbound >= 50 ? 1 : 0.3;
+        }
+        
+        marker.setOpacity(opacity);
+    });
+    
+    // Update connection lines if visible
+    if (connectionsVisible) {
+        updateConnectionLines();
+    }
+}
+
+function setView(view) {
+    currentView = view;
+    
+    // Update buttons
+    document.querySelectorAll('[id^="view-"]').forEach(btn => {
+        btn.classList.remove('active');
+        btn.classList.add('text-slate-600');
+    });
+    document.getElementById('view-' + view).classList.add('active');
+    document.getElementById('view-' + view).classList.remove('text-slate-600');
+    
+    // Update marker sizes with animation
+    officeMarkers.forEach(({ marker, data }) => {
+        const newSize = getMarkerSize(data, view);
+        const icon = marker.options.icon;
+        const heatLevel = getHeatLevel(data.efficiency);
+        
+        // Create new icon with updated size
+        const newHtml = `
+            <div class="marker-container marker-${data.type} heat-${heatLevel}" style="width: ${newSize}px; height: ${newSize}px; transition: all 0.5s;">
+                <div class="marker-pulse" style="width: ${newSize}px; height: ${newSize}px;"></div>
+                <div class="marker-core" style="width: ${newSize * 0.8}px; height: ${newSize * 0.8}px;"></div>
+            </div>
+        `;
+        
+        const newIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: newHtml,
+            iconSize: [newSize, newSize],
+            iconAnchor: [newSize/2, newSize/2]
+        });
+        
+        marker.setIcon(newIcon);
+    });
+}
+
+function toggleLayer(layer) {
+    if (layer === 'offices') {
+        officeMarkers.forEach(({ marker }) => {
+            if (map.hasLayer(marker)) map.removeLayer(marker);
+            else marker.addTo(map);
+        });
+    } else if (layer === 'destinations') {
+        destinationMarkers.forEach(({ marker }) => {
+            if (map.hasLayer(marker)) map.removeLayer(marker);
+            else marker.addTo(map);
+        });
+    } else if (layer === 'connections') {
+        connectionsVisible = !connectionsVisible;
+        const lines = document.querySelectorAll('.connection-line');
+        const arrows = document.querySelectorAll('.flow-arrow');
+        
+        lines.forEach(line => {
+            if (connectionsVisible) line.classList.add('active');
+            else line.classList.remove('active');
+        });
+        
+        arrows.forEach(arrow => {
+            if (connectionsVisible) arrow.classList.add('active');
+            else arrow.classList.remove('active');
+        });
+        
+        if (connectionsVisible) updateConnectionLines();
+    }
+}
+
+function filterByDestination(destination) {
+    focusOnDestination(destination);
+}
+
+function viewOfficeDetails() {
+    const currentOffice = locations.offices.find(o => o.id === document.getElementById('locationName').textContent.toLowerCase().replace(' ', '-'));
+    const officeName = document.getElementById('locationName').textContent;
+    alert(`📊 Detailed Performance Report: ${officeName}\n\n• Monthly Revenue Trend\n• Agent Performance Rankings\n• Customer Satisfaction Scores\n• Inventory Utilization\n• YoY Comparison Analysis\n\nClick "Full Report" in dashboard for complete analytics.`);
+}
+
+function viewAgentPerformance() {
+    const officeName = document.getElementById('locationName').textContent;
+    alert(`👥 Agent Performance Dashboard: ${officeName}\n\n• Top Performing Agents\n• Conversion Rates by Agent\n• Average Deal Size\n• Customer Feedback Scores\n• Training Completion Status`);
+}
+
+function initCharts() {
+    // Efficiency Scatter Chart
+    const ctx1 = document.getElementById('efficiencyChart').getContext('2d');
+    new Chart(ctx1, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Offices',
+                data: locations.offices.map(o => ({
+                    x: o.revenue,
+                    y: o.margin,
+                    r: o.efficiency / 3 // Bubble size based on efficiency
+                })),
+                backgroundColor: locations.offices.map(o => 
+                    o.type === 'owned' ? 'rgba(34, 197, 94, 0.7)' : 'rgba(245, 158, 11, 0.7)'
+                ),
+                borderColor: locations.offices.map(o => 
+                    o.type === 'owned' ? 'rgb(34, 197, 94)' : 'rgb(245, 158, 11)'
+                ),
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { 
+                    title: { display: true, text: 'Revenue ($M)' },
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                    min: 0,
+                    max: 5
+                },
+                y: { 
+                    title: { display: true, text: 'Margin %' },
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                    min: 10,
+                    max: 30
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const office = locations.offices[context.dataIndex];
+                            return `${office.name}: ${office.margin}% margin, ${office.revenueStr} (Eff: ${office.efficiency}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Flow Doughnut Chart
+    const ctx2 = document.getElementById('flowChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+            labels: ['Inbound', 'Outbound', 'Internal'],
+            datasets: [{
+                data: [58, 35, 7],
+                backgroundColor: ['#22c55e', '#0066cc', '#8b5cf6'],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.label}: ${context.parsed}%`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
+
+</body>
+</html>

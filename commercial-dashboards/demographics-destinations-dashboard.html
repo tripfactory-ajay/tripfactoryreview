@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory - Demographics & Destination Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .heatmap-cell { transition: all 0.2s; cursor: pointer; }
+        .heatmap-cell:hover { transform: scale(1.1); z-index: 20; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .demographic-card { transition: all 0.3s; }
+        .demographic-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.1); }
+        .trend-up { color: #22c55e; }
+        .trend-down { color: #ef4444; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-white border-b-2 border-[#0066cc] px-6 py-4 shadow-lg">
+    <div class="flex justify-between items-center max-w-[1920px] mx-auto">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-gradient-to-br from-[#0066cc] to-[#1e3a5f] rounded-xl flex items-center justify-center text-white text-2xl">
+                <i class="fas fa-users"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-[#1e3a5f]">Demographics & Destination Intelligence</h1>
+                <p class="text-xs text-slate-500">Passenger Types • Destination Matching • Marketing Insights</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <select id="officeFilter" onchange="updateDashboard()" class="border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                <option value="all">All Offices</option>
+                <option value="uk">🇬🇧 UK</option>
+                <option value="us">🇺🇸 US</option>
+                <option value="india">🇮🇳 India</option>
+                <option value="singapore">🇸🇬 Singapore</option>
+            </select>
+            
+            <select id="flowFilter" onchange="updateDashboard()" class="border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                <option value="all">All Flows</option>
+                <option value="inbound">Inbound</option>
+                <option value="outbound">Outbound</option>
+            </select>
+            
+            <select id="destinationFilter" onchange="updateDashboard()" class="border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                <option value="all">All Destinations</option>
+                <option value="maldives">Maldives</option>
+                <option value="thailand">Thailand</option>
+                <option value="uae">UAE</option>
+                <option value="uk">UK</option>
+                <option value="usa">USA</option>
+            </select>
+            
+            <button onclick="exportReport()" class="px-4 py-2 bg-[#0066cc] text-white rounded-lg text-sm font-bold">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-[1920px] mx-auto p-6 space-y-6">
+
+    <!-- Demographic Summary Cards -->
+    <div class="grid grid-cols-5 gap-4">
+        <div class="demographic-card bg-white rounded-xl p-5 shadow-lg border-t-4 border-blue-500">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                    <i class="fas fa-user-friends text-xl"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-500 font-bold uppercase">Couples</div>
+                    <div class="text-2xl font-bold text-[#1e3a5f] mono">42%</div>
+                </div>
+            </div>
+            <div class="text-xs text-slate-600">Avg booking: £3,240 • 7-day stay</div>
+            <div class="mt-2 text-xs text-green-600 font-bold">↑ 8% vs last year</div>
+        </div>
+        
+        <div class="demographic-card bg-white rounded-xl p-5 shadow-lg border-t-4 border-green-500">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600">
+                    <i class="fas fa-users text-xl"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-500 font-bold uppercase">Families</div>
+                    <div class="text-2xl font-bold text-[#1e3a5f] mono">31%</div>
+                </div>
+            </div>
+            <div class="text-xs text-slate-600">Avg booking: £4,680 • 10-day stay</div>
+            <div class="mt-2 text-xs text-green-600 font-bold">↑ 15% vs last year</div>
+        </div>
+        
+        <div class="demographic-card bg-white rounded-xl p-5 shadow-lg border-t-4 border-purple-500">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600">
+                    <i class="fas fa-user text-xl"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-500 font-bold uppercase">Solo Travelers</div>
+                    <div class="text-2xl font-bold text-[#1e3a5f] mono">18%</div>
+                </div>
+            </div>
+            <div class="text-xs text-slate-600">Avg booking: £1,890 • 5-day stay</div>
+            <div class="mt-2 text-xs text-green-600 font-bold">↑ 22% vs last year</div>
+        </div>
+        
+        <div class="demographic-card bg-white rounded-xl p-5 shadow-lg border-t-4 border-orange-500">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">
+                    <i class="fas fa-user-tie text-xl"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-500 font-bold uppercase">Business</div>
+                    <div class="text-2xl font-bold text-[#1e3a5f] mono">6%</div>
+                </div>
+            </div>
+            <div class="text-xs text-slate-600">Avg booking: £2,100 • 3-day stay</div>
+            <div class="mt-2 text-xs text-red-600 font-bold">↓ 5% vs last year</div>
+        </div>
+        
+        <div class="demographic-card bg-white rounded-xl p-5 shadow-lg border-t-4 border-pink-500">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center text-pink-600">
+                    <i class="fas fa-users text-xl"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-500 font-bold uppercase">Groups</div>
+                    <div class="text-2xl font-bold text-[#1e3a5f] mono">3%</div>
+                </div>
+            </div>
+            <div class="text-xs text-slate-600">Avg booking: £8,400 • 6-day stay</div>
+            <div class="mt-2 text-xs text-green-600 font-bold">↑ 35% vs last year</div>
+        </div>
+    </div>
+
+    <!-- Main Content: Heatmap Matrix -->
+    <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h3 class="text-xl font-bold text-[#1e3a5f] flex items-center gap-2">
+                    <i class="fas fa-th text-[#0066cc]"></i>
+                    Passenger Type vs Destination Matrix
+                </h3>
+                <p class="text-sm text-slate-500 mt-1">Color intensity = Booking volume • Click for details</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 text-xs">
+                    <span>Low</span>
+                    <div class="w-20 h-3 bg-gradient-to-r from-blue-100 via-blue-400 to-blue-800 rounded"></div>
+                    <span>High</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Heatmap Grid -->
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr>
+                        <th class="p-3 text-left text-sm font-bold text-slate-700">Destination</th>
+                        <th class="p-3 text-center text-sm font-bold text-slate-700">Couples</th>
+                        <th class="p-3 text-center text-sm font-bold text-slate-700">Families</th>
+                        <th class="p-3 text-center text-sm font-bold text-slate-700">Solo</th>
+                        <th class="p-3 text-center text-sm font-bold text-slate-700">Business</th>
+                        <th class="p-3 text-center text-sm font-bold text-slate-700">Groups</th>
+                        <th class="p-3 text-right text-sm font-bold text-slate-700">Total</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm">
+                    <!-- Maldives -->
+                    <tr class="border-t border-slate-200">
+                        <td class="p-3 font-bold text-[#1e3a5f]">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">🏝️</span>
+                                Maldives
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-800 text-white rounded-lg p-3 text-center font-bold" onclick="showDetail('maldives', 'couples')">
+                                <div class="text-lg">68%</div>
+                                <div class="text-xs opacity-75">£3,850 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-400 text-white rounded-lg p-3 text-center font-bold" onclick="showDetail('maldives', 'families')">
+                                <div class="text-lg">24%</div>
+                                <div class="text-xs opacity-75">£5,200 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-200 text-slate-700 rounded-lg p-3 text-center font-bold" onclick="showDetail('maldives', 'solo')">
+                                <div class="text-lg">6%</div>
+                                <div class="text-xs">£2,100 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-100 text-slate-600 rounded-lg p-3 text-center font-bold" onclick="showDetail('maldives', 'business')">
+                                <div class="text-lg">2%</div>
+                                <div class="text-xs">£1,800 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-300 text-white rounded-lg p-3 text-center font-bold" onclick="showDetail('maldives', 'groups')">
+                                <div class="text-lg">0%</div>
+                                <div class="text-xs">-</div>
+                            </div>
+                        </td>
+                        <td class="p-3 text-right font-bold mono">£2.4M</td>
+                    </tr>
+
+                    <!-- Thailand -->
+                    <tr class="border-t border-slate-200">
+                        <td class="p-3 font-bold text-[#1e3a5f]">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">🌴</span>
+                                Thailand
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-500 text-white rounded-lg p-3 text-center font-bold" onclick="showDetail('thailand', 'couples')">
+                                <div class="text-lg">45%</div>
+                                <div class="text-xs opacity-75">£2,100 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-600 text-white rounded-lg p-3 text-center font-bold" onclick="showDetail('thailand', 'families')">
+                                <div class="text-lg">38%</div>
+                                <div class="text-xs opacity-75">£3,400 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-400 text-white rounded-lg p-3 text-center font-bold" onclick="showDetail('thailand', 'solo')">
+                                <div class="text-lg">12%</div>
+                                <div class="text-xs opacity-75">£1,200 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-200 text-slate-700 rounded-lg p-3 text-center font-bold" onclick="showDetail('thailand', 'business')">
+                                <div class="text-lg">3%</div>
+                                <div class="text-xs">£1,500 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-300 text-white rounded-lg p-3 text-center font-bold" onclick="showDetail('thailand', 'groups')">
+                                <div class="text-lg">2%</div>
+                                <div class="text-xs">£4,800 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-3 text-right font-bold mono">£1.8M</td>
+                    </tr>
+
+                    <!-- UAE -->
+                    <tr class="border-t border-slate-200">
+                        <td class="p-3 font-bold text-[#1e3a5f]">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">🏙️</span>
+                                UAE (Dubai)
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-400 text-white rounded-lg p-3 text-center font-bold" onclick="showDetail('uae', 'couples')">
+                                <div class="text-lg">35%</div>
+                                <div class="text-xs opacity-75">£2,800 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-500 text-white rounded-lg p-3 text-center font-bold" onclick="showDetail('uae', 'families')">
+                                <div class="text-lg">42%</div>
+                                <div class="text-xs opacity-75">£3,900 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-300 text-white rounded-lg p-3 text-center font-bold" onclick="showDetail('uae', 'solo')">
+                                <div class="text-lg">8%</div>
+                                <div class="text-xs">£1,600 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-600 text-white rounded-lg p-3 text-center font-bold" onclick="showDetail('uae', 'business')">
+                                <div class="text-lg">12%</div>
+                                <div class="text-xs opacity-75">£2,400 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-200 text-slate-700 rounded-lg p-3 text-center font-bold" onclick="showDetail('uae', 'groups')">
+                                <div class="text-lg">3%</div>
+                                <div class="text-xs">£6,200 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-3 text-right font-bold mono">£1.6M</td>
+                    </tr>
+
+                    <!-- UK -->
+                    <tr class="border-t border-slate-200">
+                        <td class="p-3 font-bold text-[#1e3a5f]">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">🇬🇧</span>
+                                United Kingdom
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-300 text-white rounded-lg p-3 text-center font-bold" onclick="showDetail('uk', 'couples')">
+                                <div class="text-lg">28%</div>
+                                <div class="text-xs">£1,800 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-400 text-white rounded-lg p-3 text-center font-bold" onclick="showDetail('uk', 'families')">
+                                <div class="text-lg">35%</div>
+                                <div class="text-xs opacity-75">£2,600 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-500 text-white rounded-lg p-3 text-center font-bold" onclick="showDetail('uk', 'solo')">
+                                <div class="text-lg">22%</div>
+                                <div class="text-xs opacity-75">£1,200 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-600 text-white rounded-lg p-3 text-center font-bold" onclick="showDetail('uk', 'business')">
+                                <div class="text-lg">10%</div>
+                                <div class="text-xs opacity-75">£1,800 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-2">
+                            <div class="heatmap-cell bg-blue-200 text-slate-700 rounded-lg p-3 text-center font-bold" onclick="showDetail('uk', 'groups')">
+                                <div class="text-lg">5%</div>
+                                <div class="text-xs">£3,400 avg</div>
+                            </div>
+                        </td>
+                        <td class="p-3 text-right font-bold mono">£1.2M</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Insights -->
+        <div class="mt-6 grid grid-cols-3 gap-4">
+            <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-chart-line text-green-600"></i>
+                    <span class="font-bold text-green-800">Trending Up</span>
+                </div>
+                <p class="text-sm text-green-700">Solo travelers to Thailand up 45% YoY. Consider dedicated "Solo Explorer" packages.</p>
+            </div>
+            <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-lightbulb text-blue-600"></i>
+                    <span class="font-bold text-blue-800">Marketing Insight</span>
+                </div>
+                <p class="text-sm text-blue-700">Families booking Maldives have 40% higher LTV. Target with "Family Paradise" campaign.</p>
+            </div>
+            <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+                    <span class="font-bold text-yellow-800">Opportunity</span>
+                </div>
+                <p class="text-sm text-yellow-700">Business travel to UAE underperforming. Corporate packages needed?</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary Charts -->
+    <div class="grid grid-cols-3 gap-6">
+        
+        <!-- Booking Lead Time -->
+        <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+            <h3 class="text-lg font-bold text-[#1e3a5f] mb-4">Booking Lead Time by Type</h3>
+            <canvas id="leadTimeChart" height="250"></canvas>
+        </div>
+
+        <!-- Seasonality -->
+        <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+            <h3 class="text-lg font-bold text-[#1e3a5f] mb-4">Seasonal Patterns</h3>
+            <canvas id="seasonalChart" height="250"></canvas>
+        </div>
+
+        <!-- Revenue by Demographic -->
+        <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+            <h3 class="text-lg font-bold text-[#1e3a5f] mb-4">Revenue Contribution</h3>
+            <canvas id="revenueChart" height="250"></canvas>
+        </div>
+    </div>
+
+</main>
+
+<!-- Detail Modal -->
+<div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full">
+        <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-gradient-to-r from-[#0066cc] to-[#1e3a5f] text-white rounded-t-2xl">
+            <h2 class="text-xl font-bold" id="modalTitle">Detail View</h2>
+            <button onclick="closeModal()" class="text-white hover:text-slate-200 text-2xl">&times;</button>
+        </div>
+        <div class="p-6" id="modalContent">
+            <!-- Dynamic content -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize Charts
+    document.addEventListener('DOMContentLoaded', function() {
+        // Lead Time Chart
+        new Chart(document.getElementById('leadTimeChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Families', 'Couples', 'Solo', 'Business', 'Groups'],
+                datasets: [{
+                    label: 'Days in Advance',
+                    data: [90, 45, 30, 14, 60],
+                    backgroundColor: ['#22c55e', '#3b82f6', '#8b5cf6', '#f97316', '#ec4899']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, title: { display: true, text: 'Days' } } }
+            }
+        });
+
+        // Seasonal Chart
+        new Chart(document.getElementById('seasonalChart'), {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Families',
+                    data: [20, 25, 35, 45, 60, 85, 95, 90, 50, 40, 30, 35],
+                    borderColor: '#22c55e',
+                    tension: 0.4
+                }, {
+                    label: 'Couples',
+                    data: [40, 45, 50, 55, 60, 70, 65, 60, 55, 50, 45, 50],
+                    borderColor: '#3b82f6',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        // Revenue Chart
+        new Chart(document.getElementById('revenueChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Families', 'Couples', 'Solo', 'Business', 'Groups'],
+                datasets: [{
+                    data: [35, 40, 15, 5, 5],
+                    backgroundColor: ['#22c55e', '#3b82f6', '#8b5cf6', '#f97316', '#ec4899']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': £' + (context.parsed * 12.4).toFixed(1) + 'M';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+
+    function showDetail(destination, type) {
+        const modal = document.getElementById('detailModal');
+        document.getElementById('modalTitle').textContent = `${destination.charAt(0).toUpperCase() + destination.slice(1)} - ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+        document.getElementById('modalContent').innerHTML = `
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="bg-slate-50 p-4 rounded-lg">
+                    <div class="text-xs text-slate-500 uppercase">Total Bookings</div>
+                    <div class="text-2xl font-bold text-[#1e3a5f] mono">142</div>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-lg">
+                    <div class="text-xs text-slate-500 uppercase">Revenue</div>
+                    <div class="text-2xl font-bold text-[#1e3a5f] mono">£485K</div>
+                </div>
+            </div>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between"><span class="text-slate-600">Average booking value:</span><span class="font-bold">£3,415</span></div>
+                <div class="flex justify-between"><span class="text-slate-600">Average stay:</span><span class="font-bold">8.2 nights</span></div>
+                <div class="flex justify-between"><span class="text-slate-600">Lead time:</span><span class="font-bold">67 days</span></div>
+                <div class="flex justify-between"><span class="text-slate-600">Top source:</span><span class="font-bold">Direct website (45%)</span></div>
+            </div>
+            <div class="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                <i class="fas fa-info-circle mr-2"></i>
+                <span class="font-bold">Marketing Tip:</span> This segment responds well to email campaigns with visual content.
+            </div>
+        `;
+        modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('detailModal').classList.add('hidden');
+    }
+
+    function updateDashboard() {
+        console.log('Updating dashboard...');
+    }
+
+    function exportReport() {
+        alert('Exporting Demographics & Destination Report...');
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('detailModal');
+        if (event.target === modal) closeModal();
+    }
+</script>
+
+</body>
+</html>

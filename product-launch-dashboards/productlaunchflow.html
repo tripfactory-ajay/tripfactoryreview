@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory Product Launch Flow | Interactive Flowchart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #fafafa;
+            overflow-x: hidden;
+        }
+        
+        .font-display {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        
+        /* Flowchart Container */
+        .flowchart-container {
+            position: relative;
+            min-height: 100vh;
+        }
+        
+        /* Connection Lines */
+        .connector {
+            position: absolute;
+            width: 4px;
+            background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 0;
+            transition: height 0.5s ease;
+        }
+        
+        .connector-dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #6366f1;
+            border-radius: 50%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+        
+        /* Stage Nodes */
+        .stage-node {
+            position: relative;
+            z-index: 2;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .stage-node:hover {
+            transform: scale(1.02);
+        }
+        
+        .stage-node.active .node-content {
+            border-color: #6366f1;
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+        }
+        
+        .stage-node.completed .node-content {
+            border-color: #10b981;
+            opacity: 0.8;
+        }
+        
+        .stage-node.locked {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        
+        /* Node Content */
+        .node-content {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        /* Expandable Details */
+        .node-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+        
+        .node-details.expanded {
+            max-height: 2000px;
+        }
+        
+        /* Next Button */
+        .next-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+        
+        .next-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+        }
+        
+        /* Parallel Track */
+        .parallel-track {
+            position: absolute;
+            right: 5%;
+            top: 0;
+            width: 280px;
+            z-index: 1;
+        }
+        
+        .parallel-node {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+            border: 1px dashed rgba(6, 182, 212, 0.5);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .parallel-node.active {
+            border-style: solid;
+            border-color: #06b6d4;
+            background: rgba(6, 182, 212, 0.2);
+        }
+        
+        /* Activity Cards */
+        .activity-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .activity-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(5px);
+        }
+        
+        /* Role Badge */
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Timeline Connector */
+        .timeline-connector {
+            position: absolute;
+            left: 24px;
+            top: 60px;
+            bottom: -40px;
+            width: 2px;
+            background: linear-gradient(180deg, transparent, rgba(99, 102, 241, 0.5), transparent);
+        }
+        
+        /* Progress Ring */
+        .progress-ring {
+            position: fixed;
+            top: 100px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            z-index: 100;
+        }
+        
+        .progress-ring-circle {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 4;
+        }
+        
+        .progress-ring-progress {
+            fill: none;
+            stroke: #6366f1;
+            stroke-width: 4;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s ease;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        
+        /* Glass Effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Locked Overlay */
+        .locked-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        
+        /* Reveal Animation */
+        @keyframes reveal {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        .reveal {
+            animation: reveal 0.5s ease forwards;
+        }
+        
+        /* Hover Lift */
+        .hover-lift {
+            transition: transform 0.2s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+            .parallel-track {
+                position: relative;
+                right: auto;
+                width: 100%;
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Progress Ring -->
+    <div class="progress-ring hidden md:block">
+        <svg width="60" height="60" viewBox="0 0 60 60">
+            <circle class="progress-ring-circle" cx="30" cy="30" r="26"/>
+            <circle class="progress-ring-progress" cx="30" cy="30" r="26" 
+                    stroke-dasharray="163.36" 
+                    stroke-dashoffset="163.36"
+                    id="progress-circle"/>
+        </svg>
+        <div class="absolute inset-0 flex items-center justify-center text-xs font-bold" id="progress-text">0/8</div>
+    </div>
+
+    <!-- Header -->
+    <nav class="fixed top-0 w-full z-50 glass border-b border-white/10 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <img src="https://kimi-web-img.moonshot.cn/img/mma.prnewswire.com/0dd7b517fac6329b9f482617ccc9caf3f1a11c1f.jpg" 
+                     alt="TripFactory" 
+                     class="h-10 w-auto filter brightness-0 invert rounded">
+                <div>
+                    <span class="font-display font-bold text-xl block">Product Launch Flow</span>
+                    <span class="text-xs text-gray-400">Click each stage to reveal the next</span>
+                </div>
+            </div>
+            <button onclick="resetFlow()" class="px-4 py-2 rounded-full glass hover:bg-white/10 transition-colors text-sm">
+                Reset Journey
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="pt-24 pb-8 px-6 text-center">
+        <h1 class="font-display text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+            Turkey Product Launch
+        </h1>
+        <p class="text-gray-400 max-w-2xl mx-auto mb-2">
+            Interactive workflow: Click each stage to expand details and reveal the next step
+        </p>
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-sm">
+            <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+            Start by clicking Stage 1 below
+        </div>
+    </section>
+
+    <!-- Main Flowchart -->
+    <section class="px-6 pb-20 flowchart-container max-w-5xl mx-auto relative">
+        
+        <!-- Vertical Connector Line -->
+        <div class="connector" id="main-connector" style="height: 0; top: 100px;"></div>
+
+        <!-- STAGE 0: Destination Manager -->
+        <div class="stage-node mb-8" data-stage="0" id="stage-0">
+            <div class="node-content p-6 cursor-pointer" onclick="toggleStage(0)">
+                <!-- Header -->
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-full bg-indigo-500/20 flex items-center justify-center text-2xl border-2 border-indigo-500/50">
+                            🌍
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs font-bold text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded">STAGE 1</span>
+                                <span class="text-xs text-gray-500">Weeks 1-4</span>
+                            </div>
+                            <h2 class="text-xl font-bold text-white">Destination Manager</h2>
+                            <p class="text-gray-400 text-sm">Turkey • Product Sourcing & Negotiation</p>
+                        </div>
+                    </div>
+                    <div class="next-btn w-10 h-10 rounded-full flex items-center justify-center text-white opacity-0 transition-opacity" id="btn-0" onclick="event.stopPropagation(); revealStage(1)">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="flex gap-3 mb-4">
+                    <span class="role-badge bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                        Key Person: Destination Manager
+                    </span>
+                </div>
+
+                <!-- Expandable Content -->
+                <div class="node-details" id="details-0">
+                    <div class="border-t border-white/10 pt-4 mt-4">
+                        
+                        <!-- Activities Grid -->
+                        <div class="grid md:grid-cols-2 gap-3 mb-4">
+                            <div class="activity-card p-3">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-lg">🏨</span>
+                                    <span class="font-semibold text-indigo-300 text-sm">Hotel Sourcing</span>
+                                </div>
+                                <p class="text-xs text-gray-400">Identify 4-5 star hotels in Istanbul, Cappadocia, Antalya, Pamukkale</p>
+                            </div>
+                            <div class="activity-card p-3">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-lg">💰</span>
+                                    <span class="font-semibold text-indigo-300 text-sm">Rate Negotiation</span>
+                                </div>
+                                <p class="text-xs text-gray-400">Negotiate NET rates, allotments, cancellation terms</p>
+                            </div>
+                            <div class="activity-card p-3">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-lg">🎁</span>
+                                    <span class="font-semibold text-indigo-300 text-sm">Value-Add Perks</span>
+                                </div>
+                                <p class="text-xs text-gray-400">Secure upgrades, welcome drinks, late checkouts, spa credits</p>
+                            </div>
+                            <div class="activity-card p-3">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-lg">🚌</span>
+                                    <span class="font-semibold text-indigo-300 text-sm">Tour Contracts</span>
+                                </div>
+                                <p class="text-xs text-gray-400">Partner with local DMCs for transfers, guides, excursions</p>
+                            </div>
+                            <div class="activity-card p-3">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-lg">📸</span>
+                                    <span class="font-semibold text-indigo-300 text-sm">Content Gathering</span>
+                                </div>
+                                <p class="text-xs text-gray-400">Collect hotel images, videos, descriptions, amenities</p>
+                            </div>
+                            <div class="activity-card p-3">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-lg">📊</span>
+                                    <span class="font-semibold text-indigo-300 text-sm">Competitive Analysis</span>
+                                </div>
+                                <p class="text-xs text-gray-400">Benchmark against competitors' Turkey offerings</p>
+                            </div>
+                        </div>
+
+                        <!-- Output -->
+                        <div class="p-4 rounded-lg bg-indigo-500/10 border border-indigo-500/20 mb-4">
+                            <div class="font-semibold text-indigo-300 text-sm mb-2">📦 Output to Commercial:</div>
+                            <ul class="text-xs text-gray-300 space-y-1">
+                                <li>• Complete product dossier with hotel contracts</li>
+                                <li>• Rate sheets (NET and gross pricing)</li>
+                                <li>• Inclusions/exclusions matrix</li>
+                                <li>• High-res images and marketing content</li>
+                            </ul>
+                        </div>
+
+                        <!-- Reveal Next Button -->
+                        <button class="w-full py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-colors flex items-center justify-center gap-2" onclick="event.stopPropagation(); revealStage(1)">
+                            Complete Stage 1
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Locked Overlay -->
+                <div class="locked-overlay hidden" id="lock-0">
+                    <div class="text-center">
+                        <div class="text-4xl mb-2">🔒</div>
+                        <div class="text-sm text-gray-400">Click to unlock</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connector Dot -->
+            <div class="connector-dot" style="top: 100%;"></div>
+        </div>
+
+        <!-- STAGE 1: Commercial (Initially Hidden) -->
+        <div class="stage-node mb-8 hidden opacity-0" data-stage="1" id="stage-1">
+            <div class="node-content p-6 cursor-pointer" onclick="toggleStage(1)">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-full bg-blue-500/20 flex items-center justify-center text-2xl border-2 border-blue-500/50">
+                            💼
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded">STAGE 2</span>
+                                <span class="text-xs text-gray-500">Weeks 3-6</span>
+                            </div>
+                            <h2 class="text-xl font-bold text-white">Commercial Department</h2>
+                            <p class="text-gray-400 text-sm">Contract Validation & Pricing Strategy</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <span class="role-badge bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px]">Commercial Director</span>
+                    <span class="role-badge bg-blue-400/20 text-blue-300 border border-blue-400/30 text-[10px]">Contracting Manager</span>
+                    <span class="role-badge bg-blue-300/20 text-blue-300 border border-blue-300/30 text-[10px]">Commercial Admin</span>
+                </div>
+
+                <div class="node-details" id="details-1">
+                    <div class="border-t border-white/10 pt-4 mt-4">
+                        
+                        <!-- Roles -->
+                        <div class="space-y-3 mb-4">
+                            <div class="activity-card p-3 border-l-2 border-blue-500">
+                                <div class="font-semibold text-blue-300 text-sm mb-1">👔 Commercial Director</div>
+                                <ul class="text-xs text-gray-400 space-y-0.5">
+                                    <li>• Set margin targets and pricing strategy for Turkey</li>
+                                    <li>• Approve final hotel contracts and payment terms</li>
+                                    <li>• Define sales targets and agent incentives</li>
+                                </ul>
+                            </div>
+                            <div class="activity-card p-3 border-l-2 border-blue-400">
+                                <div class="font-semibold text-blue-300 text-sm mb-1">📊 Contracting Manager</div>
+                                <ul class="text-xs text-gray-400 space-y-0.5">
+                                    <li>• Validate all hotel contracts and rate structures</li>
+                                    <li>• Build seasonal pricing (peak/off-peak)</li>
+                                    <li>• Create package inclusions matrix</li>
+                                </ul>
+                            </div>
+                            <div class="activity-card p-3 border-l-2 border-blue-300">
+                                <div class="font-semibold text-blue-300 text-sm mb-1">💻 Commercial Admin</div>
+                                <ul class="text-xs text-gray-400 space-y-0.5">
+                                    <li>• Load all contracts into Nexus DMC system</li>
+                                    <li>• Input hotel details, room types, meal plans</li>
+                                    <li>• Set up allotment tracking</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 mb-4">
+                            <div class="font-semibold text-blue-300 text-sm mb-2">📦 Output to Product:</div>
+                            <ul class="text-xs text-gray-300 space-y-1">
+                                <li>• Validated rate sheets with margins applied</li>
+                                <li>• Approved hotel inventory and allotments</li>
+                                <li>• Package component costs</li>
+                                <li>• Seasonality calendar and blackout dates</li>
+                            </ul>
+                        </div>
+
+                        <button class="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors flex items-center justify-center gap-2" onclick="event.stopPropagation(); revealStage(2)">
+                            Complete Stage 2
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="connector-dot" style="top: 100%;"></div>
+        </div>
+
+        <!-- STAGE 2: Product (Initially Hidden) -->
+        <div class="stage-node mb-8 hidden opacity-0" data-stage="2" id="stage-2">
+            <div class="node-content p-6 cursor-pointer" onclick="toggleStage(2)">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-full bg-purple-500/20 flex items-center justify-center text-2xl border-2 border-purple-500/50">
+                            🧩
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs font-bold text-purple-400 bg-purple-500/10 px-2 py-1 rounded">STAGE 3</span>
+                                <span class="text-xs text-gray-500">Weeks 5-8</span>
+                            </div>
+                            <h2 class="text-xl font-bold text-white">Product Department</h2>
+                            <p class="text-gray-400 text-sm">Package Building & Itinerary Creation</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 mb-4">
+                    <span class="role-badge bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px]">Product Manager</span>
+                    <span class="role-badge bg-purple-400/20 text-purple-300 border border-purple-400/30 text-[10px]">Product Executives</span>
+                </div>
+
+                <div class="node-details" id="details-2">
+                    <div class="border-t border-white/10 pt-4 mt-4">
+                        
+                        <div class="grid md:grid-cols-2 gap-3 mb-4">
+                            <div class="activity-card p-3">
+                                <div class="font-semibold text-purple-300 text-sm mb-1">🏨 Individual Hotels</div>
+                                <p class="text-xs text-gray-400">Standalone listings with room types, rates, inclusions</p>
+                            </div>
+                            <div class="activity-card p-3">
+                                <div class="font-semibold text-purple-300 text-sm mb-1">🚌 Multi-City Tours</div>
+                                <p class="text-xs text-gray-400">7, 10, 14-day circuits (Istanbul-Cappadocia-Antalya)</p>
+                            </div>
+                            <div class="activity-card p-3">
+                                <div class="font-semibold text-purple-300 text-sm mb-1">🎯 Themed Packages</div>
+                                <p class="text-xs text-gray-400">Cultural, Beach & History, Honeymoon, Family Adventure</p>
+                            </div>
+                            <div class="activity-card p-3">
+                                <div class="font-semibold text-purple-300 text-sm mb-1">💰 Competitive Pricing</div>
+                                <p class="text-xs text-gray-400">10-15% below market leader, maintaining margin</p>
+                            </div>
+                        </div>
+
+                        <!-- Sample Products -->
+                        <div class="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20 mb-4">
+                            <div class="font-semibold text-purple-300 text-sm mb-3">🎁 Turkey Portfolio:</div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="p-2 rounded bg-black/20 text-center">
+                                    <div class="text-xs font-bold text-white">Essential</div>
+                                    <div class="text-[10px] text-gray-400">7 days • $1,299</div>
+                                </div>
+                                <div class="p-2 rounded bg-black/20 text-center">
+                                    <div class="text-xs font-bold text-white">Explorer</div>
+                                    <div class="text-[10px] text-gray-400">10 days • $1,899</div>
+                                </div>
+                                <div class="p-2 rounded bg-black/20 text-center">
+                                    <div class="text-xs font-bold text-white">Deluxe</div>
+                                    <div class="text-[10px] text-gray-400">14 days • $3,499</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-semibold transition-colors flex items-center justify-center gap-2" onclick="event.stopPropagation(); revealStage(3)">
+                            Complete Stage 3
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="connector-dot" style="top: 100%;"></div>
+        </div>
+
+        <!-- STAGE 3: Marketing (Initially Hidden) -->
+        <div class="stage-node mb-8 hidden opacity-0" data-stage="3" id="stage-3">
+            <div class="node-content p-6 cursor-pointer" onclick="toggleStage(3)">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-full bg-pink-500/20 flex items-center justify-center text-2xl border-2 border-pink-500/50">
+                            📢
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs font-bold text-pink-400 bg-pink-500/10 px-2 py-1 rounded">STAGE 4</span>
+                                <span class="text-xs text-gray-500">Weeks 7-10</span>
+                            </div>
+                            <h2 class="text-xl font-bold text-white">Marketing Department</h2>
+                            <p class="text-gray-400 text-sm">Campaign Creation & Asset Production</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <span class="role-badge bg-pink-500/20 text-pink-300 border border-pink-500/30 text-[10px]">Marketing Director</span>
+                    <span class="role-badge bg-pink-400/20 text-pink-300 border border-pink-400/30 text-[10px]">Marketing Manager</span>
+                    <span class="role-badge bg-pink-300/20 text-pink-300 border border-pink-300/30 text-[10px]">Design Team</span>
+                </div>
+
+                <div class="node-details" id="details-3">
+                    <div class="border-t border-white/10 pt-4 mt-4">
+                        
+                        <div class="space-y-3 mb-4">
+                            <div class="activity-card p-3 border-l-2 border-pink-500">
+                                <div class="font-semibold text-pink-300 text-sm mb-1">🎨 Marketing Director</div>
+                                <p class="text-xs text-gray-400">Brand positioning ("Where East Meets West"), campaign approval, budget allocation</p>
+                            </div>
+                            <div class="activity-card p-3 border-l-2 border-pink-400">
+                                <div class="font-semibold text-pink-300 text-sm mb-1">📱 Marketing Manager</div>
+                                <p class="text-xs text-gray-400">Multi-channel campaign planning, agent material coordination, analytics setup</p>
+                            </div>
+                            <div class="activity-card p-3 border-l-2 border-pink-300">
+                                <div class="font-semibold text-pink-300 text-sm mb-1">🖼️ Design Team</div>
+                                <p class="text-xs text-gray-400">Flyers, social assets, website banners, presentation decks, agent toolkits</p>
+                            </div>
+                        </div>
+
+                        <!-- Collateral -->
+                        <div class="p-4 rounded-lg bg-pink-500/10 border border-pink-500/20 mb-4">
+                            <div class="font-semibold text-pink-300 text-sm mb-2">📦 Marketing Collateral:</div>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-2 py-1 rounded bg-black/20 text-xs text-gray-300">📄 A4 Flyers</span>
+                                <span class="px-2 py-1 rounded bg-black/20 text-xs text-gray-300">📱 Social Kit</span>
+                                <span class="px-2 py-1 rounded bg-black/20 text-xs text-gray-300">🌐 Web Banners</span>
+                                <span class="px-2 py-1 rounded bg-black/20 text-xs text-gray-300">📧 Email Templates</span>
+                                <span class="px-2 py-1 rounded bg-black/20 text-xs text-gray-300">🎥 Promo Video</span>
+                                <span class="px-2 py-1 rounded bg-black/20 text-xs text-gray-300">📊 Sales Decks</span>
+                            </div>
+                        </div>
+
+                        <button class="w-full py-3 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-semibold transition-colors flex items-center justify-center gap-2" onclick="event.stopPropagation(); revealStage(4)">
+                            Complete Stage 4
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="connector-dot" style="top: 100%;"></div>
+        </div>
+
+        <!-- STAGE 4: Training (Initially Hidden) -->
+        <div class="stage-node mb-8 hidden opacity-0" data-stage="4" id="stage-4">
+            <div class="node-content p-6 cursor-pointer" onclick="toggleStage(4)">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-full bg-amber-500/20 flex items-center justify-center text-2xl border-2 border-amber-500/50">
+                            🎓
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs font-bold text-amber-400 bg-amber-500/10 px-2 py-1 rounded">STAGE 5</span>
+                                <span class="text-xs text-gray-500">Weeks 9-11</span>
+                            </div>
+                            <h2 class="text-xl font-bold text-white">Training Department</h2>
+                            <p class="text-gray-400 text-sm">Sales Certification & Product Mastery</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 mb-4">
+                    <span class="role-badge bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px]">Training Manager</span>
+                    <span class="role-badge bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px]">Training Executives</span>
+                </div>
+
+                <div class="node-details" id="details-4">
+                    <div class="border-t border-white/10 pt-4 mt-4">
+                        
+                        <div class="grid md:grid-cols-2 gap-3 mb-4">
+                            <div class="activity-card p-3">
+                                <div class="font-semibold text-amber-300 text-sm mb-1">📚 Product Knowledge</div>
+                                <p class="text-xs text-gray-400">Every hotel, tour, transfer detail memorized</p>
+                            </div>
+                            <div class="activity-card p-3">
+                                <div class="font-semibold text-amber-300 text-sm mb-1">🎯 Sales Technique</div>
+                                <p class="text-xs text-gray-400">How to pitch Turkey, objection handling, upselling</p>
+                            </div>
+                            <div class="activity-card p-3">
+                                <div class="font-semibold text-amber-300 text-sm mb-1">🗣️ Role Play</div>
+                                <p class="text-xs text-gray-400">Mock calls, difficult scenarios, closing practice</p>
+                            </div>
+                            <div class="activity-card p-3">
+                                <div class="font-semibold text-amber-300 text-sm mb-1">✅ Certification</div>
+                                <p class="text-xs text-gray-400">Must pass exam to sell Turkey</p>
+                            </div>
+                        </div>
+
+                        <!-- Certification Levels -->
+                        <div class="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20 mb-4">
+                            <div class="font-semibold text-amber-300 text-sm mb-2">🏆 Certification Levels:</div>
+                            <div class="space-y-1">
+                                <div class="flex items-center gap-2 text-xs text-gray-300">
+                                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                                    Level 1: Turkey Basics (all sales staff)
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-gray-300">
+                                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                                    Level 2: Turkey Specialist (destination experts)
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-gray-300">
+                                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                                    Level 3: Turkey Master (top performers)
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="w-full py-3 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-semibold transition-colors flex items-center justify-center gap-2" onclick="event.stopPropagation(); revealStage(5)">
+                            Complete Stage 5
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="connector-dot" style="top: 100%;"></div>
+        </div>
+
+        <!-- STAGE 5: Sales (Initially Hidden) -->
+        <div class="stage-node mb-8 hidden opacity-0" data-stage="5" id="stage-5">
+            <div class="node-content p-6 cursor-pointer" onclick="toggleStage(5)">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center text-2xl border-2 border-emerald-500/50">
+                            💰
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">STAGE 6</span>
+                                <span class="text-xs text-gray-500">Weeks 11-12 (Launch)</span>
+                            </div>
+                            <h2 class="text-xl font-bold text-white">Sales Department</h2>
+                            <p class="text-gray-400 text-sm">Go-Live & Inquiry Handling</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <span class="role-badge bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px]">Sales Director</span>
+                    <span class="role-badge bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-[10px]">Destination Experts</span>
+                    <span class="role-badge bg-emerald-300/20 text-emerald-300 border border-emerald-300/30 text-[10px]">Ops Team</span>
+                </div>
+
+                <div class="node-details" id="details-5">
+                    <div class="border-t border-white/10 pt-4 mt-4">
+                        
+                        <!-- Launch Day -->
+                        <div class="p-4 rounded-lg bg-emerald-500/20 border border-emerald-500/40 mb-4">
+                            <div class="font-bold text-emerald-300 text-sm mb-2 text-center">🚀 LAUNCH DAY ACTIVITIES</div>
+                            <div class="grid grid-cols-2 gap-2 text-xs text-gray-300">
+                                <div>• Turkey live on website</div>
+                                <div>• Email campaign sent</div>
+                                <div>• Social media starts</div>
+                                <div>• Daily targets set</div>
+                            </div>
+                        </div>
+
+                        <!-- Monitoring -->
+                        <div class="grid grid-cols-4 gap-2 mb-4">
+                            <div class="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center">
+                                <div class="text-lg font-bold text-emerald-400">📞</div>
+                                <div class="text-[10px] text-gray-400">Inquiries</div>
+                            </div>
+                            <div class="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center">
+                                <div class="text-lg font-bold text-emerald-400">📋</div>
+                                <div class="text-[10px] text-gray-400">Quotes</div>
+                            </div>
+                            <div class="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center">
+                                <div class="text-lg font-bold text-emerald-400">✅</div>
+                                <div class="text-[10px] text-gray-400">Bookings</div>
+                            </div>
+                            <div class="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center">
+                                <div class="text-lg font-bold text-emerald-400">💵</div>
+                                <div class="text-[10px] text-gray-400">Revenue</div>
+                            </div>
+                        </div>
+
+                        <button class="w-full py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors flex items-center justify-center gap-2" onclick="event.stopPropagation(); revealStage(6)">
+                            Complete Stage 6
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="connector-dot" style="top: 100%;"></div>
+        </div>
+
+        <!-- STAGE 6: Local Commercial (Initially Hidden) -->
+        <div class="stage-node mb-8 hidden opacity-0" data-stage="6" id="stage-6">
+            <div class="node-content p-6 cursor-pointer border-2 border-cyan-500/50" onclick="toggleStage(6)">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-full bg-cyan-500/20 flex items-center justify-center text-2xl border-2 border-cyan-500">
+                            🤝
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs font-bold text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded">STAGE 7</span>
+                                <span class="text-xs text-gray-500">Weeks 1-12 & Beyond</span>
+                            </div>
+                            <h2 class="text-xl font-bold text-white">Local Commercial Team</h2>
+                            <p class="text-gray-400 text-sm">Agent Activation & Booking Drive</p>
+                        </div>
+                    </div>
+                    <div class="px-2 py-1 rounded bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs">
+                        PARALLEL TRACK
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <span class="role-badge bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[10px]">Commercial Director</span>
+                    <span class="role-badge bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 text-[10px]">Commercial Manager</span>
+                    <span class="role-badge bg-cyan-300/20 text-cyan-300 border border-cyan-300/30 text-[10px]">Local Team</span>
+                </div>
+
+                <div class="node-details" id="details-6">
+                    <div class="border-t border-white/10 pt-4 mt-4">
+                        
+                        <!-- Phased Approach -->
+                        <div class="space-y-4 mb-4">
+                            <!-- Phase 1 -->
+                            <div class="p-4 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="bg-cyan-500 text-white text-xs px-2 py-1 rounded font-bold">PHASE 1</span>
+                                    <span class="text-cyan-300 text-sm font-semibold">Pre-Launch (Weeks 1-10)</span>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="flex items-start gap-2 text-xs text-gray-300">
+                                        <span class="text-cyan-400 font-bold">W1:</span>
+                                        <span>Identify top 20-30 agents with Turkey potential</span>
+                                    </div>
+                                    <div class="flex items-start gap-2 text-xs text-gray-300">
+                                        <span class="text-cyan-400 font-bold">W2-3:</span>
+                                        <span>Initial outreach: "We're launching Turkey - interested?"</span>
+                                    </div>
+                                    <div class="flex items-start gap-2 text-xs text-gray-300">
+                                        <span class="text-cyan-400 font-bold">W4-6:</span>
+                                        <span>Needs assessment: Price points, client profiles, training needs</span>
+                                    </div>
+                                    <div class="flex items-start gap-2 text-xs text-gray-300">
+                                        <span class="text-cyan-400 font-bold">W7-10:</span>
+                                        <span>Intensive roadshow: City visits, webinars, lunch & learns</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Phase 2 -->
+                            <div class="p-4 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="bg-green-500 text-white text-xs px-2 py-1 rounded font-bold">PHASE 2</span>
+                                    <span class="text-cyan-300 text-sm font-semibold">Launch & Drive (Weeks 11-16)</span>
+                                </div>
+                                <div class="grid md:grid-cols-2 gap-2 text-xs">
+                                    <div class="p-2 rounded bg-black/20">
+                                        <div class="font-semibold text-cyan-300 mb-1">Daily 8AM</div>
+                                        <div class="text-gray-400">Review bookings, identify non-performers</div>
+                                    </div>
+                                    <div class="p-2 rounded bg-black/20">
+                                        <div class="font-semibold text-cyan-300 mb-1">Daily 9AM</div>
+                                        <div class="text-gray-400">Call 5 agents: "Any Turkey leads?"</div>
+                                    </div>
+                                    <div class="p-2 rounded bg-black/20">
+                                        <div class="font-semibold text-cyan-300 mb-1">Daily 11AM</div>
+                                        <div class="text-gray-400">Visit agent office, close deals together</div>
+                                    </div>
+                                    <div class="p-2 rounded bg-black/20">
+                                        <div class="font-semibold text-cyan-300 mb-1">Daily 2PM</div>
+                                        <div class="text-gray-400">Follow up pending quotes</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Phase 3 -->
+                            <div class="p-4 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="bg-amber-500 text-white text-xs px-2 py-1 rounded font-bold">PHASE 3</span>
+                                    <span class="text-cyan-300 text-sm font-semibold">Optimization (Week 17+)</span>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="px-2 py-1 rounded bg-black/20 text-xs text-gray-300">Analyze data</span>
+                                    <span class="px-2 py-1 rounded bg-black/20 text-xs text-gray-300">Targeted campaigns</span>
+                                    <span class="px-2 py-1 rounded bg-black/20 text-xs text-gray-300">Success stories</span>
+                                    <span class="px-2 py-1 rounded bg-black/20 text-xs text-gray-300">Expand agent base</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Success Metrics -->
+                        <div class="grid grid-cols-4 gap-2 mb-4">
+                            <div class="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-center">
+                                <div class="text-xl font-bold text-cyan-400">30</div>
+                                <div class="text-[10px] text-gray-400">Agents Activated</div>
+                            </div>
+                            <div class="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-center">
+                                <div class="text-xl font-bold text-cyan-400">100%</div>
+                                <div class="text-[10px] text-gray-400">Trained</div>
+                            </div>
+                            <div class="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-center">
+                                <div class="text-xl font-bold text-cyan-400">50+</div>
+                                <div class="text-[10px] text-gray-400">Bookings M1</div>
+                            </div>
+                            <div class="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-center">
+                                <div class="text-xl font-bold text-cyan-400">$250K</div>
+                                <div class="text-[10px] text-gray-400">Revenue M1</div>
+                            </div>
+                        </div>
+
+                        <button class="w-full py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold transition-colors flex items-center justify-center gap-2" onclick="event.stopPropagation(); revealStage(7)">
+                            Complete Stage 7
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="connector-dot" style="top: 100%;"></div>
+        </div>
+
+        <!-- FINAL: Travel Agent (Initially Hidden) -->
+        <div class="stage-node hidden opacity-0" data-stage="7" id="stage-7">
+            <div class="node-content p-8 border-2 border-green-500 bg-gradient-to-br from-green-900/30 to-emerald-900/30">
+                <div class="text-center mb-6">
+                    <div class="w-20 h-20 rounded-full bg-green-500/30 flex items-center justify-center text-4xl mx-auto mb-4 animate-pulse">
+                        ✈️
+                    </div>
+                    <div class="text-sm text-green-400 font-semibold uppercase tracking-wider mb-2">FINAL DESTINATION</div>
+                    <h2 class="text-3xl font-bold text-white mb-2">Travel Agent</h2>
+                    <p class="text-gray-300">Fully equipped, trained & motivated to sell Turkey</p>
+                </div>
+
+                <div class="grid grid-cols-4 gap-3 mb-6">
+                    <div class="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
+                        <div class="text-2xl mb-1">📚</div>
+                        <div class="text-xs text-green-300">Full Training</div>
+                    </div>
+                    <div class="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
+                        <div class="text-2xl mb-1">📦</div>
+                        <div class="text-xs text-green-300">Marketing Kit</div>
+                    </div>
+                    <div class="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
+                        <div class="text-2xl mb-1">🎁</div>
+                        <div class="text-xs text-green-300">Incentives</div>
+                    </div>
+                    <div class="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
+                        <div class="text-2xl mb-1">📞</div>
+                        <div class="text-xs text-green-300">Daily Support</div>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-xl bg-green-500/20 border border-green-500/40 text-center">
+                    <div class="text-green-300 font-bold text-lg mb-1">🎉 PRODUCT LAUNCH SUCCESS</div>
+                    <p class="text-white text-sm">Turkey is now a thriving destination with activated agents, strong support, and growing bookings</p>
+                </div>
+
+                <button class="w-full mt-6 py-3 rounded-lg bg-green-600 hover:bg-green-500 text-white font-semibold transition-colors" onclick="resetFlow()">
+                    Start New Journey
+                </button>
+            </div>
+        </div>
+
+    </section>
+
+    <script>
+        let currentStage = 0;
+        const totalStages = 8;
+
+        function updateProgressRing() {
+            const circle = document.getElementById('progress-circle');
+            const text = document.getElementById('progress-text');
+            const radius = 26;
+            const circumference = 2 * Math.PI * radius;
+            const offset = circumference - (currentStage / (totalStages - 1)) * circumference;
+            
+            circle.style.strokeDashoffset = offset;
+            text.textContent = `${currentStage}/${totalStages - 1}`;
+        }
+
+        function toggleStage(stage) {
+            const details = document.getElementById(`details-${stage}`);
+            const card = document.querySelector(`[data-stage="${stage}"] .node-content`);
+            
+            // Toggle current
+            details.classList.toggle('expanded');
+            card.parentElement.classList.toggle('active');
+        }
+
+        function revealStage(stage) {
+            if (stage >= totalStages) return;
+            
+            const prevStage = document.getElementById(`stage-${stage - 1}`);
+            const nextStage = document.getElementById(`stage-${stage}`);
+            const connector = document.getElementById('main-connector');
+            
+            // Mark previous as completed
+            if (prevStage) {
+                prevStage.classList.add('completed');
+                prevStage.classList.remove('active');
+                document.getElementById(`details-${stage - 1}`).classList.remove('expanded');
+            }
+            
+            // Reveal next stage
+            if (nextStage) {
+                nextStage.classList.remove('hidden');
+                // Trigger reflow
+                void nextStage.offsetWidth;
+                nextStage.classList.remove('opacity-0');
+                nextStage.classList.add('reveal');
+                
+                // Scroll to it
+                setTimeout(() => {
+                    nextStage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            }
+            
+            // Update connector height
+            const newHeight = (stage + 1) * 200;
+            connector.style.height = `${newHeight}px`;
+            
+            currentStage = stage;
+            updateProgressRing();
+        }
+
+        function resetFlow() {
+            currentStage = 0;
+            updateProgressRing();
+            
+            // Hide all stages except 0
+            for (let i = 1; i < totalStages; i++) {
+                const stage = document.getElementById(`stage-${i}`);
+                if (stage) {
+                    stage.classList.add('hidden', 'opacity-0');
+                    stage.classList.remove('reveal', 'completed', 'active');
+                }
+                const details = document.getElementById(`details-${i}`);
+                if (details) details.classList.remove('expanded');
+            }
+            
+            // Reset stage 0
+            const stage0 = document.getElementById('stage-0');
+            stage0.classList.remove('completed', 'active');
+            document.getElementById('details-0').classList.remove('expanded');
+            
+            // Reset connector
+            document.getElementById('main-connector').style.height = '0';
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Initialize
+        updateProgressRing();
+    </script>
+</body>
+</html>

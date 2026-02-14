@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory - B2B Sales Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .urgent { border-left: 4px solid #ef4444; }
+        .warning { border-left: 4px solid #f59e0b; }
+        .success { border-left: 4px solid #22c55e; }
+        .action-card { transition: all 0.3s; cursor: pointer; }
+        .action-card:hover { transform: translateX(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .quote-row { transition: all 0.2s; }
+        .quote-row:hover { background: #f8fafc; transform: scale(1.01); }
+        .status-pill { transition: all 0.3s; }
+        .heatmap-cell { transition: all 0.3s; cursor: pointer; }
+        .heatmap-cell:hover { transform: scale(1.1); z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .progress-fill { transition: width 1s ease-out; }
+        .pulse-alert { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .agent-avatar { transition: all 0.3s; }
+        .agent-avatar:hover { transform: scale(1.1); }
+        .timeline-dot { position: relative; }
+        .timeline-dot::after { content: ''; position: absolute; left: 50%; top: 24px; bottom: -16px; width: 2px; background: #e2e8f0; transform: translateX(-50%); }
+        .timeline-dot:last-child::after { display: none; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white border-b-2 border-[#0066cc] px-6 py-4 shadow-lg sticky top-0 z-50">
+        <div class="max-w-[1920px] mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#0066cc] to-[#1e3a5f] rounded-xl flex items-center justify-center text-white text-2xl">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-[#1e3a5f]">B2B Sales Command Center</h1>
+                    <p class="text-xs text-slate-500">Agent Performance & Quote Action Center</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- Quick Actions -->
+                <div class="flex bg-slate-100 rounded-lg p-1">
+                    <button onclick="setView('overview')" class="view-btn active px-4 py-2 rounded-md text-sm font-bold bg-[#0066cc] text-white" id="view-overview">Overview</button>
+                    <button onclick="setView('quotes')" class="view-btn px-4 py-2 rounded-md text-sm font-bold text-slate-600" id="view-quotes">Quotes</button>
+                    <button onclick="setView('agents')" class="view-btn px-4 py-2 rounded-md text-sm font-bold text-slate-600" id="view-agents">Agents</button>
+                    <button onclick="setView('actions')" class="view-btn px-4 py-2 rounded-md text-sm font-bold text-slate-600" id="view-actions">Actions</button>
+                </div>
+
+                <div class="flex items-center gap-2 px-4 py-2 bg-red-50 rounded-lg border border-red-200">
+                    <i class="fas fa-bell text-red-500 pulse-alert"></i>
+                    <span class="text-sm font-bold text-red-600" id="urgentCount">12 Urgent</span>
+                </div>
+
+                <button onclick="window.location.href='menu.html'" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-300 transition">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filter Bar -->
+    <div class="bg-white border-b border-slate-200 px-6 py-3">
+        <div class="max-w-[1920px] mx-auto flex flex-wrap items-center gap-4">
+            <span class="text-sm font-bold text-slate-500 uppercase">Filters:</span>
+            
+            <select id="regionFilter" onchange="updateDashboard()" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc]">
+                <option value="all">All Regions</option>
+                <option value="north">North India</option>
+                <option value="south">South India</option>
+                <option value="west">West India</option>
+                <option value="east">East India</option>
+            </select>
+
+            <select id="cityFilter" onchange="updateDashboard()" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc]">
+                <option value="all">All Cities</option>
+                <option value="mumbai">Mumbai</option>
+                <option value="delhi">Delhi</option>
+                <option value="bangalore">Bangalore</option>
+                <option value="chennai">Chennai</option>
+                <option value="kolkata">Kolkata</option>
+                <option value="pune">Pune</option>
+                <option value="hyderabad">Hyderabad</option>
+                <option value="ahmedabad">Ahmedabad</option>
+            </select>
+
+            <select id="teamLeaderFilter" onchange="updateDashboard()" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc]">
+                <option value="all">All Team Leaders</option>
+                <option value="rajesh">Rajesh Kumar</option>
+                <option value="priya">Priya Sharma</option>
+                <option value="amit">Amit Patel</option>
+                <option value="sneha">Sneha Reddy</option>
+            </select>
+
+            <select id="quoteStatusFilter" onchange="updateDashboard()" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc]">
+                <option value="all">All Quotes</option>
+                <option value="pending">Pending > 48hrs</option>
+                <option value="followup">Needs Follow-up</option>
+                <option value="hot">Hot Leads</option>
+                <option value="at-risk">At Risk</option>
+                <option value="converted">Converted</option>
+                <option value="lost">Lost</option>
+            </select>
+
+            <select id="dateRangeFilter" onchange="updateDashboard()" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc]">
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month" selected>This Month</option>
+                <option value="quarter">This Quarter</option>
+            </select>
+
+            <button onclick="resetFilters()" class="px-3 py-1.5 text-sm text-[#0066cc] hover:underline">
+                <i class="fas fa-undo mr-1"></i>Reset
+            </button>
+
+            <div class="ml-auto flex items-center gap-3">
+                <button onclick="exportReport()" class="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700">
+                    <i class="fas fa-download mr-2"></i>Export
+                </button>
+                <button onclick="scheduleVisits()" class="px-4 py-1.5 bg-[#0066cc] text-white rounded-lg text-sm font-bold hover:bg-[#0052a3]">
+                    <i class="fas fa-calendar mr-2"></i>Schedule Visits
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-[1920px] mx-auto p-6 space-y-6">
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4">
+            <div class="bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Total Agents</div>
+                <div class="text-2xl font-bold text-[#1e3a5f]">1,247</div>
+                <div class="text-xs text-green-500"><i class="fas fa-arrow-up"></i> 24 new</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Active Quotes</div>
+                <div class="text-2xl font-bold text-[#1e3a5f]">3,842</div>
+                <div class="text-xs text-yellow-500"><i class="fas fa-clock"></i> 486 pending</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Quote Value</div>
+                <div class="text-2xl font-bold text-[#1e3a5f]">₹24.8Cr</div>
+                <div class="text-xs text-slate-400">$2.98M</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-lg border border-slate-200 urgent">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Pending > 48hrs</div>
+                <div class="text-2xl font-bold text-red-600">486</div>
+                <div class="text-xs text-red-500"><i class="fas fa-exclamation"></i> Action needed</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Conversion Rate</div>
+                <div class="text-2xl font-bold text-[#1e3a5f]">18.4%</div>
+                <div class="text-xs text-green-500"><i class="fas fa-arrow-up"></i> 2.1%</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Avg Response Time</div>
+                <div class="text-2xl font-bold text-[#1e3a5f]">4.2 hrs</div>
+                <div class="text-xs text-green-500"><i class="fas fa-arrow-down"></i> 0.8 hrs</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Revenue This Month</div>
+                <div class="text-2xl font-bold text-green-600">₹4.2Cr</div>
+                <div class="text-xs text-green-500"><i class="fas fa-arrow-up"></i> 12%</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-lg border border-slate-200 warning">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">At Risk Quotes</div>
+                <div class="text-2xl font-bold text-orange-600">₹3.8Cr</div>
+                <div class="text-xs text-orange-500">156 quotes</div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Left Column: Action Center -->
+            <div class="space-y-6">
+                
+                <!-- Priority Actions -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-200 bg-red-50 flex justify-between items-center">
+                        <h3 class="font-bold text-red-700 flex items-center gap-2">
+                            <i class="fas fa-fire"></i> Priority Actions Required
+                        </h3>
+                        <span class="px-2 py-1 bg-red-200 text-red-700 rounded text-xs font-bold">12 Urgent</span>
+                    </div>
+                    <div class="max-h-96 overflow-y-auto" id="priorityActions">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Agent Performance Leaderboard -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                        <h3 class="font-bold text-[#1e3a5f] flex items-center gap-2">
+                            <i class="fas fa-trophy text-yellow-500"></i> Top Performing Agents
+                        </h3>
+                        <select id="agentSort" onchange="updateAgentLeaderboard()" class="text-xs border border-slate-300 rounded px-2 py-1">
+                            <option value="conversion">By Conversion</option>
+                            <option value="revenue">By Revenue</option>
+                            <option value="quotes">By Quotes</option>
+                        </select>
+                    </div>
+                    <div id="agentLeaderboard">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Team Leader Performance -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-5">
+                    <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                        <i class="fas fa-users-cog text-blue-500"></i> Team Leader Scorecard
+                    </h3>
+                    <div class="space-y-3" id="teamLeaderBoard">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Middle Column: Quote Pipeline -->
+            <div class="lg:col-span-2 space-y-6">
+
+                <!-- Quote Pipeline Visualization -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-[#1e3a5f] flex items-center gap-2">
+                            <i class="fas fa-stream text-indigo-500"></i> Quote Pipeline Status
+                        </h3>
+                        <div class="flex gap-2">
+                            <button onclick="filterPipeline('all')" class="px-3 py-1 text-xs font-bold bg-blue-100 text-blue-700 rounded">All</button>
+                            <button onclick="filterPipeline('hot')" class="px-3 py-1 text-xs font-bold bg-red-100 text-red-700 rounded">Hot</button>
+                            <button onclick="filterPipeline('warm')" class="px-3 py-1 text-xs font-bold bg-yellow-100 text-yellow-700 rounded">Warm</button>
+                            <button onclick="filterPipeline('cold')" class="px-3 py-1 text-xs font-bold bg-slate-100 text-slate-700 rounded">Cold</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Pipeline Stages -->
+                    <div class="grid grid-cols-5 gap-4 mb-6">
+                        <div class="text-center p-4 bg-blue-50 rounded-xl border-2 border-blue-200">
+                            <div class="text-3xl font-bold text-blue-600" id="stageNew">1,240</div>
+                            <div class="text-xs text-slate-600 font-bold">New Quotes</div>
+                            <div class="text-xs text-slate-400">Today</div>
+                        </div>
+                        <div class="text-center p-4 bg-indigo-50 rounded-xl border-2 border-indigo-200">
+                            <div class="text-3xl font-bold text-indigo-600" id="stageContacted">892</div>
+                            <div class="text-xs text-slate-600 font-bold">Contacted</div>
+                            <div class="text-xs text-slate-400">72% reached</div>
+                        </div>
+                        <div class="text-center p-4 bg-purple-50 rounded-xl border-2 border-purple-200">
+                            <div class="text-3xl font-bold text-purple-600" id="stageNegotiating">486</div>
+                            <div class="text-xs text-slate-600 font-bold">Negotiating</div>
+                            <div class="text-xs text-slate-400">Active</div>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-xl border-2 border-green-200">
+                            <div class="text-3xl font-bold text-green-600" id="stageConverted">708</div>
+                            <div class="text-xs text-slate-600 font-bold">Converted</div>
+                            <div class="text-xs text-green-500">18.4% rate</div>
+                        </div>
+                        <div class="text-center p-4 bg-red-50 rounded-xl border-2 border-red-200">
+                            <div class="text-3xl font-bold text-red-600" id="stageLost">1,516</div>
+                            <div class="text-xs text-slate-600 font-bold">Lost</div>
+                            <div class="text-xs text-red-400">39.5% loss</div>
+                        </div>
+                    </div>
+
+                    <!-- Loss Reasons Analysis -->
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-bold text-sm text-slate-700 mb-3">Top Loss Reasons</h4>
+                            <div class="space-y-2" id="lossReasons">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm text-slate-700 mb-3">Conversion by Destination</h4>
+                            <div class="space-y-2" id="conversionByDest">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hot Quotes Requiring Immediate Action -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-orange-50">
+                        <h3 class="font-bold text-orange-700 flex items-center gap-2">
+                            <i class="fas fa-bolt"></i> Hot Quotes - Immediate Action Required
+                        </h3>
+                        <div class="flex gap-2">
+                            <button onclick="bulkAction('call')" class="px-3 py-1 bg-[#0066cc] text-white rounded text-xs font-bold">
+                                <i class="fas fa-phone mr-1"></i>Call All
+                            </button>
+                            <button onclick="bulkAction('email')" class="px-3 py-1 bg-green-600 text-white rounded text-xs font-bold">
+                                <i class="fas fa-envelope mr-1"></i>Email All
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                                <tr>
+                                    <th class="px-4 py-3 text-left"><input type="checkbox" class="rounded"></th>
+                                    <th class="px-4 py-3 text-left">Agent</th>
+                                    <th class="px-4 py-3 text-left">Customer</th>
+                                    <th class="px-4 py-3 text-left">Destination</th>
+                                    <th class="px-4 py-3 text-right">Value</th>
+                                    <th class="px-4 py-3 text-center">Age</th>
+                                    <th class="px-4 py-3 text-center">Status</th>
+                                    <th class="px-4 py-3 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100" id="hotQuotesTable">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Field Visit Planner -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-[#1e3a5f] flex items-center gap-2">
+                            <i class="fas fa-map-marked-alt text-green-500"></i> Field Visit Planner & Agent Coaching
+                        </h3>
+                        <button onclick="generateVisitPlan()" class="px-4 py-2 bg-[#0066cc] text-white rounded-lg text-sm font-bold hover:bg-[#0052a3]">
+                            <i class="fas fa-magic mr-2"></i>Generate AI Plan
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="visitPlan">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Coaching Guidelines -->
+                    <div class="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">
+                            <i class="fas fa-lightbulb text-yellow-500"></i> Field Agent Coaching Guidelines
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700">
+                            <ul class="space-y-2">
+                                <li><i class="fas fa-check-circle mr-2"></i>Review quotes pending > 48hrs first</li>
+                                <li><i class="fas fa-check-circle mr-2"></i>Check agent product knowledge gaps</li>
+                                <li><i class="fas fa-check-circle mr-2"></i>Verify rate competitiveness vs online</li>
+                                <li><i class="fas fa-check-circle mr-2"></i>Train on upselling techniques</li>
+                            </ul>
+                            <ul class="space-y-2">
+                                <li><i class="fas fa-check-circle mr-2"></i>Role-play objection handling</li>
+                                <li><i class="fas fa-check-circle mr-2"></i>Review successful competitor strategies</li>
+                                <li><i class="fas fa-check-circle mr-2"></i>Set daily quote follow-up targets</li>
+                                <li><i class="fas fa-check-circle mr-2"></i>Introduce new destination training</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agent Performance Matrix -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                        <i class="fas fa-th text-purple-500"></i> Agent Performance Matrix (Quotes vs Conversion)
+                    </h3>
+                    <div class="grid grid-cols-6 md:grid-cols-10 gap-2" id="agentMatrix">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div class="flex justify-between items-center mt-4 text-xs text-slate-500">
+                        <span>Low Volume / Low Conversion</span>
+                        <div class="flex gap-3">
+                            <span class="flex items-center gap-1"><div class="w-3 h-3 bg-red-500 rounded"></div> Needs Training</span>
+                            <span class="flex items-center gap-1"><div class="w-3 h-3 bg-yellow-500 rounded"></div> Developing</span>
+                            <span class="flex items-center gap-1"><div class="w-3 h-3 bg-green-500 rounded"></div> Good</span>
+                            <span class="flex items-center gap-1"><div class="w-3 h-3 bg-blue-500 rounded"></div> Star Performer</span>
+                        </div>
+                        <span>High Volume / High Conversion</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Bottom: Detailed Analytics -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Quote Aging Analysis -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                    <i class="fas fa-clock text-red-500"></i> Quote Aging Analysis
+                </h3>
+                <div class="space-y-3" id="agingAnalysis">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Product Knowledge Gaps -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                    <i class="fas fa-brain text-orange-500"></i> Knowledge Gaps & Training Needs
+                </h3>
+                <div class="space-y-3" id="knowledgeGaps">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Competitive Intelligence -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                    <i class="fas fa-chess text-blue-500"></i> Competitive Loss Analysis
+                </h3>
+                <div class="space-y-3" id="competitiveIntel">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Action Modal -->
+    <div id="actionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 p-6">
+            <h3 class="font-bold text-xl text-[#1e3a5f] mb-4">Take Action on Quote</h3>
+            <div id="modalContent"></div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg font-bold">Cancel</button>
+                <button onclick="saveAction()" class="px-4 py-2 bg-[#0066cc] text-white rounded-lg font-bold">Save Action</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Models
+        const agents = [
+            { id: 1, name: 'Rahul Sharma', city: 'Mumbai', region: 'west', teamLeader: 'rajesh', quotes: 45, conversion: 22, revenue: 2800000, pending: 8, status: 'good' },
+            { id: 2, name: 'Priya Patel', city: 'Delhi', region: 'north', teamLeader: 'priya', quotes: 62, conversion: 18, revenue: 3200000, pending: 12, status: 'star' },
+            { id: 3, name: 'Amit Kumar', city: 'Bangalore', region: 'south', teamLeader: 'amit', quotes: 38, conversion: 12, revenue: 1500000, pending: 15, status: 'at-risk' },
+            { id: 4, name: 'Sneha Reddy', city: 'Hyderabad', region: 'south', teamLeader: 'sneha', quotes: 52, conversion: 24, revenue: 4100000, pending: 6, status: 'star' },
+            { id: 5, name: 'Vikram Singh', city: 'Pune', region: 'west', teamLeader: 'rajesh', quotes: 28, conversion: 8, revenue: 890000, pending: 18, status: 'training' },
+            { id: 6, name: 'Anita Desai', city: 'Chennai', region: 'south', teamLeader: 'amit', quotes: 41, conversion: 19, revenue: 2400000, pending: 9, status: 'good' },
+            { id: 7, name: 'Raj Malhotra', city: 'Kolkata', region: 'east', teamLeader: 'priya', quotes: 35, conversion: 15, revenue: 1900000, pending: 11, status: 'average' },
+            { id: 8, name: 'Neha Gupta', city: 'Ahmedabad', region: 'west', teamLeader: 'rajesh', quotes: 48, conversion: 21, revenue: 3100000, pending: 7, status: 'good' }
+        ];
+
+        const hotQuotes = [
+            { id: 'Q2847', agent: 'Rahul Sharma', customer: 'Mr. Sharma', destination: 'Maldives', value: 485000, age: 52, status: 'hot', lastContact: '2 days ago' },
+            { id: 'Q2856', agent: 'Priya Patel', customer: 'Mrs. Gupta', destination: 'Europe', value: 620000, age: 48, status: 'hot', lastContact: '1 day ago' },
+            { id: 'Q2861', agent: 'Amit Kumar', customer: 'Mr. Reddy', destination: 'Thailand', value: 180000, age: 72, status: 'at-risk', lastContact: '4 days ago' },
+            { id: 'Q2874', agent: 'Sneha Reddy', customer: 'Mrs. Khan', destination: 'Dubai', value: 320000, age: 36, status: 'hot', lastContact: 'Today' },
+            { id: 'Q2889', agent: 'Vikram Singh', customer: 'Mr. Joshi', destination: 'Singapore', value: 240000, age: 96, status: 'urgent', lastContact: '5 days ago' },
+            { id: 'Q2892', agent: 'Anita Desai', customer: 'Mrs. Iyer', destination: 'Bali', value: 195000, age: 44, status: 'hot', lastContact: '1 day ago' }
+        ];
+
+        const lossReasons = [
+            { reason: 'Pricing too high', count: 486, percentage: 32, trend: 'up' },
+            { reason: 'Agent knowledge gap', count: 312, percentage: 21, trend: 'up' },
+            { reason: 'No availability', count: 268, percentage: 18, trend: 'down' },
+            { reason: 'Client changed mind', count: 224, percentage: 15, trend: 'same' },
+            { reason: 'Booked with competitor', count: 156, percentage: 10, trend: 'up' },
+            { reason: 'Other', count: 70, percentage: 4, trend: 'down' }
+        ];
+
+        const teamLeaders = [
+            { name: 'Rajesh Kumar', agents: 12, quotes: 520, conversion: 19.2, revenue: 12500000, status: 'good' },
+            { name: 'Priya Sharma', agents: 15, quotes: 680, conversion: 21.5, revenue: 16800000, status: 'star' },
+            { name: 'Amit Patel', agents: 10, quotes: 420, conversion: 16.8, revenue: 9800000, status: 'average' },
+            { name: 'Sneha Reddy', agents: 8, quotes: 380, conversion: 23.4, revenue: 11200000, status: 'star' }
+        ];
+
+        let currentView = 'overview';
+
+        function init() {
+            updateDashboard();
+        }
+
+        function setView(view) {
+            currentView = view;
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-[#0066cc]', 'text-white');
+                btn.classList.add('text-slate-600');
+            });
+            document.getElementById('view-' + view).classList.add('active', 'bg-[#0066cc]', 'text-white');
+            document.getElementById('view-' + view).classList.remove('text-slate-600');
+        }
+
+        function updateDashboard() {
+            updatePriorityActions();
+            updateAgentLeaderboard();
+            updateTeamLeaderBoard();
+            updateLossReasons();
+            updateHotQuotes();
+            updateVisitPlan();
+            updateAgentMatrix();
+            updateAgingAnalysis();
+            updateKnowledgeGaps();
+            updateCompetitiveIntel();
+        }
+
+        function updatePriorityActions() {
+            const container = document.getElementById('priorityActions');
+            const actions = [
+                { type: 'urgent', icon: 'fa-phone-slash', text: 'Vikram Singh has 18 quotes pending > 48hrs', action: 'Schedule immediate visit', time: '2 hrs ago' },
+                { type: 'warning', icon: 'fa-graduation-cap', text: 'Amit Kumar conversion dropped to 12%', action: 'Product training needed', time: '4 hrs ago' },
+                { type: 'urgent', icon: 'fa-fire', text: 'Hot quote Q2889 (₹240K) not contacted in 5 days', action: 'Call immediately', time: '1 hr ago' },
+                { type: 'warning', icon: 'fa-chart-line', text: 'Mumbai West region conversion below target', action: 'Team huddle required', time: '6 hrs ago' },
+                { type: 'success', icon: 'fa-trophy', text: 'Sneha Reddy achieved 150% of monthly target', action: 'Recognition & case study', time: '30 mins ago' }
+            ];
+
+            container.innerHTML = actions.map(a => `
+                <div class="action-card p-4 border-b border-slate-100 ${a.type === 'urgent' ? 'bg-red-50' : a.type === 'warning' ? 'bg-yellow-50' : 'bg-green-50'}">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 ${a.type === 'urgent' ? 'bg-red-200 text-red-600' : a.type === 'warning' ? 'bg-yellow-200 text-yellow-600' : 'bg-green-200 text-green-600'} rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas ${a.icon} text-sm"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-sm font-bold text-slate-800">${a.text}</div>
+                            <div class="text-xs text-slate-500 mt-1">${a.action}</div>
+                            <div class="text-xs text-slate-400 mt-1">${a.time}</div>
+                        </div>
+                        <button onclick="takeAction('${a.text}')" class="px-3 py-1 bg-[#0066cc] text-white rounded text-xs font-bold hover:bg-[#0052a3]">Act</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateAgentLeaderboard() {
+            const container = document.getElementById('agentLeaderboard');
+            const sortBy = document.getElementById('agentSort')?.value || 'conversion';
+            
+            let sorted = [...agents].sort((a, b) => b[sortBy] - a[sortBy]).slice(0, 5);
+            
+            container.innerHTML = sorted.map((agent, i) => `
+                <div class="flex items-center justify-between p-4 border-b border-slate-100 hover:bg-slate-50">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 ${i === 0 ? 'bg-yellow-100 text-yellow-600' : i === 1 ? 'bg-slate-200 text-slate-600' : i === 2 ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-500'} rounded-full flex items-center justify-center font-bold text-sm">
+                            ${i + 1}
+                        </div>
+                        <div>
+                            <div class="font-bold text-sm text-[#1e3a5f]">${agent.name}</div>
+                            <div class="text-xs text-slate-500">${agent.city} • ${agent.quotes} quotes</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-sm ${agent.conversion >= 20 ? 'text-green-600' : agent.conversion >= 15 ? 'text-yellow-600' : 'text-red-600'}">${agent.conversion}%</div>
+                        <div class="text-xs text-slate-400">₹${(agent.revenue/100000).toFixed(1)}L</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateTeamLeaderBoard() {
+            const container = document.getElementById('teamLeaderBoard');
+            
+            container.innerHTML = teamLeaders.map(tl => `
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div>
+                        <div class="font-bold text-sm text-[#1e3a5f]">${tl.name}</div>
+                        <div class="text-xs text-slate-500">${tl.agents} agents • ${tl.quotes} quotes</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-sm ${tl.conversion >= 20 ? 'text-green-600' : 'text-yellow-600'}">${tl.conversion}% conv</div>
+                        <div class="text-xs text-slate-400">₹${(tl.revenue/10000000).toFixed(1)}Cr</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateLossReasons() {
+            const container = document.getElementById('lossReasons');
+            
+            container.innerHTML = lossReasons.map(lr => `
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-slate-700">${lr.reason}</span>
+                        <span class="font-bold text-slate-900">${lr.percentage}% (${lr.count})</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2">
+                        <div class="bg-${lr.trend === 'up' ? 'red' : lr.trend === 'down' ? 'green' : 'yellow'}-500 h-2 rounded-full" style="width: ${lr.percentage}%"></div>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-1">
+                        ${lr.trend === 'up' ? '↑ Increasing' : lr.trend === 'down' ? '↓ Decreasing' : '→ Stable'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateHotQuotes() {
+            const tbody = document.getElementById('hotQuotesTable');
+            
+            tbody.innerHTML = hotQuotes.map(q => `
+                <tr class="quote-row ${q.status === 'urgent' ? 'bg-red-50' : q.status === 'at-risk' ? 'bg-orange-50' : ''}">
+                    <td class="px-4 py-3"><input type="checkbox" class="rounded"></td>
+                    <td class="px-4 py-3 font-medium text-[#1e3a5f]">${q.agent}</td>
+                    <td class="px-4 py-3 text-sm">${q.customer}</td>
+                    <td class="px-4 py-3 text-sm"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">${q.destination}</span></td>
+                    <td class="px-4 py-3 text-right font-bold">₹${(q.value/1000).toFixed(0)}K</td>
+                    <td class="px-4 py-3 text-center">
+                        <span class="px-2 py-1 ${q.age > 72 ? 'bg-red-200 text-red-700' : q.age > 48 ? 'bg-yellow-200 text-yellow-700' : 'bg-green-200 text-green-700'} rounded text-xs font-bold">
+                            ${q.age}h
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <span class="px-2 py-1 ${q.status === 'hot' ? 'bg-red-100 text-red-700' : q.status === 'at-risk' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'} rounded text-xs font-bold uppercase">
+                            ${q.status}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="openActionModal('${q.id}')" class="px-3 py-1 bg-[#0066cc] text-white rounded text-xs font-bold hover:bg-[#0052a3]">
+                            Action
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateVisitPlan() {
+            const container = document.getElementById('visitPlan');
+            
+            const visits = [
+                { agent: 'Vikram Singh', city: 'Pune', priority: 'urgent', reason: '18 pending quotes, 8% conversion', action: 'Intensive coaching session', date: 'Tomorrow' },
+                { agent: 'Amit Kumar', city: 'Bangalore', priority: 'high', reason: 'Conversion dropped 6%', action: 'Product training + shadowing', date: 'Day after' },
+                { agent: 'Raj Malhotra', city: 'Kolkata', priority: 'medium', reason: 'Below average performance', action: 'Review pricing strategy', date: 'Next week' }
+            ];
+            
+            container.innerHTML = visits.map(v => `
+                <div class="p-4 ${v.priority === 'urgent' ? 'bg-red-50 border-red-200' : v.priority === 'high' ? 'bg-yellow-50 border-yellow-200' : 'bg-blue-50 border-blue-200'} rounded-xl border-2">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <div class="font-bold text-[#1e3a5f]">${v.agent}</div>
+                            <div class="text-xs text-slate-500"><i class="fas fa-map-marker-alt mr-1"></i>${v.city}</div>
+                        </div>
+                        <span class="px-2 py-1 ${v.priority === 'urgent' ? 'bg-red-200 text-red-700' : v.priority === 'high' ? 'bg-yellow-200 text-yellow-700' : 'bg-blue-200 text-blue-700'} rounded text-xs font-bold uppercase">
+                            ${v.priority}
+                        </span>
+                    </div>
+                    <div class="text-sm text-slate-600 mb-2">${v.reason}</div>
+                    <div class="text-sm font-bold text-[#0066cc] mb-2">${v.action}</div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-slate-400"><i class="fas fa-calendar mr-1"></i>${v.date}</span>
+                        <button class="px-3 py-1 bg-[#0066cc] text-white rounded text-xs font-bold">Schedule</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateAgentMatrix() {
+            const matrix = document.getElementById('agentMatrix');
+            
+            matrix.innerHTML = agents.map(a => {
+                let color = 'bg-red-500';
+                if (a.conversion >= 20 && a.quotes >= 45) color = 'bg-blue-500';
+                else if (a.conversion >= 18) color = 'bg-green-500';
+                else if (a.conversion >= 15) color = 'bg-yellow-500';
+                
+                return `
+                    <div class="heatmap-cell ${color} rounded-lg p-2 text-center text-white text-xs" title="${a.name}: ${a.conversion}% conv, ${a.quotes} quotes">
+                        <div class="font-bold truncate">${a.name.split(' ')[0]}</div>
+                        <div class="text-lg font-bold">${a.conversion}%</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateAgingAnalysis() {
+            const container = document.getElementById('agingAnalysis');
+            
+            const aging = [
+                { range: '0-24 hours', count: 1240, percentage: 32, status: 'good' },
+                { range: '24-48 hours', count: 980, percentage: 26, status: 'good' },
+                { range: '48-72 hours', count: 720, percentage: 19, status: 'warning' },
+                { range: '3-5 days', count: 520, percentage: 14, status: 'warning' },
+                { range: '5+ days', count: 342, percentage: 9, status: 'danger' }
+            ];
+            
+            container.innerHTML = aging.map(a => `
+                <div class="flex items-center justify-between p-3 ${a.status === 'danger' ? 'bg-red-50' : a.status === 'warning' ? 'bg-yellow-50' : 'bg-green-50'} rounded-lg">
+                    <div>
+                        <div class="font-bold text-sm text-slate-800">${a.range}</div>
+                        <div class="text-xs text-slate-500">${a.count} quotes</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-bold ${a.status === 'danger' ? 'text-red-600' : a.status === 'warning' ? 'text-yellow-600' : 'text-green-600'}">${a.percentage}%</div>
+                        <div class="w-16 bg-slate-200 rounded-full h-1.5 mt-1">
+                            <div class="bg-${a.status === 'danger' ? 'red' : a.status === 'warning' ? 'yellow' : 'green'}-500 h-1.5 rounded-full" style="width: ${a.percentage}%"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateKnowledgeGaps() {
+            const container = document.getElementById('knowledgeGaps');
+            
+            const gaps = [
+                { topic: 'Maldives Resort Options', affected: 24, impact: 'high', training: 'Product webinar scheduled' },
+                { topic: 'Schengen Visa Process', affected: 18, impact: 'medium', training: 'Process documentation' },
+                { topic: 'Corporate Rates', affected: 15, impact: 'high', training: 'Rate card update' },
+                { topic: 'Travel Insurance', affected: 12, impact: 'medium', training: 'Partner training' }
+            ];
+            
+            container.innerHTML = gaps.map(g => `
+                <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+                    <div class="w-8 h-8 ${g.impact === 'high' ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-600'} rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-graduation-cap text-sm"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-bold text-sm text-slate-800">${g.topic}</div>
+                        <div class="text-xs text-slate-500">${g.affected} agents affected</div>
+                        <div class="text-xs text-[#0066cc] mt-1"><i class="fas fa-calendar mr-1"></i>${g.training}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateCompetitiveIntel() {
+            const container = document.getElementById('competitiveIntel');
+            
+            const competitors = [
+                { name: 'MakeMyTrip', losses: 89, reason: 'Lower pricing', trend: 'up' },
+                { name: 'Booking.com', losses: 64, reason: 'Better UX', trend: 'same' },
+                { name: 'Yatra', losses: 42, reason: 'Corporate rates', trend: 'down' },
+                { name: 'Local Agents', losses: 38, reason: 'Personal relationship', trend: 'up' }
+            ];
+            
+            container.innerHTML = competitors.map(c => `
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div>
+                        <div class="font-bold text-sm text-slate-800">${c.name}</div>
+                        <div class="text-xs text-slate-500">${c.reason}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-bold ${c.trend === 'up' ? 'text-red-600' : c.trend === 'down' ? 'text-green-600' : 'text-yellow-600'}">${c.losses}</div>
+                        <div class="text-xs text-slate-400">losses</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openActionModal(quoteId) {
+            const quote = hotQuotes.find(q => q.id === quoteId);
+            document.getElementById('modalContent').innerHTML = `
+                <div class="space-y-4">
+                    <div class="p-4 bg-slate-50 rounded-lg">
+                        <div class="font-bold text-lg text-[#1e3a5f]">Quote ${quote.id}</div>
+                        <div class="text-sm text-slate-600">Agent: ${quote.agent}</div>
+                        <div class="text-sm text-slate-600">Customer: ${quote.customer}</div>
+                        <div class="text-sm text-slate-600">Value: ₹${(quote.value/1000).toFixed(0)}K</div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Select Action</label>
+                        <select class="w-full p-2 border border-slate-300 rounded-lg">
+                            <option>Call customer immediately</option>
+                            <option>Send follow-up email</option>
+                            <option>Offer discount</option>
+                            <option>Escalate to team leader</option>
+                            <option>Schedule field visit</option>
+                            <option>Mark as lost</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Notes</label>
+                        <textarea class="w-full p-2 border border-slate-300 rounded-lg" rows="3" placeholder="Enter action notes..."></textarea>
+                    </div>
+                </div>
+            `;
+            document.getElementById('actionModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('actionModal').classList.add('hidden');
+        }
+
+        function saveAction() {
+            alert('Action saved successfully!');
+            closeModal();
+        }
+
+        function takeAction(actionText) {
+            alert('Taking action: ' + actionText);
+        }
+
+        function bulkAction(type) {
+            alert(`Bulk ${type} initiated for selected quotes`);
+        }
+
+        function generateVisitPlan() {
+            alert('AI Visit Plan Generated! Optimized route for 5 agents across 3 cities.');
+        }
+
+        function exportReport() {
+            alert('Report exported to Excel');
+        }
+
+        function scheduleVisits() {
+            alert('Opening visit scheduler...');
+        }
+
+        function resetFilters() {
+            document.getElementById('regionFilter').value = 'all';
+            document.getElementById('cityFilter').value = 'all';
+            document.getElementById('teamLeaderFilter').value = 'all';
+            document.getElementById('quoteStatusFilter').value = 'all';
+            document.getElementById('dateRangeFilter').value = 'month';
+            updateDashboard();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

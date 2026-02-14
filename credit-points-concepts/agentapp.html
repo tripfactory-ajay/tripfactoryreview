@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Ajay Travels - ORN Agent Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: #000;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: fixed;
+        }
+        
+        .font-display { font-family: 'Montserrat', sans-serif; }
+        
+        :root {
+            --orn-navy: #1e3a5f;
+            --orn-blue: #2563eb;
+            --orn-cyan: #06b6d4;
+            --orn-green: #22c55e;
+            --orn-yellow: #eab308;
+            --orn-red: #dc2626;
+            --agent-orange: #f97316;
+        }
+        
+        /* App Container */
+        #app-container {
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Splash Screen */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease-out, visibility 0.8s;
+        }
+        
+        #splash-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .splash-logo {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .splash-text {
+            animation: fadeInUp 1s ease-out 0.5s both;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Main App Content */
+        .app-content {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: #f8fafc;
+            padding-bottom: 90px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .app-content::-webkit-scrollbar { display: none; }
+        
+        /* Status Bar */
+        .status-bar {
+            height: 44px;
+            padding: 12px 24px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 15px;
+            font-weight: 600;
+            color: #000;
+            background: #ffffff;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            padding-top: max(12px, env(safe-area-inset-top));
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 84px;
+            background: #ffffff;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding-top: 12px;
+            z-index: 50;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #9ca3af;
+            transition: all 0.3s;
+            cursor: pointer;
+            padding: 4px 8px;
+            border: none;
+            background: none;
+            font-family: inherit;
+        }
+        
+        .nav-item.active { color: var(--orn-navy); }
+        .nav-item i { font-size: 22px; }
+        .nav-item span { font-size: 10px; font-weight: 600; }
+        
+        /* Pages */
+        .page {
+            display: none;
+            width: 100%;
+            min-height: 100%;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        .page.active { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ORN Logo Bars */
+        .orn-bars {
+            display: flex;
+            gap: 3px;
+            align-items: flex-end;
+            height: 32px;
+        }
+        
+        .orn-bar {
+            width: 6px;
+            border-radius: 3px;
+        }
+        
+        .orn-bar:nth-child(1) { height: 32px; background: var(--orn-navy); }
+        .orn-bar:nth-child(2) { height: 26px; background: var(--orn-blue); }
+        .orn-bar:nth-child(3) { height: 32px; background: var(--orn-cyan); }
+        .orn-bar:nth-child(4) { height: 26px; background: var(--orn-green); }
+        .orn-bar:nth-child(5) { height: 32px; background: var(--orn-yellow); }
+        .orn-bar:nth-child(6) { height: 26px; background: var(--orn-red); }
+        
+        /* Cards */
+        .card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .card-navy {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+            color: white;
+            border-radius: 20px;
+        }
+        
+        .card-orange {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            border-radius: 20px;
+        }
+        
+        .interactive-btn {
+            transition: transform 0.1s;
+            cursor: pointer;
+        }
+        
+        .interactive-btn:active { transform: scale(0.96); }
+        
+        .text-orn-navy { color: #1e3a5f; }
+        .bg-orn-navy { background-color: #1e3a5f; }
+        .text-agent-orange { color: #f97316; }
+        .bg-agent-orange { background-color: #f97316; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* Loading spinner */
+        .loading-bar {
+            width: 140px;
+            height: 3px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+            margin-top: 30px;
+            overflow: hidden;
+        }
+        
+        .loading-progress {
+            height: 100%;
+            background: #f97316;
+            border-radius: 3px;
+            animation: loading 2s ease-in-out;
+            width: 100%;
+        }
+        
+        @keyframes loading {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        /* Commission Badge */
+        .commission-badge {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #1e3a5f;
+            font-weight: 800;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+        }
+
+        /* Status Badges */
+        .status-confirmed {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-completed {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* Quick Action Grid */
+        .quick-action {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border-radius: 16px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+        
+        .quick-action:active {
+            transform: scale(0.95);
+            background: #f8fafc;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+        <div class="splash-logo mb-6">
+            <div class="orn-bars" style="height: 60px; margin-bottom: 20px;">
+                <div class="orn-bar" style="height: 60px; width: 12px; border-radius: 6px; background: white;"></div>
+                <div class="orn-bar" style="height: 48px; width: 12px; border-radius: 6px; background: rgba(255,255,255,0.8);"></div>
+                <div class="orn-bar" style="height: 60px; width: 12px; border-radius: 6px; background: white;"></div>
+                <div class="orn-bar" style="height: 48px; width: 12px; border-radius: 6px; background: rgba(255,255,255,0.8);"></div>
+                <div class="orn-bar" style="height: 60px; width: 12px; border-radius: 6px; background: white;"></div>
+                <div class="orn-bar" style="height: 48px; width: 12px; border-radius: 6px; background: rgba(255,255,255,0.8);"></div>
+            </div>
+        </div>
+        <h1 class="text-3xl font-black text-white font-display tracking-tight splash-text text-center px-6">Welcome Ajay Travels</h1>
+        <p class="text-orange-300 text-base mt-3 splash-text font-semibold" style="animation-delay: 0.7s;">to your Credit Points World</p>
+        <p class="text-blue-200 text-xs mt-2 splash-text" style="animation-delay: 0.9s;">Delhi, India • Authorized Agent</p>
+        <div class="loading-bar splash-text" style="animation-delay: 0.3s;">
+            <div class="loading-progress"></div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app-container">
+        <div class="app-content" id="app">
+            
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <span id="clock">9:41</span>
+                <div class="flex gap-2 items-center">
+                    <i class="fas fa-signal text-xs"></i>
+                    <i class="fas fa-wifi text-xs"></i>
+                    <i class="fas fa-battery-full text-xs"></i>
+                </div>
+            </div>
+
+            <!-- SCREEN 1: LOGIN -->
+            <div id="page-login" class="page active">
+                <div class="flex flex-col items-center justify-center min-h-[calc(100vh-140px)] px-8 pb-20 bg-white">
+                    <div class="mb-8 text-center">
+                        <div class="flex justify-center mb-4">
+                            <div class="orn-bars">
+                                <div class="orn-bar"></div>
+                                <div class="orn-bar"></div>
+                                <div class="orn-bar"></div>
+                                <div class="orn-bar"></div>
+                                <div class="orn-bar"></div>
+                                <div class="orn-bar"></div>
+                            </div>
+                        </div>
+                        <h1 class="text-5xl font-black text-black mb-2 font-display tracking-tight">ORN</h1>
+                        <p class="text-gray-600 font-semibold text-sm">Agent Partner Portal</p>
+                    </div>
+
+                    <div class="w-full space-y-4">
+                        <div class="card p-4 border-2 border-orange-100 bg-orange-50/30">
+                            <label class="text-xs text-gray-500 uppercase tracking-wider font-bold block mb-1">Agency ID</label>
+                            <input type="text" value="AJAY-DEL-001" class="w-full bg-transparent text-gray-900 text-lg font-semibold outline-none" readonly>
+                        </div>
+                        
+                        <div class="card p-4">
+                            <label class="text-xs text-gray-500 uppercase tracking-wider font-bold block mb-1">Password</label>
+                            <input type="password" value="••••••••" class="w-full bg-transparent text-gray-900 text-lg outline-none" readonly>
+                        </div>
+
+                        <button onclick="navigateTo('home')" class="interactive-btn w-full bg-orn-navy text-white font-bold py-4 rounded-2xl shadow-lg text-lg mt-6">
+                            Access Agent Portal
+                        </button>
+
+                        <div class="text-center mt-6 space-y-3">
+                            <a href="#" class="text-orn-navy text-sm font-bold block">Forgot Password?</a>
+                            <div class="pt-4 border-t border-gray-200">
+                                <p class="text-xs text-gray-700 font-bold">Ajay Travels</p>
+                                <p class="text-[10px] text-gray-500 mt-1">Connaught Place, New Delhi • GST: 07AJAY1234K</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-12 flex justify-center gap-6">
+                        <div class="text-center">
+                            <div class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center mb-1 mx-auto border border-orange-100">
+                                <i class="fas fa-handshake text-agent-orange"></i>
+                            </div>
+                            <p class="text-[9px] text-gray-600 font-bold">B2B Partner</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-1 mx-auto border border-blue-100">
+                                <i class="fas fa-percentage text-orn-navy"></i>
+                            </div>
+                            <p class="text-[9px] text-gray-600 font-bold">Commission</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center mb-1 mx-auto border border-green-100">
+                                <i class="fas fa-headset text-green-600"></i>
+                            </div>
+                            <p class="text-[9px] text-gray-600 font-bold">24/7 Support</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 2: HOME (AGENT DASHBOARD) -->
+            <div id="page-home" class="page">
+                <!-- Header -->
+                <div class="px-6 pt-2 pb-4 flex justify-between items-center bg-white">
+                    <div class="flex items-center gap-3">
+                        <div class="orn-bars" style="height: 24px;">
+                            <div class="orn-bar" style="height: 24px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 20px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 24px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 20px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 24px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 20px; width: 5px;"></div>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Welcome back,</p>
+                            <p class="text-gray-900 font-bold text-sm">Ajay Travels</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="navigateTo('notifications')" class="interactive-btn w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center relative">
+                            <i class="fas fa-bell text-gray-600"></i>
+                            <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Credit Balance Card -->
+                <div class="px-6 mb-6">
+                    <div class="card-navy p-6 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                        
+                        <div class="relative z-10">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <p class="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">Available Credit Points</p>
+                                    <h2 class="text-5xl font-bold text-white font-display">10,000</h2>
+                                    <p class="text-white font-bold text-lg">ORN Credits</p>
+                                    <p class="text-blue-200 text-xs mt-1">= ₹ 8,30,000 INR</p>
+                                </div>
+                                <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur">
+                                    <i class="fas fa-wallet text-white text-xl"></i>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 pt-4 border-t border-white/20">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-blue-200 text-xs">Credits Used This Month</span>
+                                    <span class="text-white font-bold text-sm">2,450</span>
+                                </div>
+                                <div class="h-2 bg-white/20 rounded-full overflow-hidden">
+                                    <div class="h-full bg-orange-400 w-1/4 rounded-full"></div>
+                                </div>
+                                <p class="text-white text-xs mt-2 font-medium">Gold Agent • Top 5% Performer</p>
+                            </div>
+
+                            <div class="flex gap-3 mt-6">
+                                <button onclick="navigateTo('inventory')" class="interactive-btn flex-1 bg-white text-orn-navy py-3 rounded-xl font-bold text-sm shadow-lg">
+                                    Browse Inventory
+                                </button>
+                                <button onclick="navigateTo('bookings')" class="interactive-btn flex-1 bg-white/10 text-white border border-white/20 py-3 rounded-xl font-bold text-sm backdrop-blur">
+                                    My Bookings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="px-6 mb-6">
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="card p-3 text-center">
+                            <p class="text-2xl font-bold text-orn-navy">24</p>
+                            <p class="text-[10px] text-gray-500 font-semibold uppercase">Active Bookings</p>
+                        </div>
+                        <div class="card p-3 text-center">
+                            <p class="text-2xl font-bold text-green-600">₹45K</p>
+                            <p class="text-[10px] text-gray-500 font-semibold uppercase">This Month</p>
+                        </div>
+                        <div class="card p-3 text-center">
+                            <p class="text-2xl font-bold text-agent-orange">12%</p>
+                            <p class="text-[10px] text-gray-500 font-semibold uppercase">Commission</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="px-6 mb-6">
+                    <h3 class="text-gray-900 font-bold text-lg mb-4">Quick Actions</h3>
+                    <div class="grid grid-cols-4 gap-3">
+                        <button onclick="navigateTo('inventory')" class="quick-action interactive-btn">
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-orn-navy">
+                                <i class="fas fa-search text-lg"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-700 font-bold text-center leading-tight">Browse<br>Packages</span>
+                        </button>
+                        <button onclick="navigateTo('bookings')" class="quick-action interactive-btn">
+                            <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600">
+                                <i class="fas fa-plus-circle text-lg"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-700 font-bold text-center leading-tight">New<br>Booking</span>
+                        </button>
+                        <button onclick="navigateTo('earnings')" class="quick-action interactive-btn">
+                            <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-agent-orange">
+                                <i class="fas fa-chart-line text-lg"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-700 font-bold text-center leading-tight">View<br>Earnings</span>
+                        </button>
+                        <button onclick="navigateTo('customers')" class="quick-action interactive-btn">
+                            <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
+                                <i class="fas fa-users text-lg"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-700 font-bold text-center leading-tight">My<br>Customers</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Top Selling Packages -->
+                <div class="px-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-gray-900 font-bold text-lg">Top Packages to Sell</h3>
+                        <button onclick="navigateTo('inventory')" class="text-orn-navy text-xs font-bold">View All →</button>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="card overflow-hidden flex border-2 border-orange-100">
+                            <div class="w-24 h-24 relative flex-shrink-0">
+                                <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=200&h=200&fit=crop" class="w-full h-full object-cover" alt="Bali">
+                                <div class="absolute top-1 left-1 bg-red-500 text-white text-[8px] font-bold px-2 py-0.5 rounded">HOT</div>
+                            </div>
+                            <div class="flex-1 p-3 flex flex-col justify-center">
+                                <div class="flex justify-between items-start mb-1">
+                                    <h4 class="text-gray-900 font-bold text-sm">Bali Family Special</h4>
+                                    <span class="commission-badge">12% Comm</span>
+                                </div>
+                                <p class="text-gray-500 text-xs mb-2">6N/7D • Flights + Hotel</p>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-orn-navy font-bold">850</span>
+                                        <span class="text-gray-500 text-xs"> Credits</span>
+                                    </div>
+                                    <span class="text-green-600 text-xs font-bold">High Demand</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card overflow-hidden flex">
+                            <div class="w-24 h-24 relative flex-shrink-0">
+                                <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=200&h=200&fit=crop" class="w-full h-full object-cover" alt="Japan">
+                            </div>
+                            <div class="flex-1 p-3 flex flex-col justify-center">
+                                <div class="flex justify-between items-start mb-1">
+                                    <h4 class="text-gray-900 font-bold text-sm">Japan Cherry Blossom</h4>
+                                    <span class="commission-badge">10% Comm</span>
+                                </div>
+                                <p class="text-gray-500 text-xs mb-2">8N/9D • Guided Tour</p>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-orn-navy font-bold">1,200</span>
+                                        <span class="text-gray-500 text-xs"> Credits</span>
+                                    </div>
+                                    <span class="text-gray-400 text-xs">45 sold</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card overflow-hidden flex">
+                            <div class="w-24 h-24 relative flex-shrink-0">
+                                <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200&h=200&fit=crop" class="w-full h-full object-cover" alt="Maldives">
+                            </div>
+                            <div class="flex-1 p-3 flex flex-col justify-center">
+                                <div class="flex justify-between items-start mb-1">
+                                    <h4 class="text-gray-900 font-bold text-sm">Maldives Honeymoon</h4>
+                                    <span class="commission-badge">15% Comm</span>
+                                </div>
+                                <p class="text-gray-500 text-xs mb-2">4N/5D • Water Villa</p>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-orn-navy font-bold">1,800</span>
+                                        <span class="text-gray-500 text-xs"> Credits</span>
+                                    </div>
+                                    <span class="text-gray-400 text-xs">28 sold</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Bookings -->
+                <div class="px-6 pb-24">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-gray-900 font-bold text-lg">Recent Customer Bookings</h3>
+                        <button onclick="navigateTo('bookings')" class="text-orn-navy text-xs font-bold">View All →</button>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="card p-4 flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                                <i class="fas fa-plane text-sm"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-gray-900 text-sm font-bold truncate">Sharma Family - Bali</p>
+                                <p class="text-gray-500 text-xs truncate">Booked today • 4 travelers</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-green-600 font-bold text-sm block">+₹5,100</span>
+                                <span class="text-[10px] text-gray-400">Commission</span>
+                            </div>
+                        </div>
+                        
+                        <div class="card p-4 flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-green-600 flex-shrink-0">
+                                <i class="fas fa-check text-sm"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-gray-900 text-sm font-bold truncate">Patel Group - Dubai</p>
+                                <p class="text-gray-500 text-xs truncate">Completed yesterday • 8 travelers</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-gray-900 font-bold text-sm block">₹8,400</span>
+                                <span class="text-[10px] text-green-600">Earned</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 3: INVENTORY (PACKAGES TO SELL) -->
+            <div id="page-inventory" class="page">
+                <div class="px-6 pt-2 pb-4 flex items-center gap-3 bg-white">
+                    <button onclick="navigateTo('home')" class="interactive-btn w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900 font-display">Travel Inventory</h2>
+                        <p class="text-xs text-gray-500">Packages available for your customers</p>
+                    </div>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="px-6 mb-4">
+                    <div class="card p-3 flex items-center gap-3">
+                        <i class="fas fa-search text-gray-400"></i>
+                        <input type="text" placeholder="Search destinations, packages..." class="flex-1 bg-transparent outline-none text-sm">
+                        <button class="interactive-btn p-2 bg-orn-navy text-white rounded-lg">
+                            <i class="fas fa-filter text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Category Tabs -->
+                <div class="px-6 mb-4">
+                    <div class="flex gap-2 overflow-x-auto no-scrollbar">
+                        <button class="interactive-btn px-5 py-2 bg-orn-navy text-white rounded-full text-xs font-bold whitespace-nowrap">ALL PACKAGES</button>
+                        <button class="interactive-btn px-5 py-2 bg-gray-100 text-gray-600 rounded-full text-xs font-bold whitespace-nowrap">FAMILY</button>
+                        <button class="interactive-btn px-5 py-2 bg-gray-100 text-gray-600 rounded-full text-xs font-bold whitespace-nowrap">HONEYMOON</button>
+                        <button class="interactive-btn px-5 py-2 bg-gray-100 text-gray-600 rounded-full text-xs font-bold whitespace-nowrap">GROUP</button>
+                    </div>
+                </div>
+
+                <div class="px-6 space-y-4 pb-24">
+                    <!-- Featured Package -->
+                    <div class="card overflow-hidden border-2 border-orange-200">
+                        <div class="h-40 bg-gray-200 relative">
+                            <img src="https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=600&h=400&fit=crop" class="w-full h-full object-cover" alt="Thailand">
+                            <div class="absolute top-3 left-3 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Best Seller</div>
+                            <div class="absolute top-3 right-3 bg-white/90 backdrop-blur text-orn-navy text-[10px] font-bold px-3 py-1 rounded-full">15% Commission</div>
+                        </div>
+                        <div class="p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-bold text-gray-900">Thailand Island Hopper</h3>
+                                <span class="text-2xl font-bold text-orn-navy">650</span>
+                            </div>
+                            <p class="text-gray-500 text-xs mb-3">Bangkok + Phuket + Krabi • 7N/8D • Flights Included</p>
+                            
+                            <div class="grid grid-cols-3 gap-2 mb-4 text-center">
+                                <div class="bg-blue-50 rounded-lg p-2">
+                                    <p class="text-[10px] text-gray-500">Your Cost</p>
+                                    <p class="text-sm font-bold text-orn-navy">650 CR</p>
+                                </div>
+                                <div class="bg-green-50 rounded-lg p-2">
+                                    <p class="text-[10px] text-gray-500">Sell Price</p>
+                                    <p class="text-sm font-bold text-green-600">₹54,000</p>
+                                </div>
+                                <div class="bg-orange-50 rounded-lg p-2">
+                                    <p class="text-[10px] text-gray-500">You Earn</p>
+                                    <p class="text-sm font-bold text-agent-orange">₹8,100</p>
+                                </div>
+                            </div>
+
+                            <button class="interactive-btn w-full bg-orn-navy text-white py-3 rounded-xl font-bold text-sm">
+                                Book for Customer
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Regular Packages -->
+                    <div class="card overflow-hidden flex">
+                        <div class="w-28 h-28 relative flex-shrink-0">
+                            <img src="https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=200&h=200&fit=crop" class="w-full h-full object-cover" alt="Europe">
+                            <div class="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] py-1 text-center">12% Comm</div>
+                        </div>
+                        <div class="flex-1 p-3 flex flex-col justify-center">
+                            <h4 class="text-gray-900 font-bold text-sm mb-1">Europe Highlights</h4>
+                            <p class="text-gray-500 text-xs mb-2">Paris + Swiss + Italy • 10D</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-orn-navy font-bold">1,450 CR</span>
+                                <button class="interactive-btn px-4 py-1.5 bg-orn-navy text-white text-xs font-bold rounded-lg">Sell</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card overflow-hidden flex">
+                        <div class="w-28 h-28 relative flex-shrink-0">
+                            <img src="https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?w=200&h=200&fit=crop" class="w-full h-full object-cover" alt="Vietnam">
+                            <div class="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] py-1 text-center">10% Comm</div>
+                        </div>
+                        <div class="flex-1 p-3 flex flex-col justify-center">
+                            <h4 class="text-gray-900 font-bold text-sm mb-1">Vietnam Explorer</h4>
+                            <p class="text-gray-500 text-xs mb-2">Hanoi + Halong Bay • 5N/6D</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-orn-navy font-bold">520 CR</span>
+                                <button class="interactive-btn px-4 py-1.5 bg-orn-navy text-white text-xs font-bold rounded-lg">Sell</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card overflow-hidden flex">
+                        <div class="w-28 h-28 relative flex-shrink-0">
+                            <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&h=200&fit=crop" class="w-full h-full object-cover" alt="Swiss">
+                            <div class="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] py-1 text-center">12% Comm</div>
+                        </div>
+                        <div class="flex-1 p-3 flex flex-col justify-center">
+                            <h4 class="text-gray-900 font-bold text-sm mb-1">Swiss Alps Special</h4>
+                            <p class="text-gray-500 text-xs mb-2">Zurich + Interlaken • 6N/7D</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-orn-navy font-bold">1,850 CR</span>
+                                <button class="interactive-btn px-4 py-1.5 bg-orn-navy text-white text-xs font-bold rounded-lg">Sell</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card overflow-hidden flex">
+                        <div class="w-28 h-28 relative flex-shrink-0">
+                            <img src="https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=200&h=200&fit=crop" class="w-full h-full object-cover" alt="Dubai">
+                            <div class="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] py-1 text-center">8% Comm</div>
+                        </div>
+                        <div class="flex-1 p-3 flex flex-col justify-center">
+                            <h4 class="text-gray-900 font-bold text-sm mb-1">Dubai Shopping Festival</h4>
+                            <p class="text-gray-500 text-xs mb-2">4N/5D • Visa Included</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-orn-navy font-bold">420 CR</span>
+                                <button class="interactive-btn px-4 py-1.5 bg-orn-navy text-white text-xs font-bold rounded-lg">Sell</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 4: BOOKINGS -->
+            <div id="page-bookings" class="page">
+                <div class="px-6 pt-2 pb-4 flex items-center gap-3 bg-white">
+                    <button onclick="navigateTo('home')" class="interactive-btn w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900 font-display">My Bookings</h2>
+                        <p class="text-xs text-gray-500">Track all customer reservations</p>
+                    </div>
+                </div>
+
+                <!-- Filter Tabs -->
+                <div class="px-6 mb-4">
+                    <div class="flex gap-2 overflow-x-auto no-scrollbar">
+                        <button class="interactive-btn px-5 py-2 bg-orn-navy text-white rounded-full text-xs font-bold whitespace-nowrap">ALL</button>
+                        <button class="interactive-btn px-5 py-2 bg-gray-100 text-gray-600 rounded-full text-xs font-bold whitespace-nowrap">CONFIRMED</button>
+                        <button class="interactive-btn px-5 py-2 bg-gray-100 text-gray-600 rounded-full text-xs font-bold whitespace-nowrap">PENDING</button>
+                        <button class="interactive-btn px-5 py-2 bg-gray-100 text-gray-600 rounded-full text-xs font-bold whitespace-nowrap">COMPLETED</button>
+                    </div>
+                </div>
+
+                <div class="px-6 space-y-4 pb-24">
+                    <!-- Confirmed Booking -->
+                    <div class="card overflow-hidden border-l-4 border-green-500">
+                        <div class="bg-green-50 px-4 py-2 flex justify-between items-center border-b border-green-100">
+                            <span class="text-xs font-bold text-green-700 uppercase tracking-wider">Confirmed</span>
+                            <span class="text-xs text-green-600 font-semibold">Booking ID: ORN-78234</span>
+                        </div>
+                        <div class="p-4">
+                            <div class="flex gap-4 mb-4">
+                                <div class="w-20 h-20 rounded-xl bg-gray-200 overflow-hidden flex-shrink-0">
+                                    <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=200&h=200&fit=crop" class="w-full h-full object-cover" alt="Bali">
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-gray-900 font-bold mb-1">Bali Family Package</h3>
+                                    <p class="text-gray-500 text-xs mb-1">Customer: Sharma Family</p>
+                                    <p class="text-gray-500 text-xs">Travel: Mar 15-22, 2024 • 4 pax</p>
+                                </div>
+                            </div>
+                            
+                            <div class="border-t border-gray-100 pt-3 space-y-2">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">Credits Used</span>
+                                    <span class="text-orn-navy font-bold">3,400 CR</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">Commission Earned</span>
+                                    <span class="text-green-600 font-bold">₹5,100</span>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2 mt-4">
+                                <button class="interactive-btn flex-1 bg-orn-navy text-white py-2 rounded-lg text-xs font-bold">
+                                    View Voucher
+                                </button>
+                                <button class="interactive-btn flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-xs font-bold">
+                                    Modify
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pending Booking -->
+                    <div class="card overflow-hidden border-l-4 border-yellow-500">
+                        <div class="bg-yellow-50 px-4 py-2 flex justify-between items-center border-b border-yellow-100">
+                            <span class="text-xs font-bold text-yellow-700 uppercase tracking-wider">Pending Payment</span>
+                            <span class="text-xs text-yellow-600 font-semibold">Booking ID: ORN-78235</span>
+                        </div>
+                        <div class="p-4">
+                            <div class="flex gap-4 mb-4">
+                                <div class="w-20 h-20 rounded-xl bg-gray-200 overflow-hidden flex-shrink-0">
+                                    <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=200&h=200&fit=crop" class="w-full h-full object-cover" alt="Japan">
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-gray-900 font-bold mb-1">Japan Cherry Blossom</h3>
+                                    <p class="text-gray-500 text-xs mb-1">Customer: Gupta Family</p>
+                                    <p class="text-gray-500 text-xs">Travel: Apr 10-18, 2024 • 3 pax</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
+                                <p class="text-xs text-yellow-800 text-center font-semibold">Awaiting customer payment confirmation</p>
+                            </div>
+
+                            <div class="flex gap-2">
+                                <button class="interactive-btn flex-1 bg-green-600 text-white py-2 rounded-lg text-xs font-bold">
+                                    Confirm Payment
+                                </button>
+                                <button class="interactive-btn flex-1 bg-red-100 text-red-600 py-2 rounded-lg text-xs font-bold">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Completed Booking -->
+                    <div class="card overflow-hidden border-l-4 border-blue-500 opacity-75">
+                        <div class="bg-blue-50 px-4 py-2 flex justify-between items-center border-b border-blue-100">
+                            <span class="text-xs font-bold text-blue-700 uppercase tracking-wider">Completed</span>
+                            <span class="text-xs text-blue-600 font-semibold">Booking ID: ORN-77921</span>
+                        </div>
+                        <div class="p-4">
+                            <div class="flex gap-4 mb-3">
+                                <div class="w-20 h-20 rounded-xl bg-gray-200 overflow-hidden flex-shrink-0">
+                                    <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200&h=200&fit=crop" class="w-full h-full object-cover grayscale" alt="Maldives">
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-gray-900 font-bold mb-1">Maldives Honeymoon</h3>
+                                    <p class="text-gray-500 text-xs mb-1">Customer: Patel Couple</p>
+                                    <p class="text-gray-500 text-xs">Travel: Jan 15-20, 2024 • 2 pax</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between items-center pt-3 border-t border-gray-100">
+                                <div>
+                                    <p class="text-xs text-gray-500">Commission Paid</p>
+                                    <p class="text-green-600 font-bold">₹12,600</p>
+                                </div>
+                                <button class="interactive-btn text-orn-navy text-xs font-bold">View Details →</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 5: EARNINGS -->
+            <div id="page-earnings" class="page">
+                <div class="px-6 pt-2 pb-4">
+                    <h2 class="text-2xl font-bold text-gray-900 font-display">My Earnings</h2>
+                    <p class="text-gray-500 text-sm">Commission & Performance</p>
+                </div>
+
+                <!-- Total Earnings Card -->
+                <div class="px-6 mb-6">
+                    <div class="card-orange p-6 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                        
+                        <div class="relative z-10 text-center">
+                            <p class="text-orange-100 text-xs font-bold uppercase tracking-wider mb-2">Total Commission Earned</p>
+                            <h1 class="text-4xl font-bold text-white font-display mb-1">₹ 1,24,500</h1>
+                            <p class="text-orange-100 text-sm mb-6">Lifetime Earnings</p>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-white/10 backdrop-blur rounded-xl p-3">
+                                    <p class="text-2xl font-bold text-white">₹45,200</p>
+                                    <p class="text-orange-100 text-xs">This Month</p>
+                                </div>
+                                <div class="bg-white/10 backdrop-blur rounded-xl p-3">
+                                    <p class="text-2xl font-bold text-white">24</p>
+                                    <p class="text-orange-100 text-xs">Bookings</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Performance -->
+                <div class="px-6 mb-6">
+                    <h3 class="text-gray-900 font-bold mb-4 text-sm uppercase tracking-wider">Monthly Performance</h3>
+                    <div class="card p-4">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center text-green-600">
+                                        <i class="fas fa-calendar-check text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-900 font-bold text-sm">February 2024</p>
+                                        <p class="text-gray-500 text-xs">12 bookings</p>
+                                    </div>
+                                </div>
+                                <span class="text-green-600 font-bold">₹45,200</span>
+                            </div>
+                            
+                            <div class="h-px bg-gray-100"></div>
+                            
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                                        <i class="fas fa-calendar text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-900 font-bold text-sm">January 2024</p>
+                                        <p class="text-gray-500 text-xs">18 bookings</p>
+                                    </div>
+                                </div>
+                                <span class="text-gray-900 font-bold">₹52,800</span>
+                            </div>
+                            
+                            <div class="h-px bg-gray-100"></div>
+                            
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
+                                        <i class="fas fa-calendar text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-900 font-bold text-sm">December 2023</p>
+                                        <p class="text-gray-500 text-xs">15 bookings</p>
+                                    </div>
+                                </div>
+                                <span class="text-gray-900 font-bold">₹26,500</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Commission Structure -->
+                <div class="px-6 pb-24">
+                    <h3 class="text-gray-900 font-bold mb-4 text-sm uppercase tracking-wider">Your Commission Tiers</h3>
+                    <div class="space-y-3">
+                        <div class="card p-4 border-2 border-orange-200 bg-orange-50/30">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-900 font-bold">International Packages</span>
+                                <span class="commission-badge">12% Avg</span>
+                            </div>
+                            <p class="text-xs text-gray-500">Europe, USA, Australia, Japan</p>
+                        </div>
+                        
+                        <div class="card p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-900 font-bold">Asian Destinations</span>
+                                <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">10%</span>
+                            </div>
+                            <p class="text-xs text-gray-500">Thailand, Singapore, Bali, Vietnam</p>
+                        </div>
+                        
+                        <div class="card p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-900 font-bold">Middle East</span>
+                                <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">8%</span>
+                            </div>
+                            <p class="text-xs text-gray-500">Dubai, Abu Dhabi, Saudi Arabia</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-info-circle text-orn-navy mt-0.5"></i>
+                            <div>
+                                <p class="text-sm font-bold text-gray-900">Gold Agent Status</p>
+                                <p class="text-xs text-gray-600 mt-1">You're in the top 5% of agents! Maintain 20+ bookings per month to unlock Platinum status (15% commission).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 6: CUSTOMERS -->
+            <div id="page-customers" class="page">
+                <div class="px-6 pt-2 pb-4 flex items-center gap-3 bg-white">
+                    <button onclick="navigateTo('home')" class="interactive-btn w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900 font-display">My Customers</h2>
+                        <p class="text-xs text-gray-500">Manage your client base</p>
+                    </div>
+                </div>
+
+                <!-- Search -->
+                <div class="px-6 mb-4">
+                    <div class="card p-3 flex items-center gap-3">
+                        <i class="fas fa-search text-gray-400"></i>
+                        <input type="text" placeholder="Search customers..." class="flex-1 bg-transparent outline-none text-sm">
+                        <button class="interactive-btn p-2 bg-green-500 text-white rounded-lg">
+                            <i class="fas fa-plus text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="px-6 space-y-3 pb-24">
+                    <div class="card p-4">
+                        <div class="flex items-center gap-4 mb-3">
+                            <div class="w-12 h-12 rounded-full bg-orn-navy text-white flex items-center justify-center text-lg font-bold">RS</div>
+                            <div class="flex-1">
+                                <h3 class="text-gray-900 font-bold">Rajesh Sharma</h3>
+                                <p class="text-gray-500 text-xs">rajesh.sharma@email.com</p>
+                            </div>
+                            <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">Active</span>
+                        </div>
+                        <div class="flex justify-between text-sm border-t border-gray-100 pt-3">
+                            <span class="text-gray-500">Total Bookings: <span class="text-gray-900 font-bold">3</span></span>
+                            <span class="text-gray-500">Total Spent: <span class="text-gray-900 font-bold">₹1,24,000</span></span>
+                        </div>
+                    </div>
+
+                    <div class="card p-4">
+                        <div class="flex items-center gap-4 mb-3">
+                            <div class="w-12 h-12 rounded-full bg-purple-500 text-white flex items-center justify-center text-lg font-bold">PG</div>
+                            <div class="flex-1">
+                                <h3 class="text-gray-900 font-bold">Priya Gupta</h3>
+                                <p class="text-gray-500 text-xs">priya.gupta@email.com</p>
+                            </div>
+                            <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">Active</span>
+                        </div>
+                        <div class="flex justify-between text-sm border-t border-gray-100 pt-3">
+                            <span class="text-gray-500">Total Bookings: <span class="text-gray-900 font-bold">5</span></span>
+                            <span class="text-gray-500">Total Spent: <span class="text-gray-900 font-bold">₹2,45,000</span></span>
+                        </div>
+                    </div>
+
+                    <div class="card p-4">
+                        <div class="flex items-center gap-4 mb-3">
+                            <div class="w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center text-lg font-bold">VP</div>
+                            <div class="flex-1">
+                                <h3 class="text-gray-900 font-bold">Vikram Patel</h3>
+                                <p class="text-gray-500 text-xs">vikram.patel@email.com</p>
+                            </div>
+                            <span class="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded-full">New</span>
+                        </div>
+                        <div class="flex justify-between text-sm border-t border-gray-100 pt-3">
+                            <span class="text-gray-500">Total Bookings: <span class="text-gray-900 font-bold">1</span></span>
+                            <span class="text-gray-500">Total Spent: <span class="text-gray-900 font-bold">₹42,000</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 7: PROFILE -->
+            <div id="page-profile" class="page">
+                <div class="px-6 pt-2 pb-4">
+                    <h2 class="text-2xl font-bold text-gray-900 font-display">Agency Profile</h2>
+                </div>
+
+                <!-- Agency Card -->
+                <div class="px-6 mb-6">
+                    <div class="card-navy p-6 text-center relative overflow-hidden">
+                        <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-white/10 flex items-center justify-center text-3xl font-bold text-white border-4 border-white/20">
+                            AT
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-1">Ajay Travels</h3>
+                        <p class="text-blue-200 text-sm mb-2">Connaught Place, New Delhi</p>
+                        <div class="inline-flex items-center gap-2 bg-yellow-500/20 border border-yellow-400/30 px-4 py-2 rounded-full mb-4">
+                            <i class="fas fa-crown text-yellow-400"></i>
+                            <span class="text-yellow-300 font-bold text-sm">Gold Agent</span>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-white/20">
+                            <div>
+                                <p class="text-xl font-bold text-white">156</p>
+                                <p class="text-blue-200 text-xs">Total Bookings</p>
+                            </div>
+                            <div>
+                                <p class="text-xl font-bold text-white">₹12.4L</p>
+                                <p class="text-blue-200 text-xs">Sales Volume</p>
+                            </div>
+                            <div>
+                                <p class="text-xl font-bold text-white">4.9</p>
+                                <p class="text-blue-200 text-xs">Rating</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agency Details -->
+                <div class="px-6 mb-6">
+                    <h3 class="text-gray-900 font-bold mb-4 text-sm uppercase tracking-wider">Agency Information</h3>
+                    <div class="card overflow-hidden">
+                        <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                            <span class="text-gray-500 text-sm">Agent ID</span>
+                            <span class="text-gray-900 font-mono text-sm font-bold">AJAY-DEL-001</span>
+                        </div>
+                        <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                            <span class="text-gray-500 text-sm">GST Number</span>
+                            <span class="text-gray-900 text-sm font-bold">07AJAY1234K1Z8</span>
+                        </div>
+                        <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                            <span class="text-gray-500 text-sm">Contact</span>
+                            <span class="text-gray-900 text-sm font-bold">+91 98101 23456</span>
+                        </div>
+                        <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                            <span class="text-gray-500 text-sm">Email</span>
+                            <span class="text-gray-900 text-sm font-bold">bookings@ajaytravels.in</span>
+                        </div>
+                        <div class="p-4 flex justify-between items-center">
+                            <span class="text-gray-500 text-sm">Address</span>
+                            <span class="text-gray-900 text-sm font-bold text-right">Block C, CP, New Delhi</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div class="px-6 space-y-3 pb-24">
+                    <h3 class="text-gray-900 font-bold mb-2 text-sm uppercase tracking-wider">Settings</h3>
+                    
+                    <button class="interactive-btn w-full card p-4 flex items-center justify-between text-left">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-orn-navy">
+                                <i class="fas fa-bell text-sm"></i>
+                            </div>
+                            <span class="text-gray-900 text-sm font-bold">Notifications</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                    </button>
+
+                    <button class="interactive-btn w-full card p-4 flex items-center justify-between text-left">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
+                                <i class="fas fa-lock text-sm"></i>
+                            </div>
+                            <span class="text-gray-900 text-sm font-bold">Change Password</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                    </button>
+
+                    <button class="interactive-btn w-full card p-4 flex items-center justify-between text-left">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center text-green-600">
+                                <i class="fas fa-headset text-sm"></i>
+                            </div>
+                            <span class="text-gray-900 text-sm font-bold">Agent Support</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                    </button>
+
+                    <button onclick="navigateTo('login')" class="interactive-btn w-full card p-4 flex items-center justify-between text-left border-red-200 bg-red-50">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
+                                <i class="fas fa-sign-out-alt text-sm"></i>
+                            </div>
+                            <span class="text-red-600 text-sm font-bold">Sign Out</span>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="mt-8 text-center pb-6">
+                    <div class="flex justify-center items-center gap-2 mb-2">
+                        <div class="orn-bars" style="height: 20px;">
+                            <div class="orn-bar" style="height: 20px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 16px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 20px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 16px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 20px; width: 5px;"></div>
+                            <div class="orn-bar" style="height: 16px; width: 5px;"></div>
+                        </div>
+                        <span class="text-black font-black font-display text-xl">ORN</span>
+                    </div>
+                    <p class="text-xs text-gray-600 font-bold">B2B Agent Partner Portal</p>
+                    <p class="text-[10px] text-gray-400 mt-1">© 2024 ORN Holidays • Part of HCL Group</p>
+                </div>
+            </div>
+
+            <!-- SCREEN 8: NOTIFICATIONS -->
+            <div id="page-notifications" class="page">
+                <div class="px-6 pt-2 pb-4 flex items-center gap-3 bg-white">
+                    <button onclick="navigateTo('home')" class="interactive-btn w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <h2 class="text-xl font-bold text-gray-900 font-display">Notifications</h2>
+                </div>
+
+                <div class="px-6 mb-4">
+                    <div class="flex gap-2">
+                        <button class="interactive-btn flex-1 bg-orn-navy text-white py-2 rounded-lg text-xs font-bold">All</button>
+                        <button class="interactive-btn flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg text-xs font-bold">Bookings</button>
+                        <button class="interactive-btn flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg text-xs font-bold">Payments</button>
+                    </div>
+                </div>
+
+                <div class="px-6 space-y-3 pb-24">
+                    <div class="card p-4 border-l-4 border-green-500 bg-green-50/30">
+                        <div class="flex gap-3">
+                            <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white flex-shrink-0">
+                                <i class="fas fa-check text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start mb-1">
+                                    <h4 class="text-gray-900 font-bold text-sm">Commission Credited</h4>
+                                    <span class="text-[10px] text-gray-400">2h ago</span>
+                                </div>
+                                <p class="text-gray-600 text-xs">₹5,100 commission for booking ORN-78234 has been credited to your account.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-4 border-l-4 border-blue-500">
+                        <div class="flex gap-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                                <i class="fas fa-plane text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start mb-1">
+                                    <h4 class="text-gray-900 font-bold text-sm">New Package Available</h4>
+                                    <span class="text-[10px] text-gray-400">5h ago</span>
+                                </div>
+                                <p class="text-gray-600 text-xs">New Europe Summer Special package added with 15% commission rate.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-4 border-l-4 border-orange-500">
+                        <div class="flex gap-3">
+                            <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 flex-shrink-0">
+                                <i class="fas fa-gift text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start mb-1">
+                                    <h4 class="text-gray-900 font-bold text-sm">Bonus Credits Added</h4>
+                                    <span class="text-[10px] text-gray-400">1d ago</span>
+                                </div>
+                                <p class="text-gray-600 text-xs">Congratulations! 500 bonus credits added for achieving Gold status.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-4 border-l-4 border-purple-500 opacity-60">
+                        <div class="flex gap-3">
+                            <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 flex-shrink-0">
+                                <i class="fas fa-star text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start mb-1">
+                                    <h4 class="text-gray-900 font-bold text-sm">Rate Your Experience</h4>
+                                    <span class="text-[10px] text-gray-400">2d ago</span>
+                                </div>
+                                <p class="text-gray-600 text-xs">How was your experience with the recent Bali package? Share your feedback.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation -->
+            <div class="bottom-nav">
+                <button class="nav-item active" onclick="navigateTo('home')" data-page="home">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </button>
+                <button class="nav-item" onclick="navigateTo('inventory')" data-page="inventory">
+                    <i class="fas fa-suitcase"></i>
+                    <span>Inventory</span>
+                </button>
+                <button class="nav-item" onclick="navigateTo('bookings')" data-page="bookings">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Bookings</span>
+                </button>
+                <button class="nav-item" onclick="navigateTo('earnings')" data-page="earnings">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Earnings</span>
+                </button>
+                <button class="nav-item" onclick="navigateTo('profile')" data-page="profile">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Splash screen fade out
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('splash-screen').classList.add('fade-out');
+            }, 2800);
+        });
+
+        // Clock update
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Navigation
+        function navigateTo(pageName) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            const targetPage = document.getElementById('page-' + pageName);
+            if (targetPage) {
+                targetPage.classList.add('active');
+            }
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.page === pageName) {
+                    item.item.classList.add('active');
+                }
+            });
+            
+            const appContent = document.querySelector('.app-content');
+            if (appContent) {
+                appContent.scrollTop = 0;
+            }
+        }
+
+        // Touch feedback
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('button, .interactive-btn').forEach(btn => {
+                btn.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.96)';
+                });
+                btn.addEventListener('touchend', function() {
+                    this.style.transform = '';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory Command Centre - Organizational Structure</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --mgmt-color: #1a365d;
+            --tech-color: #3182ce;
+            --finance-color: #38b2ac;
+            --marketing-color: #805ad5;
+            --sales-color: #e53e3e;
+            --operations-color: #38a169;
+            --hr-color: #d53f8c;
+            --commercial-color: #dd6b20;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f7fafc;
+            min-height: 100vh;
+            padding-top: 140px;
+        }
+        
+        /* Compact Fixed Top Bar */
+        .command-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: white;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .header-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .header-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+        }
+        
+        .stat-pill {
+            background: rgba(255,255,255,0.1);
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .stat-value {
+            font-weight: 700;
+            color: #48bb78;
+        }
+        
+        .header-controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-sm {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .btn-sm:hover { background: rgba(255,255,255,0.2); transform: translateY(-1px); }
+        .btn-sm.primary { background: #4299e1; }
+        .btn-sm.success { background: #48bb78; }
+        .btn-sm.warning { background: #ed8936; }
+        .btn-sm.danger { background: #f56565; }
+        
+        /* Department Quick Stats Bar */
+        .dept-quick-bar {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 1px;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .dept-quick-item {
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .dept-quick-item:hover { transform: translateY(-2px); }
+        .dept-quick-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            right: 10%;
+            height: 3px;
+            background: white;
+            border-radius: 3px 3px 0 0;
+        }
+        
+        .dept-quick-item.management { background: var(--mgmt-color); }
+        .dept-quick-item.tech { background: var(--tech-color); }
+        .dept-quick-item.finance { background: var(--finance-color); }
+        .dept-quick-item.marketing { background: var(--marketing-color); }
+        .dept-quick-item.sales { background: var(--sales-color); }
+        .dept-quick-item.operations { background: var(--operations-color); }
+        .dept-quick-item.hr { background: var(--hr-color); }
+        .dept-quick-item.commercial { background: var(--commercial-color); }
+        
+        .dept-quick-icon { font-size: 1.2em; margin-bottom: 4px; }
+        .dept-quick-name { font-size: 0.65em; font-weight: 600; text-transform: uppercase; opacity: 0.9; }
+        .dept-quick-count {
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+        .dept-quick-change {
+            font-size: 0.7em;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+        
+        /* Main Content */
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Leadership Section */
+        .leadership-section {
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(26, 54, 93, 0.3);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .section-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .leadership-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        
+        .leader-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s;
+        }
+        
+        .leader-card:hover {
+            transform: translateY(-3px);
+            background: rgba(255,255,255,0.15);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        
+        .leader-name {
+            font-size: 1.1em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .leader-role {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+        
+        .leader-form {
+            display: grid;
+            gap: 10px;
+        }
+        
+        .form-select-dark {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            background: rgba(0,0,0,0.2);
+            color: white;
+            font-size: 0.85em;
+        }
+        
+        .form-select-dark option { background: #2d3748; color: white; }
+        
+        /* Department Sections */
+        .dept-section {
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .dept-header {
+            padding: 20px 25px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .dept-header.management { background: var(--mgmt-color); }
+        .dept-header.tech { background: var(--tech-color); }
+        .dept-header.finance { background: var(--finance-color); }
+        .dept-header.marketing { background: var(--marketing-color); }
+        .dept-header.sales { background: var(--sales-color); }
+        .dept-header.operations { background: var(--operations-color); }
+        .dept-header.hr { background: var(--hr-color); }
+        .dept-header.commercial { background: var(--commercial-color); }
+        
+        .dept-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .dept-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+        }
+        
+        .dept-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.2);
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+        
+        .dept-body {
+            padding: 20px;
+        }
+        
+        /* Role Groups */
+        .role-group {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        
+        .role-group:hover { border-color: #cbd5e0; }
+        
+        .role-header {
+            background: #f7fafc;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .role-header:hover { background: #edf2f7; }
+        
+        .role-group.expanded .role-header {
+            background: linear-gradient(135deg, #ebf8ff 0%, #e6fffa 100%);
+            border-bottom: 2px solid #4299e1;
+        }
+        
+        .role-title-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .role-count {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.95em;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .role-name {
+            font-weight: 700;
+            color: #2d3748;
+            font-size: 1em;
+        }
+        
+        .expand-icon {
+            transition: transform 0.3s;
+            color: #718096;
+            font-size: 1.2em;
+        }
+        
+        .role-group.expanded .expand-icon { transform: rotate(180deg); }
+        
+        .role-members {
+            display: none;
+            max-height: 600px;
+            overflow-y: auto;
+            background: white;
+        }
+        
+        .role-group.expanded .role-members { display: block; }
+        
+        /* Person Cards */
+        .person-card {
+            padding: 18px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: grid;
+            grid-template-columns: 1fr 1.5fr auto;
+            gap: 15px;
+            align-items: start;
+            transition: all 0.2s;
+        }
+        
+        @media (max-width: 1200px) {
+            .person-card { grid-template-columns: 1fr; }
+        }
+        
+        .person-card:hover { background: #f7fafc; }
+        .person-card:last-child { border-bottom: none; }
+        
+        .person-card.inactive {
+            background: #fed7d7;
+            opacity: 0.7;
+        }
+        
+        .person-card.modified {
+            border-left: 4px solid #ed8936;
+            background: #fffaf0;
+        }
+        
+        .person-main { min-width: 0; }
+        
+        .person-name {
+            font-weight: 700;
+            color: #2d3748;
+            font-size: 1em;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .person-original {
+            font-size: 0.8em;
+            color: #a0aec0;
+            text-decoration: line-through;
+        }
+        
+        .person-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        @media (max-width: 600px) {
+            .person-form-grid { grid-template-columns: 1fr; }
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.85em;
+            transition: all 0.2s;
+        }
+        
+        .form-control:focus {
+            border-color: #4299e1;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+        
+        .checkbox-group-inline {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .checkbox-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .checkbox-pill:hover { border-color: #4299e1; }
+        .checkbox-pill.checked {
+            background: #ebf8ff;
+            border-color: #4299e1;
+            color: #2b6cb0;
+            font-weight: 600;
+        }
+        
+        .person-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover { transform: scale(1.1); }
+        .action-btn.validate { border-color: #48bb78; color: #48bb78; }
+        .action-btn.validate:hover, .action-btn.validate.active { background: #48bb78; color: white; }
+        .action-btn.reject { border-color: #f56565; color: #f56565; }
+        .action-btn.reject:hover, .action-btn.reject.active { background: #f56565; color: white; }
+        .action-btn.inactive-btn { border-color: #ed8936; color: #ed8936; }
+        .action-btn.inactive-btn:hover, .action-btn.inactive-btn.active { background: #ed8936; color: white; }
+        
+        .modified-badge {
+            display: inline-block;
+            background: #ed8936;
+            color: white;
+            font-size: 0.7em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            font-weight: 600;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .dept-quick-bar { grid-template-columns: repeat(4, 1fr); }
+        }
+        
+        @media (max-width: 768px) {
+            body { padding-top: 180px; }
+            .dept-quick-bar { grid-template-columns: repeat(2, 1fr); }
+            .header-stats { display: none; }
+            .header-controls { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Fixed Command Header -->
+    <div class="command-header">
+        <div class="header-top">
+            <div class="header-title">
+                🎯 TripFactory Command Centre
+                <span style="opacity: 0.7; font-size: 0.8em; font-weight: 400;">| Organizational Structure</span>
+            </div>
+            
+            <div class="header-stats">
+                <div class="stat-pill">
+                    <span>Active:</span>
+                    <span class="stat-value" id="header-active">452</span>
+                </div>
+                <div class="stat-pill">
+                    <span>Modified:</span>
+                    <span class="stat-value" id="header-modified" style="color: #ed8936;">0</span>
+                </div>
+                <div class="stat-pill">
+                    <span>Inactive:</span>
+                    <span class="stat-value" id="header-inactive" style="color: #f56565;">0</span>
+                </div>
+            </div>
+            
+            <div class="header-controls">
+                <button class="btn-sm" onclick="expandAll()">📂 Expand</button>
+                <button class="btn-sm" onclick="collapseAll()">📁 Collapse</button>
+                <button class="btn-sm warning" onclick="resetChanges()">🔄 Reset</button>
+                <button class="btn-sm success" onclick="saveData()">💾 Save</button>
+                <button class="btn-sm primary" onclick="exportCleanExcel()">📊 Export Excel</button>
+                <button class="btn-sm danger" onclick="generateOrgChart()">🌳 Org Chart</button>
+            </div>
+        </div>
+        
+        <div class="dept-quick-bar">
+            <div class="dept-quick-item management" onclick="scrollToDept('management')">
+                <div class="dept-quick-icon">👔</div>
+                <div class="dept-quick-name">Management</div>
+                <div class="dept-quick-count" id="quick-mgmt">12</div>
+                <div class="dept-quick-change" id="change-mgmt">—</div>
+            </div>
+            <div class="dept-quick-item tech" onclick="scrollToDept('tech')">
+                <div class="dept-quick-icon">💻</div>
+                <div class="dept-quick-name">Tech</div>
+                <div class="dept-quick-count" id="quick-tech">48</div>
+                <div class="dept-quick-change" id="change-tech">—</div>
+            </div>
+            <div class="dept-quick-item finance" onclick="scrollToDept('finance')">
+                <div class="dept-quick-icon">💰</div>
+                <div class="dept-quick-name">Finance</div>
+                <div class="dept-quick-count" id="quick-finance">15</div>
+                <div class="dept-quick-change" id="change-finance">—</div>
+            </div>
+            <div class="dept-quick-item marketing" onclick="scrollToDept('marketing')">
+                <div class="dept-quick-icon">📢</div>
+                <div class="dept-quick-name">Marketing</div>
+                <div class="dept-quick-count" id="quick-marketing">18</div>
+                <div class="dept-quick-change" id="change-marketing">—</div>
+            </div>
+            <div class="dept-quick-item sales" onclick="scrollToDept('sales')">
+                <div class="dept-quick-icon">💼</div>
+                <div class="dept-quick-name">Sales</div>
+                <div class="dept-quick-count" id="quick-sales">42</div>
+                <div class="dept-quick-change" id="change-sales">—</div>
+            </div>
+            <div class="dept-quick-item operations" onclick="scrollToDept('operations')">
+                <div class="dept-quick-icon">⚙️</div>
+                <div class="dept-quick-name">Operations</div>
+                <div class="dept-quick-count" id="quick-operations">285</div>
+                <div class="dept-quick-change" id="change-operations">—</div>
+            </div>
+            <div class="dept-quick-item hr" onclick="scrollToDept('hr')">
+                <div class="dept-quick-icon">👥</div>
+                <div class="dept-quick-name">HR</div>
+                <div class="dept-quick-count" id="quick-hr">10</div>
+                <div class="dept-quick-change" id="change-hr">—</div>
+            </div>
+            <div class="dept-quick-item commercial" onclick="scrollToDept('commercial')">
+                <div class="dept-quick-icon">🤝</div>
+                <div class="dept-quick-name">Commercial</div>
+                <div class="dept-quick-count" id="quick-commercial">22</div>
+                <div class="dept-quick-change" id="change-commercial">—</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        
+        <!-- Leadership Section (CEO/Founders Only) -->
+        <div class="leadership-section" id="leadership">
+            <div class="section-header">
+                <div class="section-title">👑 C-Suite & Founders</div>
+                <div style="font-size: 0.9em; opacity: 0.8;">Executive Leadership Team</div>
+            </div>
+            <div class="leadership-grid" id="leadership-grid">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Department Sections -->
+        <div id="departments-container">
+            <!-- Populated dynamically -->
+        </div>
+        
+    </div>
+
+    <script>
+        // COMPLETE DATASET - All 452 employees
+        const allPeople = [
+            // EXECUTIVE LEADERSHIP (Founders & C-Suite)
+            { name: "Vinay Gupta", role: "Founder & CEO", dept: "management", isManager: true, isExecutive: true },
+            { name: "Amit Aggarwal", role: "Co-Founder (Tech)", dept: "management", isManager: true, isExecutive: true },
+            { name: "Ankit Agarwal", role: "Co-Founder (Procurement)", dept: "management", isManager: true, isExecutive: true },
+            { name: "Ankush Agarwal", role: "Co-Founder (People & Marketing)", dept: "management", isManager: true, isExecutive: true },
+            { name: "Varun Gupta", role: "Co-Founder (Tech)", dept: "management", isManager: true, isExecutive: true },
+            
+            // MANAGEMENT (Non-executive)
+            { name: "Vikas Sharma", role: "CEO's Office", dept: "management", isManager: true, isExecutive: false },
+            { name: "Vandana Mishra", role: "CEO's Office", dept: "management", isManager: true, isExecutive: false },
+            { name: "Lalitha P", role: "Country Manager - India", dept: "management", isManager: true, isExecutive: false },
+            { name: "Rahul Narayan", role: "Chief People Officer", dept: "management", isManager: true, isExecutive: false },
+            { name: "Yogesh Mehta", role: "Chief Commercial Officer", dept: "management", isManager: true, isExecutive: false },
+            { name: "Tonney Sharma", role: "Head of Quality", dept: "management", isManager: true, isExecutive: false },
+            { name: "Seema Tabbasum", role: "VP - Business Partnership", dept: "management", isManager: true, isExecutive: false },
+            
+            // TECH (48 people)
+            { name: "Nitin Madeshia", role: "Director of Product", dept: "tech", isManager: true, isExecutive: false },
+            { name: "Shrinivas Ravindra Devarkonda", role: "SVP - Devops", dept: "tech", isManager: true, isExecutive: false },
+            { name: "Sirajuddin Reniman", role: "Senior Engineering Manager", dept: "tech", isManager: true, isExecutive: false },
+            { name: "Ram Krishna Garg", role: "VP - Engineering", dept: "tech", isManager: true, isExecutive: false },
+            { name: "Thageer Ashraf S", role: "Sr.Product Designer", dept: "tech", isManager: true, isExecutive: false },
+            { name: "Kshitiz Gupta", role: "Lead Software Engineer", dept: "tech", isManager: true, isExecutive: false },
+            { name: "Vishal Sinha", role: "Engineering Manager", dept: "tech", isManager: true, isExecutive: false },
+            { name: "Shubham Kumar Baranwal", role: "Senior Engineering Manager", dept: "tech", isManager: true, isExecutive: false },
+            { name: "Aashish Manohar Varlani", role: "Senior Software Engineer", dept: "tech", isManager: true, isExecutive: false },
+            { name: "Sachin Kushawaha", role: "Senior Engineering Manager", dept: "tech", isManager: true, isExecutive: false },
+            { name: "Ashish Yadav", role: "VP - Product & Growth", dept: "tech", isManager: true, isExecutive: false },
+            { name: "Asad Siddiqui", role: "Product", dept: "tech", isManager: true, isExecutive: false },
+            { name: "Disha Mooljee", role: "Senior Product Manager", dept: "tech", isManager: true, isExecutive: false },
+            { name: "Karthik S", role: "Assistant Manager - Product", dept: "tech", isManager: true, isExecutive: false },
+            // Tech staff (non-manager)
+            { name: "Nandana N", role: "Senior Product Executive", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Vatsal Jalla", role: "Senior Product Executive", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Diana S K", role: "Product Associate", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Asha Aswathaiah", role: "Product Executive", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Indramma .", role: "Product Executive", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Jawahar R", role: "Product Executive", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Nandhini S", role: "Product Executive", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Bushra Shafi Sayyed", role: "Product Executive", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Rahul Kumar Sharma", role: "Product Executive", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Chandra Kothari", role: "Product Executive", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Pallavi Jain", role: "Product Executive", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Yara Sainithin", role: "Product Executive", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Sougata Saha", role: "Product Executive", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Raghu S T", role: "Product Executive", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Ashna Sunilkumar Sadhwani", role: "Product Executive", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Tejas V C", role: "IT & Admin Executive", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Suraj Patil", role: "Software Test Engineer", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Anusha S P", role: "Senior Test Engineer", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Nagarajan Thangavel", role: "Senior Software Engineer", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Sarath R Nair", role: "Software Engineer", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Kumari Riya", role: "Software Engineer", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Prajwal B M", role: "Software Development Engineer - I", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Ravi S", role: "Software Development Engineer - I", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Bandi Karthik", role: "Software Development Engineer - I", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Sravan Peddakotla", role: "Software Development Engineer - I", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Sarthak Gupta", role: "Software Development Engineer - I", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Anik Saha", role: "Software Engineer", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Deepankar Mondal", role: "Technical Lead", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Chandu Udarapu", role: "Junior MIS Executive", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Divya Shree H M", role: "Junior MIS Executive", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Imaran ali", role: "Tech- Intern", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Vishal Vishwakarma", role: "Tech- Intern", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Cephas Gokula", role: "Tech- Intern", dept: "tech", isManager: false, isExecutive: false },
+            { name: "Yuvin Raja", role: "Tech- Intern", dept: "tech", isManager: false, isExecutive: false },
+            
+            // FINANCE (15 people)
+            { name: "Surya Prakash Sunku", role: "India and Global Finance Controller", dept: "finance", isManager: true, isExecutive: false },
+            { name: "Mallana Gouda", role: "Accounts Manager", dept: "finance", isManager: true, isExecutive: false },
+            { name: "Abhilash K R", role: "Account Manager - IATA BSP Administrator", dept: "finance", isManager: true, isExecutive: false },
+            { name: "Sumi Chanda", role: "Treasury Manager", dept: "finance", isManager: true, isExecutive: false },
+            { name: "Ananda M", role: "Deputy Manager - Accounts", dept: "finance", isManager: true, isExecutive: false },
+            { name: "Keerthi R", role: "Deputy Manager - Accounts", dept: "finance", isManager: true, isExecutive: false },
+            { name: "Raghu N R", role: "Senior Accounts Executive", dept: "finance", isManager: false, isExecutive: false },
+            { name: "Shashi Bansal", role: "Assistant Finance Manager", dept: "finance", isManager: false, isExecutive: false },
+            { name: "Sonu Chauhan", role: "Assistant Finance Manager", dept: "finance", isManager: false, isExecutive: false },
+            { name: "Venkatesh B", role: "Accounts Manager", dept: "finance", isManager: false, isExecutive: false },
+            { name: "Srikanth S", role: "Assistant Manager - Accounts", dept: "finance", isManager: false, isExecutive: false },
+            { name: "Abhilash Dinesh", role: "Tax Executive", dept: "finance", isManager: false, isExecutive: false },
+            { name: "Arun Asokan", role: "Accounts Executive", dept: "finance", isManager: false, isExecutive: false },
+            { name: "Rajesh Adhikari", role: "Accounts Executive", dept: "finance", isManager: false, isExecutive: false },
+            { name: "Flavia Patrick", role: "Accounts Executive", dept: "finance", isManager: false, isExecutive: false },
+            
+            // MARKETING (18 people)
+            { name: "Puja Roy", role: "HR Executive", dept: "marketing", isManager: true, isExecutive: false },
+            { name: "Riya Bansal", role: "Event Head", dept: "marketing", isManager: true, isExecutive: false },
+            { name: "Tiasha Sanyal", role: "Social Media Manager", dept: "marketing", isManager: true, isExecutive: false },
+            { name: "Riya Debnath", role: "Marketing & Promotion", dept: "marketing", isManager: false, isExecutive: false },
+            { name: "Twinkle Gupta", role: "Social Media Marketing", dept: "marketing", isManager: false, isExecutive: false },
+            { name: "Bikash Ekka", role: "Graphics Designer", dept: "marketing", isManager: false, isExecutive: false },
+            { name: "Manish Kumar Tiwari", role: "Digital Marketing Specialist", dept: "marketing", isManager: false, isExecutive: false },
+            { name: "Dibash Sarkar", role: "SEO Expert", dept: "marketing", isManager: false, isExecutive: false },
+            { name: "Koushik Dutta", role: "Digital Marketing", dept: "marketing", isManager: false, isExecutive: false },
+            { name: "Mehadi Hasan", role: "Graphics Designer", dept: "marketing", isManager: false, isExecutive: false },
+            { name: "Priyanshu Dey", role: "Social Media Executive", dept: "marketing", isManager: false, isExecutive: false },
+            { name: "Kamal Roy", role: "Google Ads Specialist", dept: "marketing", isManager: false, isExecutive: false },
+            { name: "Joydeep Saha", role: "Digital Marketing Executive", dept: "marketing", isManager: false, isExecutive: false },
+            { name: "Srishti Kithania", role: "Content Creator", dept: "marketing", isManager: false, isExecutive: false },
+            { name: "Shubham Dutta", role: "Social Media Executive", dept: "marketing", isManager: false, isExecutive: false },
+            { name: "Dipanita Majumder", role: "HR Executive", dept: "marketing", isManager: false, isExecutive: false },
+            { name: "Sadhana Subba", role: "Talent Acquisition Specialist", dept: "marketing", isManager: false, isExecutive: false },
+            
+            // SALES (42 people)
+            { name: "Gauri Shankar Gaud", role: "VP - Sales", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Payal Jain", role: "VP - Sales", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Poonam Thapa", role: "Head – Revenue and Operations", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Bharat Gulati", role: "Sales and Operations Manager - OCEANIA", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Bhagya Jyothi B", role: "Assistant Manager - Sales", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Sonu Kumar B", role: "Assistant Manager - Sales", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Kamini Sharma", role: "Assistant Manager - Sales", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Priscilla John", role: "Business Head- B2C Growth", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Neda Sadaf Tajuddin", role: "Senior Manager- B2B Business Performance", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Saba Firdose", role: "Assistant Manager - Sales", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Prakash M", role: "Assistant Manager - Sales", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Pulkit Gupta", role: "Assistant Manager - Sales", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Martina Vasan", role: "Senior Manager- B2C Business Performance", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Albert Regan Joseph", role: "Senior Manager- B2C Business Performance", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Naveen Rajesh", role: "Assistant Manager - Sales", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Periyaraj Ravichandran", role: "Team Lead - Sales", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Subarna Shaw", role: "Team Lead - Sales", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Mala Kondamma", role: "Senior Manager- B2C Business Performance", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Shipra Meshram", role: "Key Account Manager", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Thriveni .", role: "Key Account Manager", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Sowmya K P", role: "Key Account Manager", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Ankita Chakraborty", role: "Team Lead - Sales", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Sanket De", role: "Team Lead - Sales", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Mohd Asif", role: "VP - Sales", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Nagaraju B K", role: "Sales Head - B2B (South India)", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Sagarmal Sen", role: "Business Development Manager", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Anuj Kumar Sareen", role: "Business Development Manager", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Rajesh Kumar", role: "Area Sales Manager", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Gurpreet Singh", role: "Sales Manager", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Giriraj Singh", role: "Deputy Manager - Sales", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Satyendra Goswami", role: "Business Development Manager", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Dharmanand Dixit", role: "Area Sales Manager", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Athul P S", role: "Relationship Manager", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Shantanu Abhay Sukhathankar", role: "Senior Sales Manager", dept: "sales", isManager: true, isExecutive: false },
+            { name: "Fouziya Sultana", role: "Assistant Manager - Sales", dept: "sales", isManager: false, isExecutive: false },
+            { name: "Rashmi A", role: "Assistant Manager - Sales", dept: "sales", isManager: false, isExecutive: false },
+            { name: "Nishanth D Shekar", role: "Assistant Manager - Sales", dept: "sales", isManager: false, isExecutive: false },
+            { name: "Abdul Hameed A", role: "Team Lead - Sales", dept: "sales", isManager: false, isExecutive: false },
+            { name: "Jyotsna S", role: "Sales Account Manager", dept: "sales", isManager: false, isExecutive: false },
+            { name: "Samudwith M S", role: "Team Lead - Sales", dept: "sales", isManager: false, isExecutive: false },
+            { name: "Manideep Koduri", role: "Key Account Manager", dept: "sales", isManager: false, isExecutive: false },
+            { name: "Kiran Kumar A C", role: "Key Account Manager", dept: "sales", isManager: false, isExecutive: false },
+            
+            // OPERATIONS (285 people) - Managers
+            { name: "Chethan G K", role: "Process Manager", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Dilip M J", role: "Business Process Head", dept: "operations", isManager: true, isExecutive: false },
+            { name: "V Laxman Kumar", role: "Operation Executive", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Tanmay Sachdeva", role: "Senior Manager - Global Product & Partnerships", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Abhishek .", role: "Senior Operation Executive", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Kartikay Yagyik", role: "Quality Control - Manager", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Sham Sunder V", role: "Assistant Manager - Operations", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Bipul Daimari", role: "Team Lead - Operations", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Magesh Mohanraj", role: "Team Lead - Operations", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Reginold Simon", role: "Manager- Visa Operations", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Mohammed Arif S", role: "Manager - DMC Operations", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Shaik Abdul Masroor", role: "Deputy Manager - Group Desk", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Mohammed Nabeel Faraz", role: "Assistant Manager - Operations", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Mohammed Suhail", role: "Team Lead - Operations", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Tousif Sait", role: "Deputy Manager - Flights Operations", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Shashank H M", role: "Deputy Manager - Operations", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Jayachandra H S", role: "Assistant Manager - Operations", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Ifraq Ahmed R N", role: "Manager - DMC Operations", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Kaushik S", role: "Assistant Manager - Operations", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Sanjeev Kumar Chhikara", role: "Regional Head Visa (North & West)", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Bidesh Chowdhury", role: "Team Lead - Operations", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Charitha Ravi", role: "Team Lead", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Kiran N", role: "Team Lead", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Venkatesh Prasad N H", role: "Team Lead", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Pathan Mohammed P Saleem", role: "Team Lead - Operations", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Mohammed Sameerulla Khan", role: "Team Lead - Operations", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Faisal syed mukthar Shah", role: "Subject Matter Expert - SME", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Thanush Reddy S B", role: "Senior Operation Executive", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Nanjappa M C", role: "Quality Manager", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Chhaya Kumari", role: "Manager - Visa Operations", dept: "operations", isManager: true, isExecutive: false },
+            { name: "S Mamatha", role: "Asst.Manager- Visa Operations", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Vigneshwaran K", role: "Senior Air Ticketing Executive", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Abdul Khader Miheshan K M", role: "Senior Air Ticketing Executive", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Asha S", role: "Sr. Operation Executive", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Ganesh Raju N", role: "Sr. Operation Executive", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Nithyananda S C", role: "Senior Operation Executive", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Priya D S", role: "Senior Operation Executive", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Sagar Mukherjee", role: "Sr. Customer Support Executive", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Asif Akram", role: "Sr. Customer Support Executive", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Darshan S", role: "Senior customer support", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Amir Shafi Shaikh", role: "Tour Manager", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Puja Onekar", role: "FIT Operations Head - Europe", dept: "operations", isManager: true, isExecutive: false },
+            { name: "Kartik Karjee", role: "Branch Manager", dept: "operations", isManager: true, isExecutive: false },
+            
+            // Operations - Destination Experts (100)
+            { name: "Parthib Kumar Barman", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Ria Dhar", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Bishal Sarkar", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Simran Thapa", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Tomali Purkayastha", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Priyanki Roy", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Anjali Prasad", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Sandhya Kumari", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Swastika Rai", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Sangdup Tamang", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Reena P", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Ankur Dwivedi", role: "Sr. Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Arpitha V", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Adrian J Milton", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Spoorthi P K", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Prakash B", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Subramaya M", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Mohith K V", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Joseph A", role: "Sr. Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Pratyush Anand", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Madhu Sudhan S", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Ayan Razvi", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Deepa K S", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Shahanaz R", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Vijnesh Jayanandan Poojary", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Martin L Nerella", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Augustine Alex P", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Deepthi G A", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Shimron Gershom", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Soheb Makandar", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Ananya S Gowda", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Sahana B V", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Shaistha N", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Solomon Nikhil D", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Tejas C", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Mohammed Daaniyal", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Deepshika S", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Vijrambha Gowda", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Gudla Aryan Rajesh", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Tushar Gowda P", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Glen Somanna A", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Akshay Kumar", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Yashaswini A", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Ranjan Gowda R", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Harismitha B M", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Brijesh Krishna M N", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Sanjana M", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Sudipta Mondal", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Amra Jabeen", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Janavi G", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Sanjana S", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Jyothi S Vara", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Janani SB", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Dhaiwik R", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Saran S", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Sree Parvathi R", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Nisarga C R", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Spandana L", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Manasa M", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Mamtha Patel Norat Ram", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Vijaya Lakshmi karanth", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Sania Jakki", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Nikita Ekka", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Rajdeep Sarkar", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Susmita Roy", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Raktim Biswas", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Surabhi Pradhan", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Ayush Rai", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Shristi Gurung", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Pradumna Rai", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Kaurag Bhattacharjee", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Shayani Dutta", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Nikita Tamang", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Anushri Tamang", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Megha Nandita Sah", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Shrestha Nandy", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Muskaan Khawas", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Nisith Chakraborty", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Asmita Sarkar", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Chiranjit Boro", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Parvesh Kumari", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Neha U", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Aditi Singh", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Ronak Raju Dhanwani", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            
+            // Operations - Operation Executives (80)
+            { name: "Heena Kousar", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Pratigya Rai", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Debashmita Bhattacherjee", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Varsha Thapa", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Chitto Broto Goswami", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Ramyashree M", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Lokesh C Savadatti", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Shashank M", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Mehar unnisa", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Sadhana P", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Varsha C A", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Navya G", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Chaithra V", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Bharath Kumar D", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Nithin D", role: "Visa Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Pravir Pathak", role: "Visa Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Aravind P", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Madhuri A", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Annwesha Pal", role: "Visa Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Sujanya N S", role: "Visa Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Sharath Kumar A", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Harshitha R", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Bhargavi H Kulkarni", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Chandana V", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Chiraag Chakraborthy", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Mohammed Masood Ahmed", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Taniya Nandi", role: "Operation Executives", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Pradeep M", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Navya A R", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Madan S", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Rakshitha Ganesh", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Mohammed Arbaz Pasha", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Deepika V", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Anushree S", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Chandhan V K", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Rakshitha M S", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Harry Jenifer Z", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Navya P", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Aishwarya A", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Bhuvana R", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Sai Charan M", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Rohit Sharma", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Roshini Fathima", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Mohini V Handewale", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Rashmika G", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Ameena Iram", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Meghana M S", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Deeksha N S", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Harish R - Ops", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Spandhana K V", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Rakshitha V", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Chandan P R", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Prithvi Samuel A", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Chandana R", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Mahima A", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Nandini R", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Deepika G", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Akash Kumar", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Kavya S", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Smitha Shet", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Manjula S", role: "B2B Support Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Kaviya M", role: "B2B Support Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Shravan Kumar Bind", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Varshini N", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Ananya C C", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Kavya D R", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Ramisha Antony Raj", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Hari Krishna S", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Abhishek Haldia", role: "Visa Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Sonia Yadav", role: "Visa Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Ruchi Verma", role: "Visa Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Saloni Tokas", role: "Visa Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Nikita Kharbanda", role: "Visa Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Balachandar H Benakatti", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Abhishek Mohanta", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Ira Mukund Bhatt", role: "Europe Customer Experience", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Bhimashankar Ravindra Kulkarni", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Zehra Khatoon Khan", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Farheen Firoz", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Mahammadhusain Saeed Bijale", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Mehul Sanjay Bhalerao", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Gnana Deepa Nadar", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Aaron Parmar", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Delita Agnelo Fernandes", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Diya Dechamma K B", role: "FCD Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Komala H", role: "FCD Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Thanushree A", role: "Destination Expert", dept: "operations", isManager: false, isExecutive: false },
+            
+            // Operations - Air Ticketing (13)
+            { name: "Subhranil Basak", role: "Air Ticketing Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Puja Biswas", role: "Air Ticketing Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Sushmita Majumder", role: "Air Ticketing Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Munin Basumatary", role: "Air Ticketing Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Survi Verma", role: "Air Ticketing Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Abhishek Teron", role: "Air Ticketing Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Vaisakh P V", role: "Air Ticketing Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Mohammed Sadath Khan", role: "Air Ticketing Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Syed Mubarak", role: "Air Ticketing Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Mohammed Faizad", role: "Air Ticketing Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Suraj C J", role: "Air Ticketing Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Vijaya kumar J", role: "Air Ticketing Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Shaik Mohammad Fayaz Ahmad", role: "Air Ticketing Executive", dept: "operations", isManager: false, isExecutive: false },
+            
+            // Operations - Support Staff (22)
+            { name: "Chumki Barman", role: "Office Assistant", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Anuradha Roy Barman", role: "Office Assistant", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Santosh Balmiki", role: "Office Assistant", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Sunil M S", role: "Customer Support Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Koushik s", role: "Customer Success Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Prem Kumar E", role: "Customer Support Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Khaleel Ur Rehman", role: "Customer Support Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Kavya M", role: "Customer Support Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Harish R", role: "Customer Support Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Ganesh S S", role: "Customer Support Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Sindhu S", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Vignesh S", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Suhas G", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Bhargavi B", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Rakshitha R", role: "Operation Executive", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Anusha S", role: "Chat Support", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Akhila B", role: "Chat Support", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Veda K", role: "Subject Matter Expert - SME", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Saranya M", role: "Subject Matter Expert - SME", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Suresh V", role: "Subject Matter Expert - SME", dept: "operations", isManager: false, isExecutive: false },
+            { name: "Vaishali Yadav", role: "Supply Relationship Manager", dept: "operations", isManager: false, isExecutive: false },
+            
+            // HR (10 people)
+            { name: "Roshan V V", role: "Lead Talent Acquisition Specialist", dept: "hr", isManager: true, isExecutive: false },
+            { name: "Krishna Prasad BP", role: "Asst Manager - HR Operations", dept: "hr", isManager: true, isExecutive: false },
+            { name: "Eswara Rao Madugula", role: "Senior Manager - Payroll", dept: "hr", isManager: true, isExecutive: false },
+            { name: "Annock Wesly S", role: "Talent Acquisition Specialist", dept: "hr", isManager: false, isExecutive: false },
+            { name: "Sonal Singh", role: "Talent Acquisition Specialist", dept: "hr", isManager: false, isExecutive: false },
+            { name: "Shveta Sood", role: "HR Executive", dept: "hr", isManager: false, isExecutive: false },
+            { name: "Pritisha Parekh", role: "HR Executive", dept: "hr", isManager: false, isExecutive: false },
+            { name: "Rakesh N", role: "Sr HR Executive", dept: "hr", isManager: false, isExecutive: false },
+            { name: "Heera Mohan", role: "HR Executive", dept: "hr", isManager: false, isExecutive: false },
+            { name: "Agraharam Sriharsha Bhatt", role: "HR Executive", dept: "hr", isManager: false, isExecutive: false },
+            
+            // COMMERCIAL (22 people)
+            { name: "Sachidanand Keni", role: "VP - Revenue Management", dept: "commercial", isManager: true, isExecutive: false },
+            { name: "Rajeev Gautam", role: "Head - North Contracting", dept: "commercial", isManager: true, isExecutive: false },
+            { name: "Saif Ansar Khan", role: "Contracting & Marketing Head - UK & Europe", dept: "commercial", isManager: true, isExecutive: false },
+            { name: "Shriya - Gupta", role: "Supply Relationship Manager", dept: "commercial", isManager: true, isExecutive: false },
+            { name: "Shaurya Pratap Singh", role: "Contracting Manager", dept: "commercial", isManager: true, isExecutive: false },
+            { name: "Vasumitha G", role: "Contract Account Manager (CAM)", dept: "commercial", isManager: false, isExecutive: false },
+            { name: "Yuvraj V B", role: "Contract Account Manager (CAM)", dept: "commercial", isManager: false, isExecutive: false },
+            { name: "Girish V", role: "Contract Account Manager (CAM)", dept: "commercial", isManager: false, isExecutive: false },
+            { name: "Firdause kauser", role: "Contract Account Manager (CAM)", dept: "commercial", isManager: false, isExecutive: false },
+            { name: "Praveen Kumar K", role: "Contract Account Manager (CAM)", dept: "commercial", isManager: false, isExecutive: false },
+            { name: "Shaikh Humera", role: "Contract Account Manager (CAM)", dept: "commercial", isManager: false, isExecutive: false },
+            { name: "Lakshmi M Maraddi", role: "Contract Account Manager (CAM)", dept: "commercial", isManager: false, isExecutive: false },
+            { name: "Nikitha S", role: "Contract Account Manager (CAM)", dept: "commercial", isManager: false, isExecutive: false },
+            { name: "Joseph Raj A", role: "Contract Account Manager (CAM)", dept: "commercial", isManager: false, isExecutive: false },
+            { name: "Sriramana S", role: "Destination Expert", dept: "commercial", isManager: false, isExecutive: false },
+            { name: "Sandhya Manandhar", role: "Destination Expert", dept: "commercial", isManager: false, isExecutive: false },
+            { name: "Sheetal V", role: "Destination Expert", dept: "commercial", isManager: false, isExecutive: false },
+            { name: "Dhanush K V", role: "B2B Support Executive", dept: "commercial", isManager: false, isExecutive: false },
+            { name: "Sachin M", role: "Snr Quality Analyst", dept: "commercial", isManager: false, isExecutive: false },
+            { name: "Leonard Vicky", role: "Air Ticketing Executive", dept: "commercial", isManager: false, isExecutive: false },
+            { name: "Sagar Padmakar Joshi", role: "Business Development Executive", dept: "commercial", isManager: false, isExecutive: false },
+            { name: "Mohammed Sarosh", role: "Key Account Manager", dept: "commercial", isManager: false, isExecutive: false }
+        ];
+
+        // Data management
+        let originalData = [];
+        let currentData = [];
+
+        // Initialize
+        function initializeData() {
+            originalData = JSON.parse(JSON.stringify(allPeople));
+            currentData = JSON.parse(JSON.stringify(allPeople));
+        }
+
+        // Get unique roles for dropdown
+        function getUniqueRoles() {
+            return [...new Set(originalData.map(p => p.role))].sort();
+        }
+
+        // Department options
+        function getDeptOptions(selected) {
+            const depts = {
+                management: '👔 Management',
+                tech: '💻 Tech',
+                finance: '💰 Finance',
+                marketing: '📢 Marketing',
+                sales: '💼 Sales',
+                operations: '⚙️ Operations',
+                hr: '👥 HR',
+                commercial: '🤝 Commercial'
+            };
+            return Object.entries(depts).map(([val, label]) => 
+                `<option value="${val}" ${val === selected ? 'selected' : ''}>${label}</option>`
+            ).join('');
+        }
+
+        // Role options
+        function getRoleOptions(selected) {
+            const roles = getUniqueRoles();
+            let html = `<option value="">Select Role...</option>`;
+            roles.forEach(r => {
+                html += `<option value="${r}" ${r === selected ? 'selected' : ''}>${r}</option>`;
+            });
+            html += `<option value="CUSTOM">✏️ Custom...</option>`;
+            return html;
+        }
+
+        // Render leadership section (CEO/Founders only)
+        function renderLeadership() {
+            const container = document.getElementById('leadership-grid');
+            const executives = currentData.filter(p => p.isExecutive && !p.inactive);
+            
+            container.innerHTML = executives.map(person => {
+                const idx = currentData.indexOf(person);
+                return `
+                    <div class="leader-card" data-idx="${idx}">
+                        <div class="leader-name">${person.name}</div>
+                        <div class="leader-role">${person.role}</div>
+                        <div class="leader-form">
+                            <select class="form-select-dark" onchange="updatePersonDept(this, ${idx})">
+                                ${getDeptOptions(person.dept)}
+                            </select>
+                            <select class="form-select-dark" onchange="updatePersonRole(this, ${idx})">
+                                ${getRoleOptions(person.role)}
+                            </select>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render departments
+        function renderDepartments() {
+            const container = document.getElementById('departments-container');
+            const depts = ['management', 'tech', 'finance', 'marketing', 'sales', 'operations', 'hr', 'commercial'];
+            const deptNames = {
+                management: '👔 Management',
+                tech: '💻 Technology',
+                finance: '💰 Finance',
+                marketing: '📢 Marketing',
+                sales: '💼 Sales',
+                operations: '⚙️ Operations',
+                hr: '👥 HR & People',
+                commercial: '🤝 Commercial'
+            };
+
+            let html = '';
+            
+            depts.forEach(dept => {
+                // Get people in this department (excluding executives already shown in leadership)
+                const deptPeople = currentData.filter(p => p.dept === dept && !p.isExecutive && !p.inactive);
+                if (deptPeople.length === 0 && dept !== 'management') return;
+                
+                // Group by role
+                const byRole = {};
+                deptPeople.forEach(p => {
+                    if (!byRole[p.role]) byRole[p.role] = [];
+                    byRole[p.role].push(p);
+                });
+
+                // Sort roles by count (descending)
+                const sortedRoles = Object.entries(byRole).sort((a, b) => b[1].length - a[1].length);
+                
+                const managers = deptPeople.filter(p => p.isManager).length;
+                const staff = deptPeople.filter(p => !p.isManager).length;
+                
+                html += `
+                    <div class="dept-section" id="dept-${dept}">
+                        <div class="dept-header ${dept}">
+                            <div class="dept-title">
+                                ${deptNames[dept]}
+                                <span style="font-size: 0.7em; opacity: 0.9; font-weight: 500;">
+                                    (${deptPeople.length} people)
+                                </span>
+                            </div>
+                            <div class="dept-meta">
+                                <div class="dept-meta-item">👨‍💼 ${managers} Managers</div>
+                                <div class="dept-meta-item">👥 ${staff} Staff</div>
+                            </div>
+                        </div>
+                        <div class="dept-body">
+                            ${sortedRoles.map(([role, people]) => `
+                                <div class="role-group" id="group-${dept}-${role.replace(/[^a-zA-Z0-9]/g, '-')}">
+                                    <div class="role-header" onclick="toggleGroup('${dept}-${role.replace(/[^a-zA-Z0-9]/g, '-')}')">
+                                        <div class="role-title-section">
+                                            <span class="role-count">${people.length}</span>
+                                            <span class="role-name">${role}</span>
+                                        </div>
+                                        <span class="expand-icon">▼</span>
+                                    </div>
+                                    <div class="role-members">
+                                        ${people.map(person => renderPersonCard(person)).join('')}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Render individual person card
+        function renderPersonCard(person) {
+            const idx = currentData.indexOf(person);
+            const original = originalData[idx];
+            const isModified = person.dept !== original.dept || person.role !== original.role || person.inactive;
+            
+            return `
+                <div class="person-card ${person.inactive ? 'inactive' : ''} ${isModified ? 'modified' : ''}" data-idx="${idx}">
+                    <div class="person-main">
+                        <div class="person-name">
+                            ${person.name}
+                            ${isModified ? '<span class="modified-badge">MODIFIED</span>' : ''}
+                        </div>
+                        ${person.role !== original.role ? `<div class="person-original">Was: ${original.role}</div>` : ''}
+                        ${person.dept !== original.dept ? `<div class="person-original">Was: ${original.dept}</div>` : ''}
+                    </div>
+                    
+                    <div class="person-form-grid">
+                        <select class="form-control" onchange="updatePersonDept(this, ${idx})">
+                            ${getDeptOptions(person.dept)}
+                        </select>
+                        <select class="form-control" onchange="updatePersonRole(this, ${idx})">
+                            ${getRoleOptions(person.role)}
+                        </select>
+                        <div class="checkbox-group-inline">
+                            <label class="checkbox-pill">
+                                <input type="checkbox" onchange="toggleBusiness(this, ${idx}, 'B2B')" 
+                                    ${(person.business || []).includes('B2B') ? 'checked' : ''}> B2B
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" onchange="toggleBusiness(this, ${idx}, 'B2C')" 
+                                    ${(person.business || []).includes('B2C') ? 'checked' : ''}> B2C
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" onchange="toggleBusiness(this, ${idx}, 'TourOp')" 
+                                    ${(person.business || []).includes('TourOp') ? 'checked' : ''}> TourOp
+                            </label>
+                        </div>
+                        <select class="form-control" onchange="updateReportsTo(this, ${idx})">
+                            <option value="">Reports to...</option>
+                            ${currentData.filter(p => p.isManager && !p.inactive).map(m => 
+                                `<option value="${m.name}" ${(person.reportsTo || '') === m.name ? 'selected' : ''}>${m.name}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    
+                    <div class="person-actions">
+                        <button class="action-btn validate" onclick="validatePerson(this, true)" title="Correct">✓</button>
+                        <button class="action-btn reject" onclick="validatePerson(this, false)" title="Review">✗</button>
+                        <button class="action-btn inactive-btn ${person.inactive ? 'active' : ''}" onclick="toggleInactive(${idx})" title="Toggle Inactive">
+                            ⚠️
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Toggle group expansion
+        function toggleGroup(id) {
+            const group = document.getElementById(`group-${id}`);
+            if (group) group.classList.toggle('expanded');
+        }
+
+        // Expand all
+        function expandAll() {
+            document.querySelectorAll('.role-group').forEach(g => g.classList.add('expanded'));
+        }
+
+        // Collapse all
+        function collapseAll() {
+            document.querySelectorAll('.role-group').forEach(g => g.classList.remove('expanded'));
+        }
+
+        // Scroll to department
+        function scrollToDept(dept) {
+            const el = document.getElementById(`dept-${dept}`) || document.getElementById('leadership');
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                document.querySelectorAll('.dept-quick-item').forEach(i => i.classList.remove('active'));
+                document.querySelector(`.dept-quick-item.${dept}`)?.classList.add('active');
+            }
+        }
+
+        // Update functions
+        function updatePersonDept(select, idx) {
+            currentData[idx].dept = select.value;
+            currentData[idx].modified = true;
+            refreshAll();
+        }
+
+        function updatePersonRole(select, idx) {
+            if (select.value === 'CUSTOM') {
+                const custom = prompt('Enter custom role:');
+                if (custom) {
+                    currentData[idx].role = custom;
+                    currentData[idx].modified = true;
+                }
+            } else {
+                currentData[idx].role = select.value;
+                currentData[idx].modified = true;
+            }
+            refreshAll();
+        }
+
+        function toggleBusiness(cb, idx, type) {
+            if (!currentData[idx].business) currentData[idx].business = [];
+            if (cb.checked) {
+                currentData[idx].business.push(type);
+            } else {
+                currentData[idx].business = currentData[idx].business.filter(t => t !== type);
+            }
+            cb.parentElement.classList.toggle('checked', cb.checked);
+        }
+
+        function updateReportsTo(select, idx) {
+            currentData[idx].reportsTo = select.value;
+            currentData[idx].modified = true;
+        }
+
+        function toggleInactive(idx) {
+            currentData[idx].inactive = !currentData[idx].inactive;
+            refreshAll();
+        }
+
+        function validatePerson(btn, isValid) {
+            const card = btn.closest('.person-card');
+            card.querySelectorAll('.action-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            card.style.borderLeft = isValid ? '4px solid #48bb78' : '4px solid #f56565';
+        }
+
+        // Update quick stats
+        function updateQuickStats() {
+            const depts = ['management', 'tech', 'finance', 'marketing', 'sales', 'operations', 'hr', 'commercial'];
+            let totalActive = 0;
+            let totalInactive = 0;
+            let totalModified = 0;
+
+            depts.forEach(dept => {
+                const originalCount = originalData.filter(p => p.dept === dept && !p.isExecutive).length;
+                const currentCount = currentData.filter(p => p.dept === dept && !p.isExecutive && !p.inactive).length;
+                const change = currentCount - originalCount;
+
+                const quickEl = document.getElementById(`quick-${dept}`);
+                const changeEl = document.getElementById(`change-${dept}`);
+                
+                if (quickEl) quickEl.textContent = currentCount;
+                
+                if (changeEl) {
+                    if (change === 0) {
+                        changeEl.textContent = '—';
+                        changeEl.style.color = 'rgba(255,255,255,0.7)';
+                    } else if (change > 0) {
+                        changeEl.textContent = `+${change}`;
+                        changeEl.style.color = '#68d391';
+                    } else {
+                        changeEl.textContent = change;
+                        changeEl.style.color = '#fc8181';
+                    }
+                }
+
+                totalActive += currentCount;
+            });
+
+            // Count totals
+            currentData.forEach((p, idx) => {
+                if (p.inactive) totalInactive++;
+                if (p.modified || p.dept !== originalData[idx].dept || p.role !== originalData[idx].role || p.inactive !== originalData[idx].inactive) {
+                    totalModified++;
+                }
+            });
+
+            document.getElementById('header-active').textContent = totalActive;
+            document.getElementById('header-inactive').textContent = totalInactive;
+            document.getElementById('header-modified').textContent = totalModified;
+        }
+
+        // Refresh all views
+        function refreshAll() {
+            renderLeadership();
+            renderDepartments();
+            updateQuickStats();
+            
+            // Re-apply checkbox states
+            document.querySelectorAll('.checkbox-pill input:checked').forEach(cb => {
+                cb.parentElement.classList.add('checked');
+            });
+        }
+
+        // Reset changes
+        function resetChanges() {
+            if (confirm('Reset all changes to original data?')) {
+                currentData = JSON.parse(JSON.stringify(originalData));
+                refreshAll();
+            }
+        }
+
+        // Save data
+        function saveData() {
+            localStorage.setItem('tripfactory_org', JSON.stringify({
+                timestamp: new Date().toISOString(),
+                data: currentData
+            }));
+            alert('✅ Saved! All changes preserved.');
+        }
+
+        // Export clean Excel
+        function exportCleanExcel() {
+            let csv = 'Name,Current Department,Current Role,Original Department,Original Role,Status,Is Manager,Reports To,Business Functions\n';
+            
+            currentData.forEach((p, idx) => {
+                const orig = originalData[idx];
+                csv += `"${p.name}","${p.dept}","${p.role}","${orig.dept}","${orig.role}","${p.inactive ? 'Inactive' : 'Active'}","${p.isManager ? 'Yes' : 'No'}","${p.reportsTo || ''}","${(p.business || []).join('; ')}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `TripFactory_Org_Structure_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        // Generate org chart
+        function generateOrgChart() {
+            const activePeople = currentData.filter(p => !p.inactive);
+            const chartWindow = window.open('', '_blank');
+            
+            let html = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>TripFactory Org Chart</title>
+                    <style>
+                        body { font-family: Arial; padding: 40px; background: #f5f5f5; }
+                        .org-tree { display: flex; flex-direction: column; align-items: center; gap: 30px; }
+                        .level { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+                        .node {
+                            background: white;
+                            padding: 15px 20px;
+                            border-radius: 10px;
+                            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                            text-align: center;
+                            min-width: 180px;
+                            border-top: 5px solid;
+                        }
+                        .node.executive { border-color: #1a365d; }
+                        .node.manager { border-color: #4299e1; }
+                        .node.staff { border-color: #48bb78; }
+                        .name { font-weight: bold; font-size: 1em; margin-bottom: 5px; }
+                        .role { font-size: 0.85em; color: #666; }
+                        .dept { font-size: 0.75em; text-transform: uppercase; margin-top: 5px; color: #999; }
+                        h1 { text-align: center; color: #2d3748; margin-bottom: 30px; }
+                        .stats { text-align: center; margin-bottom: 30px; color: #666; }
+                    </style>
+                </head>
+                <body>
+                    <h1>🏢 TripFactory Organizational Chart</h1>
+                    <div class="stats">
+                        Generated on ${new Date().toLocaleDateString()} | 
+                        ${activePeople.length} Active Employees | 
+                        ${activePeople.filter(p => p.isExecutive).length} Executives | 
+                        ${activePeople.filter(p => p.isManager && !p.isExecutive).length} Managers
+                    </div>
+                    <div class="org-tree">
+                        <div class="level">
+                            ${activePeople.filter(p => p.isExecutive).map(p => `
+                                <div class="node executive">
+                                    <div class="name">${p.name}</div>
+                                    <div class="role">${p.role}</div>
+                                    <div class="dept">${p.dept}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="level">
+                            ${activePeople.filter(p => p.isManager && !p.isExecutive).slice(0, 12).map(p => `
+                                <div class="node manager">
+                                    <div class="name">${p.name}</div>
+                                    <div class="role">${p.role}</div>
+                                    <div class="dept">${p.dept}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            chartWindow.document.write(html);
+        }
+
+        // Initialize
+        initializeData();
+        refreshAll();
+
+        // Load saved data
+        const saved = localStorage.getItem('tripfactory_org');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                if (parsed.data) {
+                    currentData = parsed.data;
+                    refreshAll();
+                }
+            } catch(e) {
+                console.log('No saved data found');
+            }
+        }
+
+        // Initialize checkbox states
+        document.querySelectorAll('.checkbox-pill input:checked').forEach(cb => {
+            cb.parentElement.classList.add('checked');
+        });
+    </script>
+</body>
+</html>

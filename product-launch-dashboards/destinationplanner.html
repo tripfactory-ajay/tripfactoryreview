@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Destination Market Planner - Strategic Route & Agent Activation Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .metric-card { transition: all 0.3s ease; }
+        .metric-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        .agent-row:hover { background-color: #f8fafc; }
+        .heatmap-dot { transition: all 0.3s ease; cursor: pointer; }
+        .heatmap-dot:hover { transform: scale(1.2); filter: brightness(1.2); }
+        .route-line { stroke-dasharray: 5,5; animation: dash 20s linear infinite; }
+        @keyframes dash { to { stroke-dashoffset: -100; } }
+        .dropdown-menu { display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); z-index: 50; max-height: 200px; overflow-y: auto; }
+        .dropdown-menu.active { display: block; }
+        .dropdown-item { padding: 0.5rem 1rem; cursor: pointer; transition: background-color 0.2s; }
+        .dropdown-item:hover { background-color: #f1f5f9; }
+        .progress-bar { transition: width 1s ease-in-out; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .nav-tab { transition: all 0.2s; }
+        .nav-tab.active { background-color: #2563eb; color: white; }
+        .number-input { transition: all 0.2s; }
+        .number-input:focus { transform: scale(1.02); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+    </style>
+<base target="_blank">
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+        <div class="max-w-[1920px] mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+                        <i class="fas fa-plane-departure text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-slate-900">Destination Market Planner</h1>
+                        <p class="text-xs text-slate-500">Strategic Route & Agent Activation Dashboard</p>
+                    </div>
+                </div>
+
+                <nav class="flex items-center gap-1">
+                    <button onclick="switchTab('overview')" id="tab-overview" class="nav-tab px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition">Overview</button>
+                    <button onclick="switchTab('route-analysis')" id="tab-route-analysis" class="nav-tab px-4 py-2 text-sm font-medium rounded-lg active">Route Analysis</button>
+                    <button onclick="switchTab('agent-network')" id="tab-agent-network" class="nav-tab px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition">Agent Network</button>
+                    <button onclick="switchTab('campaign-planner')" id="tab-campaign-planner" class="nav-tab px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition">Campaign Planner</button>
+                    <button onclick="switchTab('performance')" id="tab-performance" class="nav-tab px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition">Performance</button>
+                </nav>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="exportPlan()" class="px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-100 rounded-lg hover:bg-emerald-200 transition">
+                        <i class="fas fa-download mr-2"></i>Export Plan
+                    </button>
+                    <button onclick="generateCampaign()" class="px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition">
+                        <i class="fas fa-rocket mr-2"></i>Generate Campaign
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filter Bar -->
+    <div class="bg-white border-b border-slate-200 py-4">
+        <div class="max-w-[1920px] mx-auto px-4">
+            <div class="flex items-center gap-4 flex-wrap">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Filters:</span>
+
+                <div class="relative">
+                    <label class="block text-xs text-slate-500 mb-1">Destination</label>
+                    <div class="relative">
+                        <button onclick="toggleDropdown('destination')" class="w-40 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm font-semibold text-blue-700 flex items-center justify-between hover:bg-blue-100 transition">
+                            <span id="destination-text">Turkey</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="destination-menu" class="dropdown-menu w-40">
+                            <div class="dropdown-item" onclick="selectDestination('Turkey')">Turkey</div>
+                            <div class="dropdown-item" onclick="selectDestination('Greece')">Greece</div>
+                            <div class="dropdown-item" onclick="selectDestination('Egypt')">Egypt</div>
+                            <div class="dropdown-item" onclick="selectDestination('Thailand')">Thailand</div>
+                            <div class="dropdown-item" onclick="selectDestination('Dubai')">Dubai</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <label class="block text-xs text-slate-500 mb-1">Source Region</label>
+                    <div class="relative">
+                        <button onclick="toggleDropdown('region')" class="w-40 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm font-semibold text-blue-700 flex items-center justify-between hover:bg-blue-100 transition">
+                            <span id="region-text">India</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="region-menu" class="dropdown-menu w-40">
+                            <div class="dropdown-item" onclick="selectRegion('India')">India</div>
+                            <div class="dropdown-item" onclick="selectRegion('UK')">United Kingdom</div>
+                            <div class="dropdown-item" onclick="selectRegion('Germany')">Germany</div>
+                            <div class="dropdown-item" onclick="selectRegion('France')">France</div>
+                            <div class="dropdown-item" onclick="selectRegion('USA')">USA</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <label class="block text-xs text-slate-500 mb-1">Origin Cities</label>
+                    <div class="relative">
+                        <button onclick="toggleDropdown('cities')" class="w-48 px-3 py-2 bg-purple-50 border border-purple-200 rounded-lg text-sm font-semibold text-purple-700 flex items-center justify-between hover:bg-purple-100 transition">
+                            <span id="cities-text" class="truncate">Delhi, Mumbai, Bangalore</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="cities-menu" class="dropdown-menu w-48">
+                            <div class="dropdown-item" onclick="toggleCity('Delhi')"><input type="checkbox" checked class="mr-2 city-checkbox" data-city="Delhi"> Delhi</div>
+                            <div class="dropdown-item" onclick="toggleCity('Mumbai')"><input type="checkbox" checked class="mr-2 city-checkbox" data-city="Mumbai"> Mumbai</div>
+                            <div class="dropdown-item" onclick="toggleCity('Bangalore')"><input type="checkbox" checked class="mr-2 city-checkbox" data-city="Bangalore"> Bangalore</div>
+                            <div class="dropdown-item" onclick="toggleCity('Chennai')"><input type="checkbox" class="mr-2 city-checkbox" data-city="Chennai"> Chennai</div>
+                            <div class="dropdown-item" onclick="toggleCity('Hyderabad')"><input type="checkbox" class="mr-2 city-checkbox" data-city="Hyderabad"> Hyderabad</div>
+                            <div class="dropdown-item" onclick="toggleCity('Kolkata')"><input type="checkbox" class="mr-2 city-checkbox" data-city="Kolkata"> Kolkata</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <label class="block text-xs text-slate-500 mb-1">Target Passengers</label>
+                    <input type="number" id="target-passengers" value="100000" 
+                           class="number-input w-36 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-sm font-semibold text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                           onchange="updateCalculations()">
+                </div>
+
+                <div class="relative">
+                    <label class="block text-xs text-slate-500 mb-1">Avg. Package Value</label>
+                    <select id="package-value" onchange="updateCalculations()" 
+                            class="w-36 px-3 py-2 bg-teal-50 border border-teal-200 rounded-lg text-sm font-semibold text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                        <option value="2000">€2,000</option>
+                        <option value="2500">€2,500</option>
+                        <option value="3000" selected>€3,000</option>
+                        <option value="3500">€3,500</option>
+                        <option value="4000">€4,000</option>
+                    </select>
+                </div>
+
+                <button onclick="resetFilters()" class="mt-5 px-4 py-2 text-sm text-slate-600 hover:text-slate-900 border border-slate-300 rounded-lg hover:bg-slate-100 transition">
+                    <i class="fas fa-redo mr-2"></i>Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-[1920px] mx-auto px-4 py-6">
+
+        <!-- Top Metrics - Always Visible -->
+        <div class="grid grid-cols-6 gap-4 mb-6">
+            <div class="metric-card bg-white rounded-xl p-4 border-l-4 border-blue-600 card-shadow">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-slate-500 uppercase">Target Passengers</span>
+                    <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-users text-blue-600 text-xs"></i>
+                    </div>
+                </div>
+                <div class="text-2xl font-bold text-blue-600" id="metric-passengers">100,000</div>
+                <div class="text-xs text-emerald-600 mt-1"><i class="fas fa-arrow-up mr-1"></i>+12% vs last year</div>
+            </div>
+
+            <div class="metric-card bg-white rounded-xl p-4 border-l-4 border-blue-500 card-shadow">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-slate-500 uppercase">Origin Airports</span>
+                    <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-plane text-blue-500 text-xs"></i>
+                    </div>
+                </div>
+                <div class="text-2xl font-bold text-blue-500" id="metric-airports">8</div>
+                <div class="text-xs text-slate-500 mt-1">3 Major hubs identified</div>
+            </div>
+
+            <div class="metric-card bg-white rounded-xl p-4 border-l-4 border-purple-500 card-shadow">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-slate-500 uppercase">Active Agents</span>
+                    <div class="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user-tie text-purple-600 text-xs"></i>
+                    </div>
+                </div>
+                <div class="text-2xl font-bold text-purple-600" id="metric-agents">24</div>
+                <div class="text-xs text-slate-500 mt-1">Top tier partners</div>
+            </div>
+
+            <div class="metric-card bg-white rounded-xl p-4 border-l-4 border-amber-500 card-shadow">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-slate-500 uppercase">Est. Revenue Potential</span>
+                    <div class="w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-euro-sign text-amber-600 text-xs"></i>
+                    </div>
+                </div>
+                <div class="text-2xl font-bold text-amber-600" id="metric-revenue">€300M</div>
+                <div class="text-xs text-slate-500 mt-1">Based on selected package</div>
+            </div>
+
+            <div class="metric-card bg-white rounded-xl p-4 border-l-4 border-teal-500 card-shadow">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-slate-500 uppercase">Bookings Required</span>
+                    <div class="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-ticket-alt text-teal-600 text-xs"></i>
+                    </div>
+                </div>
+                <div class="text-2xl font-bold text-teal-600" id="metric-bookings">33,334</div>
+                <div class="text-xs text-slate-500 mt-1">3.0 passengers per booking</div>
+            </div>
+
+            <div class="metric-card bg-white rounded-xl p-4 border-l-4 border-emerald-500 card-shadow">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-slate-500 uppercase">Avg. Bookings/Agent</span>
+                    <div class="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-chart-line text-emerald-600 text-xs"></i>
+                    </div>
+                </div>
+                <div class="text-2xl font-bold text-emerald-600" id="metric-per-agent">1,389</div>
+                <div class="text-xs text-slate-500 mt-1">Annual target per agent</div>
+            </div>
+        </div>
+
+        <!-- TAB 1: OVERVIEW -->
+        <div id="content-overview" class="tab-content">
+            <div class="grid grid-cols-12 gap-6">
+                <div class="col-span-8">
+                    <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">
+                            <i class="fas fa-chart-pie mr-2 text-blue-600"></i>Executive Summary
+                        </h3>
+                        <div class="grid grid-cols-3 gap-4 mb-6">
+                            <div class="p-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg text-white">
+                                <div class="text-3xl font-bold" id="overview-passengers">100K</div>
+                                <div class="text-sm opacity-90">Target Passengers</div>
+                                <div class="mt-2 text-xs bg-white/20 rounded px-2 py-1 inline-block">Turkey 2024</div>
+                            </div>
+                            <div class="p-4 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg text-white">
+                                <div class="text-3xl font-bold" id="overview-revenue">€300M</div>
+                                <div class="text-sm opacity-90">Revenue Potential</div>
+                                <div class="mt-2 text-xs bg-white/20 rounded px-2 py-1 inline-block">Gross</div>
+                            </div>
+                            <div class="p-4 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg text-white">
+                                <div class="text-3xl font-bold" id="overview-agents">24</div>
+                                <div class="text-sm opacity-90">Key Agents</div>
+                                <div class="mt-2 text-xs bg-white/20 rounded px-2 py-1 inline-block">Top Tier</div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-semibold text-slate-700 mb-3">Key Metrics Breakdown</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                                        <span class="text-sm text-slate-600">Total Bookings Needed</span>
+                                        <span class="font-bold text-slate-800" id="overview-bookings">33,334</span>
+                                    </div>
+                                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                                        <span class="text-sm text-slate-600">Average Group Size</span>
+                                        <span class="font-bold text-slate-800">3.0 passengers</span>
+                                    </div>
+                                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                                        <span class="text-sm text-slate-600">Commission Pool (12%)</span>
+                                        <span class="font-bold text-amber-600" id="overview-commission">€36M</span>
+                                    </div>
+                                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                                        <span class="text-sm text-slate-600">Avg Revenue per Agent</span>
+                                        <span class="font-bold text-emerald-600" id="overview-rev-per-agent">€12.5M</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-700 mb-3">Success Probability</h4>
+                                <div class="p-4 bg-slate-50 rounded-lg">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-sm font-medium">Overall Target Achievement</span>
+                                        <span class="text-lg font-bold text-emerald-600">87%</span>
+                                    </div>
+                                    <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden mb-4">
+                                        <div class="h-full bg-emerald-500 rounded-full" style="width: 87%"></div>
+                                    </div>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between"><span class="text-slate-600">Market Demand</span><span class="font-medium text-emerald-600">High</span></div>
+                                        <div class="flex justify-between"><span class="text-slate-600">Agent Capacity</span><span class="font-medium text-emerald-600">Sufficient</span></div>
+                                        <div class="flex justify-between"><span class="text-slate-600">Flight Availability</span><span class="font-medium text-amber-600">Moderate</span></div>
+                                        <div class="flex justify-between"><span class="text-slate-600">Pricing Competitiveness</span><span class="font-medium text-emerald-600">Good</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">
+                            <i class="fas fa-chart-line mr-2 text-blue-600"></i>Projected Passenger Growth Trajectory
+                        </h3>
+                        <canvas id="trendChart" height="120"></canvas>
+                    </div>
+                </div>
+
+                <div class="col-span-4 space-y-6">
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">Quick Stats</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-plane-departure text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <div class="text-2xl font-bold text-slate-800">248</div>
+                                    <div class="text-xs text-slate-500">Weekly flights available</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-percentage text-emerald-600"></i>
+                                </div>
+                                <div>
+                                    <div class="text-2xl font-bold text-slate-800">18.4%</div>
+                                    <div class="text-xs text-slate-500">Avg conversion rate</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-clock text-amber-600"></i>
+                                </div>
+                                <div>
+                                    <div class="text-2xl font-bold text-slate-800">4.2 hrs</div>
+                                    <div class="text-xs text-slate-500">Avg response time</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">Top Origin Cities</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-6 h-6 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                                        <span class="text-sm font-medium">Delhi</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-sm font-bold">45 flights/wk</div>
+                                        <div class="text-xs text-slate-500">35% of capacity</div>
+                                    </div>
+                                </div>
+                                <div class="w-full h-2 bg-slate-100 rounded-full">
+                                    <div class="h-full bg-amber-500 rounded-full" style="width: 85%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-6 h-6 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                                        <span class="text-sm font-medium">Mumbai</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-sm font-bold">38 flights/wk</div>
+                                        <div class="text-xs text-slate-500">30% of capacity</div>
+                                    </div>
+                                </div>
+                                <div class="w-full h-2 bg-slate-100 rounded-full">
+                                    <div class="h-full bg-blue-500 rounded-full" style="width: 72%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-6 h-6 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                                        <span class="text-sm font-medium">Bangalore</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-sm font-bold">28 flights/wk</div>
+                                        <div class="text-xs text-slate-500">22% of capacity</div>
+                                    </div>
+                                </div>
+                                <div class="w-full h-2 bg-slate-100 rounded-full">
+                                    <div class="h-full bg-purple-500 rounded-full" style="width: 55%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4"><i class="fas fa-bell mr-2 text-amber-500"></i>Alerts</h3>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <div class="flex items-start gap-2">
+                                    <i class="fas fa-exclamation-circle text-red-500 mt-0.5"></i>
+                                    <div>
+                                        <div class="text-sm font-medium text-red-800">High Priority</div>
+                                        <div class="text-xs text-red-600">3 agents need immediate training</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                <div class="flex items-start gap-2">
+                                    <i class="fas fa-info-circle text-amber-500 mt-0.5"></i>
+                                    <div>
+                                        <div class="text-sm font-medium text-amber-800">Medium Priority</div>
+                                        <div class="text-xs text-amber-600">Chennai capacity at 85%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: ROUTE ANALYSIS -->
+        <div id="content-route-analysis" class="tab-content active">
+            <div class="grid grid-cols-12 gap-6">
+                <div class="col-span-5 space-y-6">
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">
+                            <i class="fas fa-map-marked-alt mr-2 text-blue-600"></i>Origin Airport Network & Agent Heatmap
+                        </h3>
+                        <div class="relative h-96 bg-slate-50 rounded-lg overflow-hidden">
+                            <svg viewBox="0 0 400 350" class="w-full h-full">
+                                <path d="M 120 80 L 150 60 L 200 50 L 250 70 L 280 100 L 300 150 L 280 200 L 250 250 L 200 280 L 150 260 L 100 220 L 80 170 L 90 120 Z" 
+                                      fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                                <line x1="180" y1="100" x2="350" y2="50" stroke="#60a5fa" stroke-width="2" class="route-line" opacity="0.6"/>
+                                <line x1="120" y1="180" x2="350" y2="50" stroke="#60a5fa" stroke-width="2" class="route-line" opacity="0.6"/>
+                                <line x1="160" y1="220" x2="350" y2="50" stroke="#60a5fa" stroke-width="2" class="route-line" opacity="0.6"/>
+                                <line x1="220" y1="240" x2="350" y2="50" stroke="#60a5fa" stroke-width="2" class="route-line" opacity="0.6"/>
+                                <circle cx="180" cy="100" r="12" fill="#dc2626" opacity="0.8" class="heatmap-dot" onclick="showAirportInfo('Delhi', 45)"/>
+                                <text x="180" y="85" text-anchor="middle" font-size="10" font-weight="bold">Delhi (DEL)</text>
+                                <text x="180" y="125" text-anchor="middle" font-size="8" fill="#64748b">45 flights/wk</text>
+                                <circle cx="120" cy="180" r="10" fill="#ea580c" opacity="0.8" class="heatmap-dot" onclick="showAirportInfo('Mumbai', 38)"/>
+                                <text x="120" y="165" text-anchor="middle" font-size="10" font-weight="bold">Mumbai (BOM)</text>
+                                <text x="120" y="200" text-anchor="middle" font-size="8" fill="#64748b">38 flights/wk</text>
+                                <circle cx="160" cy="220" r="9" fill="#f59e0b" opacity="0.8" class="heatmap-dot" onclick="showAirportInfo('Bangalore', 28)"/>
+                                <text x="160" y="205" text-anchor="middle" font-size="10" font-weight="bold">Bangalore (BLR)</text>
+                                <text x="160" y="240" text-anchor="middle" font-size="8" fill="#64748b">28 flights/wk</text>
+                                <circle cx="220" cy="240" r="8" fill="#f97316" opacity="0.8" class="heatmap-dot" onclick="showAirportInfo('Chennai', 22)"/>
+                                <text x="220" y="225" text-anchor="middle" font-size="10" font-weight="bold">Chennai (MAA)</text>
+                                <text x="220" y="260" text-anchor="middle" font-size="8" fill="#64748b">22 flights/wk</text>
+                                <circle cx="150" cy="200" r="8" fill="#f97316" opacity="0.8" class="heatmap-dot" onclick="showAirportInfo('Hyderabad', 25)"/>
+                                <text x="150" y="185" text-anchor="middle" font-size="9" font-weight="bold">Hyderabad</text>
+                                <circle cx="250" cy="140" r="7" fill="#fb923c" opacity="0.8" class="heatmap-dot" onclick="showAirportInfo('Kolkata', 18)"/>
+                                <text x="250" y="125" text-anchor="middle" font-size="9" font-weight="bold">Kolkata</text>
+                                <circle cx="100" cy="150" r="6" fill="#fdba74" opacity="0.8" class="heatmap-dot" onclick="showAirportInfo('Ahmedabad', 15)"/>
+                                <text x="100" y="135" text-anchor="middle" font-size="9" font-weight="bold">Ahmedabad</text>
+                                <circle cx="140" cy="260" r="5" fill="#fed7aa" opacity="0.8" class="heatmap-dot" onclick="showAirportInfo('Kochi', 12)"/>
+                                <text x="140" y="280" text-anchor="middle" font-size="9" font-weight="bold">Kochi</text>
+                                <circle cx="350" cy="50" r="15" fill="#f59e0b" stroke="#d97706" stroke-width="3"/>
+                                <text x="350" y="30" text-anchor="middle" font-size="12" font-weight="bold" fill="#d97706">TURKEY</text>
+                                <text x="350" y="75" text-anchor="middle" font-size="10">★ Destination</text>
+                            </svg>
+                            <div class="absolute bottom-2 left-2 bg-white/90 p-2 rounded-lg text-xs">
+                                <div class="font-semibold mb-1">Flight Frequency:</div>
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red-600"></span> High (40+)</div>
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-orange-500"></span> Medium (20-40)</div>
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-orange-300"></span> Low (<20)</div>
+                            </div>
+                        </div>
+                        <div id="airport-info" class="mt-4 p-3 bg-blue-50 rounded-lg hidden">
+                            <p class="text-sm text-blue-800"></p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">
+                            <i class="fas fa-route mr-2 text-blue-600"></i>Route Performance Analysis
+                        </h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-slate-200">
+                                        <th class="text-left py-2 text-xs font-semibold text-slate-500">Route</th>
+                                        <th class="text-left py-2 text-xs font-semibold text-slate-500">Weekly Flights</th>
+                                        <th class="text-left py-2 text-xs font-semibold text-slate-500">Capacity</th>
+                                        <th class="text-left py-2 text-xs font-semibold text-slate-500">Utilization</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="route-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">
+                            <i class="fas fa-calculator mr-2 text-blue-600"></i>Booking Calculator & Projections
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs text-slate-500">Target Passengers</label>
+                                    <input type="number" id="calc-passengers" value="100000" readonly class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm font-semibold">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-slate-500">Avg. Group Size</label>
+                                    <input type="number" id="calc-group-size" value="3.0" step="0.1" class="number-input w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" onchange="updateCalculations()">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs text-slate-500">Avg. Package Price</label>
+                                    <input type="text" id="calc-price" value="€3,000" readonly class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm font-semibold">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-slate-500">Commission Rate</label>
+                                    <input type="text" value="12%" readonly class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm font-semibold">
+                                </div>
+                            </div>
+                            <div class="p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                                <h4 class="text-sm font-bold text-blue-800 mb-3">CALCULATED REQUIREMENTS:</h4>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-slate-700">Total Bookings Required:</span>
+                                        <span class="text-xl font-bold text-blue-600" id="calc-bookings">33,334</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-slate-700">Gross Revenue Potential:</span>
+                                        <span class="text-xl font-bold text-emerald-600" id="calc-revenue">€300M</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-slate-700">Commission Pool:</span>
+                                        <span class="text-xl font-bold text-amber-600" id="calc-commission">€36M</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-span-7 space-y-6">
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">
+                            <i class="fas fa-bullseye mr-2 text-blue-600"></i>Strategic Agent Activation Plan
+                        </h3>
+                        <div class="grid grid-cols-5 gap-3">
+                            <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                                <div class="text-xs text-slate-500 mb-1">Target</div>
+                                <div class="text-2xl font-bold text-blue-600" id="plan-passengers">100K</div>
+                                <div class="text-xs text-slate-500">Passengers</div>
+                            </div>
+                            <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-center">
+                                <div class="text-xs text-slate-500 mb-1">Bookings Needed</div>
+                                <div class="text-2xl font-bold text-amber-600" id="plan-bookings">33,334</div>
+                                <div class="text-xs text-slate-500">Total bookings</div>
+                            </div>
+                            <div class="p-3 bg-purple-50 border border-purple-200 rounded-lg text-center">
+                                <div class="text-xs text-slate-500 mb-1">Key Agents</div>
+                                <div class="text-2xl font-bold text-purple-600">24</div>
+                                <div class="text-xs text-slate-500">Top partners</div>
+                            </div>
+                            <div class="p-3 bg-teal-50 border border-teal-200 rounded-lg text-center">
+                                <div class="text-xs text-slate-500 mb-1">Per Agent Target</div>
+                                <div class="text-2xl font-bold text-teal-600" id="plan-per-agent">1,389</div>
+                                <div class="text-xs text-slate-500">Annual bookings</div>
+                            </div>
+                            <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-center">
+                                <div class="text-xs text-slate-500 mb-1">Revenue/Agent</div>
+                                <div class="text-2xl font-bold text-emerald-600" id="plan-rev-agent">€4.17M</div>
+                                <div class="text-xs text-slate-500">Potential revenue</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-slate-800">
+                                <i class="fas fa-users mr-2 text-blue-600"></i>Top 24 Agent Performance Matrix
+                            </h3>
+                            <input type="text" placeholder="Search agents..." class="px-3 py-1 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" onkeyup="filterAgents(this.value)">
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-slate-200">
+                                        <th class="text-left py-2 px-2 text-xs font-semibold text-slate-500">Rank</th>
+                                        <th class="text-left py-2 px-2 text-xs font-semibold text-slate-500">Agent</th>
+                                        <th class="text-left py-2 px-2 text-xs font-semibold text-slate-500">City</th>
+                                        <th class="text-left py-2 px-2 text-xs font-semibold text-slate-500">Bookings</th>
+                                        <th class="text-left py-2 px-2 text-xs font-semibold text-slate-500">Conv. Rate</th>
+                                        <th class="text-left py-2 px-2 text-xs font-semibold text-slate-500">Tier</th>
+                                        <th class="text-left py-2 px-2 text-xs font-semibold text-slate-500">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="agent-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">
+                            <i class="fas fa-clipboard-list mr-2 text-blue-600"></i>Recommended Campaign Strategy
+                        </h3>
+                        <div class="grid grid-cols-4 gap-4">
+                            <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                                <h4 class="font-bold text-emerald-700 mb-2 text-sm"><i class="fas fa-gift mr-1"></i> Incentive Structure</h4>
+                                <ul class="text-xs text-slate-700 space-y-1">
+                                    <li>• €50 bonus per booking above 1,500</li>
+                                    <li>• Top performer award: €5,000</li>
+                                    <li>• Group booking multiplier: 1.5x</li>
+                                </ul>
+                            </div>
+                            <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                                <h4 class="font-bold text-amber-700 mb-2 text-sm"><i class="fas fa-map-marker-alt mr-1"></i> Roadshow Locations</h4>
+                                <ul class="text-xs text-slate-700 space-y-1">
+                                    <li>• Delhi: 3 events (Q1, Q3)</li>
+                                    <li>• Mumbai: 2 events (Q2, Q4)</li>
+                                    <li>• Bangalore: 2 events (Q1, Q3)</li>
+                                </ul>
+                            </div>
+                            <div class="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                                <h4 class="font-bold text-purple-700 mb-2 text-sm"><i class="fas fa-bullhorn mr-1"></i> Marketing Support</h4>
+                                <ul class="text-xs text-slate-700 space-y-1">
+                                    <li>• Co-branded digital campaigns</li>
+                                    <li>• Turkey fam trips for top 10 agents</li>
+                                    <li>• Local language brochures</li>
+                                </ul>
+                            </div>
+                            <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                <h4 class="font-bold text-blue-700 mb-2 text-sm"><i class="fas fa-chart-bar mr-1"></i> Tracking KPIs</h4>
+                                <ul class="text-xs text-slate-700 space-y-1">
+                                    <li>• Weekly booking targets per agent</li>
+                                    <li>• Monthly conversion rate reviews</li>
+                                    <li>• Quarterly revenue assessments</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">
+                            <i class="fas fa-bolt mr-2 text-amber-500"></i>Immediate Actions Required
+                        </h3>
+                        <div class="space-y-3" id="actions-list"></div>
+                        <div class="mt-4 p-4 bg-amber-50 border-2 border-amber-200 rounded-lg">
+                            <h4 class="text-sm font-bold text-amber-800 mb-2"><i class="fas fa-lightbulb mr-2"></i>KEY INSIGHT:</h4>
+                            <p class="text-sm text-slate-700">
+                                To achieve <span class="font-bold" id="insight-passengers">100,000 passengers</span> to Turkey from India, focus on 
+                                <span class="font-bold">24 key agents</span> across 8 airports. Each agent needs to average 
+                                <span class="font-bold" id="insight-per-agent">1,389 bookings annually</span> (29/month). Prioritize Delhi & Mumbai 
+                                agents who currently drive 65% of Turkey bookings.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: AGENT NETWORK -->
+        <div id="content-agent-network" class="tab-content">
+            <div class="grid grid-cols-12 gap-6">
+                <div class="col-span-8">
+                    <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">
+                            <i class="fas fa-project-diagram mr-2 text-blue-600"></i>Agent Network Distribution
+                        </h3>
+                        <div class="grid grid-cols-4 gap-4 mb-6">
+                            <div class="p-4 bg-blue-50 rounded-lg text-center">
+                                <div class="text-3xl font-bold text-blue-600">24</div>
+                                <div class="text-sm text-slate-600">Total Agents</div>
+                            </div>
+                            <div class="p-4 bg-emerald-50 rounded-lg text-center">
+                                <div class="text-3xl font-bold text-emerald-600">8</div>
+                                <div class="text-sm text-slate-600">Cities Covered</div>
+                            </div>
+                            <div class="p-4 bg-amber-50 rounded-lg text-center">
+                                <div class="text-3xl font-bold text-amber-600">6</div>
+                                <div class="text-sm text-slate-600">Tier 1 Agents</div>
+                            </div>
+                            <div class="p-4 bg-purple-50 rounded-lg text-center">
+                                <div class="text-3xl font-bold text-purple-600">18</div>
+                                <div class="text-sm text-slate-600">Tier 2 & 3</div>
+                            </div>
+                        </div>
+                        <canvas id="agentNetworkChart" height="100"></canvas>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">
+                            <i class="fas fa-city mr-2 text-blue-600"></i>Agent Distribution by City
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4" id="city-breakdown"></div>
+                    </div>
+                </div>
+
+                <div class="col-span-4">
+                    <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">
+                            <i class="fas fa-trophy mr-2 text-amber-500"></i>Top Performers Leaderboard
+                        </h3>
+                        <div class="space-y-4" id="leaderboard"></div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">Performance Metrics</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-600">Avg Conversion Rate</span>
+                                    <span class="font-bold text-emerald-600">87.5%</span>
+                                </div>
+                                <div class="w-full h-2 bg-slate-100 rounded-full">
+                                    <div class="h-full bg-emerald-500 rounded-full" style="width: 87.5%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-600">Response Time</span>
+                                    <span class="font-bold text-blue-600">4.2 hrs</span>
+                                </div>
+                                <div class="w-full h-2 bg-slate-100 rounded-full">
+                                    <div class="h-full bg-blue-500 rounded-full" style="width: 70%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-600">Customer Satisfaction</span>
+                                    <span class="font-bold text-purple-600">4.6/5</span>
+                                </div>
+                                <div class="w-full h-2 bg-slate-100 rounded-full">
+                                    <div class="h-full bg-purple-500 rounded-full" style="width: 92%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-600">Repeat Business Rate</span>
+                                    <span class="font-bold text-amber-600">68%</span>
+                                </div>
+                                <div class="w-full h-2 bg-slate-100 rounded-full">
+                                    <div class="h-full bg-amber-500 rounded-full" style="width: 68%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: CAMPAIGN PLANNER -->
+        <div id="content-campaign-planner" class="tab-content">
+            <div class="grid grid-cols-12 gap-6">
+                <div class="col-span-8">
+                    <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-slate-800">
+                                <i class="fas fa-calendar-alt mr-2 text-blue-600"></i>Campaign Calendar 2024
+                            </h3>
+                            <button onclick="addCampaignEvent()" class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+                                <i class="fas fa-plus mr-2"></i>Add Event
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-4 gap-4" id="campaign-calendar"></div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">
+                            <i class="fas fa-euro-sign mr-2 text-blue-600"></i>Campaign Budget Calculator
+                        </h3>
+                        <div class="grid grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-semibold text-slate-700 mb-3">Budget Allocation</h4>
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-3 h-3 bg-blue-500 rounded"></div>
+                                            <span class="text-sm text-slate-600">Agent Incentives</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <input type="number" value="40" class="w-16 px-2 py-1 text-sm border border-slate-200 rounded text-right budget-input" data-type="incentives" onchange="updateBudget()">%
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-3 h-3 bg-emerald-500 rounded"></div>
+                                            <span class="text-sm text-slate-600">Roadshows & Events</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <input type="number" value="30" class="w-16 px-2 py-1 text-sm border border-slate-200 rounded text-right budget-input" data-type="roadshows" onchange="updateBudget()">%
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-3 h-3 bg-amber-500 rounded"></div>
+                                            <span class="text-sm text-slate-600">Marketing Materials</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <input type="number" value="20" class="w-16 px-2 py-1 text-sm border border-slate-200 rounded text-right budget-input" data-type="marketing" onchange="updateBudget()">%
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-3 h-3 bg-purple-500 rounded"></div>
+                                            <span class="text-sm text-slate-600">Fam Trips</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <input type="number" value="10" class="w-16 px-2 py-1 text-sm border border-slate-200 rounded text-right budget-input" data-type="famtrips" onchange="updateBudget()">%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-700 mb-3">Budget Summary</h4>
+                                <div class="p-4 bg-slate-50 rounded-lg space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-slate-600">Total Campaign Budget:</span>
+                                        <span class="text-xl font-bold text-slate-800">€500,000</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-slate-600">Cost per Booking:</span>
+                                        <span class="text-lg font-bold text-blue-600" id="cost-per-booking">€15.00</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-slate-600">Cost per Passenger:</span>
+                                        <span class="text-lg font-bold text-emerald-600" id="cost-per-pax">€5.00</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-slate-600">ROI:</span>
+                                        <span class="text-lg font-bold text-emerald-600">600%</span>
+                                    </div>
+                                </div>
+                                <canvas id="budgetChart" height="150"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-span-4">
+                    <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">
+                            <i class="fas fa-copy mr-2 text-blue-600"></i>Campaign Templates
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="p-3 border border-slate-200 rounded-lg hover:border-blue-400 cursor-pointer transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="font-medium text-slate-800">Agent Onboarding</span>
+                                    <span class="text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded">Active</span>
+                                </div>
+                                <p class="text-xs text-slate-500">Welcome kit + training program</p>
+                            </div>
+                            <div class="p-3 border border-slate-200 rounded-lg hover:border-blue-400 cursor-pointer transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="font-medium text-slate-800">Roadshow Package</span>
+                                    <span class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">Draft</span>
+                                </div>
+                                <p class="text-xs text-slate-500">Complete event management kit</p>
+                            </div>
+                            <div class="p-3 border border-slate-200 rounded-lg hover:border-blue-400 cursor-pointer transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="font-medium text-slate-800">Incentive Program</span>
+                                    <span class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">Draft</span>
+                                </div>
+                                <p class="text-xs text-slate-500">Tiered bonus structure</p>
+                            </div>
+                            <div class="p-3 border border-slate-200 rounded-lg hover:border-blue-400 cursor-pointer transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="font-medium text-slate-800">Digital Campaign</span>
+                                    <span class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">Draft</span>
+                                </div>
+                                <p class="text-xs text-slate-500">Social media + email templates</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">
+                            <i class="fas fa-tasks mr-2 text-amber-500"></i>Upcoming Tasks
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+                                <input type="checkbox" class="mt-1">
+                                <div>
+                                    <div class="text-sm font-medium">Finalize Q1 roadshow dates</div>
+                                    <div class="text-xs text-slate-500">Due in 3 days</div>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+                                <input type="checkbox" class="mt-1">
+                                <div>
+                                    <div class="text-sm font-medium">Send agent welcome packs</div>
+                                    <div class="text-xs text-slate-500">Due in 5 days</div>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+                                <input type="checkbox" class="mt-1">
+                                <div>
+                                    <div class="text-sm font-medium">Book venue for Delhi event</div>
+                                    <div class="text-xs text-slate-500">Due in 1 week</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: PERFORMANCE -->
+        <div id="content-performance" class="tab-content">
+            <div class="grid grid-cols-12 gap-6">
+                <div class="col-span-8">
+                    <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">
+                            <i class="fas fa-chart-line mr-2 text-blue-600"></i>Performance Tracking Dashboard
+                        </h3>
+                        <div class="grid grid-cols-4 gap-4 mb-6">
+                            <div class="p-4 bg-emerald-50 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-emerald-600">18.4%</div>
+                                <div class="text-xs text-slate-600">Conversion Rate</div>
+                                <div class="text-xs text-emerald-600 mt-1">+2.1% vs target</div>
+                            </div>
+                            <div class="p-4 bg-blue-50 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-blue-600">4.2 hrs</div>
+                                <div class="text-xs text-slate-600">Avg Response Time</div>
+                                <div class="text-xs text-emerald-600 mt-1">-0.8 hrs improvement</div>
+                            </div>
+                            <div class="p-4 bg-amber-50 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-amber-600">€24.8Cr</div>
+                                <div class="text-xs text-slate-600">Quote Value</div>
+                                <div class="text-xs text-emerald-600 mt-1">+15% vs last month</div>
+                            </div>
+                            <div class="p-4 bg-purple-50 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-purple-600">3,842</div>
+                                <div class="text-xs text-slate-600">Active Quotes</div>
+                                <div class="text-xs text-emerald-600 mt-1">+486 pending</div>
+                            </div>
+                        </div>
+                        <canvas id="performanceChart" height="100"></canvas>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">
+                            <i class="fas fa-trophy mr-2 text-amber-500"></i>Top Performing Agents This Month
+                        </h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-slate-200">
+                                        <th class="text-left py-2 text-xs font-semibold text-slate-500">Agent</th>
+                                        <th class="text-left py-2 text-xs font-semibold text-slate-500">Bookings</th>
+                                        <th class="text-left py-2 text-xs font-semibold text-slate-500">Revenue</th>
+                                        <th class="text-left py-2 text-xs font-semibold text-slate-500">Conv. Rate</th>
+                                        <th class="text-left py-2 text-xs font-semibold text-slate-500">Trend</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b border-slate-100">
+                                        <td class="py-3 font-medium">Sneha Reddy</td>
+                                        <td class="py-3">245</td>
+                                        <td class="py-3 text-emerald-600 font-medium">€735K</td>
+                                        <td class="py-3"><span class="text-emerald-600">24%</span></td>
+                                        <td class="py-3"><i class="fas fa-arrow-up text-emerald-500"></i> +12%</td>
+                                    </tr>
+                                    <tr class="border-b border-slate-100">
+                                        <td class="py-3 font-medium">Rahul Sharma</td>
+                                        <td class="py-3">218</td>
+                                        <td class="py-3 text-emerald-600 font-medium">€654K</td>
+                                        <td class="py-3"><span class="text-emerald-600">22%</span></td>
+                                        <td class="py-3"><i class="fas fa-arrow-up text-emerald-500"></i> +8%</td>
+                                    </tr>
+                                    <tr class="border-b border-slate-100">
+                                        <td class="py-3 font-medium">Neha Gupta</td>
+                                        <td class="py-3">195</td>
+                                        <td class="py-3 text-emerald-600 font-medium">€585K</td>
+                                        <td class="py-3"><span class="text-emerald-600">21%</span></td>
+                                        <td class="py-3"><i class="fas fa-arrow-up text-emerald-500"></i> +5%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-span-4 space-y-6">
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">
+                            <i class="fas fa-bullseye mr-2 text-blue-600"></i>Target vs Actual
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-600">Passengers</span>
+                                    <span class="font-bold"><span id="actual-passengers">45,230</span> / <span id="target-display">100,000</span></span>
+                                </div>
+                                <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-blue-500 rounded-full" style="width: 45%"></div>
+                                </div>
+                                <div class="text-xs text-slate-500 mt-1">45% of annual target</div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-600">Revenue</span>
+                                    <span class="font-bold">€135M / €300M</span>
+                                </div>
+                                <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-emerald-500 rounded-full" style="width: 45%"></div>
+                                </div>
+                                <div class="text-xs text-slate-500 mt-1">45% of annual target</div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-600">Bookings</span>
+                                    <span class="font-bold">15,076 / 33,334</span>
+                                </div>
+                                <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-amber-500 rounded-full" style="width: 45%"></div>
+                                </div>
+                                <div class="text-xs text-slate-500 mt-1">45% of annual target</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">
+                            <i class="fas fa-exclamation-triangle mr-2 text-red-500"></i>At-Risk Agents
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="font-medium text-red-800">Vikram Singh</span>
+                                    <span class="text-xs text-red-600 bg-red-100 px-2 py-1 rounded">-15%</span>
+                                </div>
+                                <p class="text-xs text-red-600">Below target for 3 consecutive months</p>
+                            </div>
+                            <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="font-medium text-amber-800">Amit Kumar</span>
+                                    <span class="text-xs text-amber-600 bg-amber-100 px-2 py-1 rounded">-8%</span>
+                                </div>
+                                <p class="text-xs text-amber-600">Conversion rate dropped to 12%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 transition-transform duration-300 z-50">
+        <span id="toast-message">Action completed</span>
+    </div>
+
+    <script>
+        // Agent Data
+        const agents = [
+            { name: 'Rajesh Kumar', city: 'Delhi', bookings: 1850, conv: '95%', tier: 3, target: 1389 },
+            { name: 'Priya Sharma', city: 'Mumbai', bookings: 1720, conv: '92%', tier: 3, target: 1389 },
+            { name: 'Amit Patel', city: 'Bangalore', bookings: 1680, conv: '94%', tier: 3, target: 1389 },
+            { name: 'Sneha Reddy', city: 'Hyderabad', bookings: 1540, conv: '89%', tier: 3, target: 1389 },
+            { name: 'Vikram Singh', city: 'Delhi', bookings: 1420, conv: '87%', tier: 2, target: 1389 },
+            { name: 'Neha Gupta', city: 'Mumbai', bookings: 1380, conv: '91%', tier: 3, target: 1389 },
+            { name: 'Rahul Verma', city: 'Chennai', bookings: 1320, conv: '85%', tier: 2, target: 1389 },
+            { name: 'Anita Desai', city: 'Bangalore', bookings: 1280, conv: '88%', tier: 2, target: 1389 },
+            { name: 'Kiran Shah', city: 'Ahmedabad', bookings: 1240, conv: '86%', tier: 2, target: 1389 },
+            { name: 'Deepak Rao', city: 'Hyderabad', bookings: 1200, conv: '84%', tier: 2, target: 1389 },
+            { name: 'Meera Iyer', city: 'Chennai', bookings: 1180, conv: '90%', tier: 3, target: 1389 },
+            { name: 'Sanjay Mehta', city: 'Mumbai', bookings: 1150, conv: '83%', tier: 2, target: 1389 },
+            { name: 'Pooja Nair', city: 'Kochi', bookings: 1120, conv: '82%', tier: 2, target: 1389 },
+            { name: 'Arun Kumar', city: 'Delhi', bookings: 1100, conv: '85%', tier: 2, target: 1389 },
+            { name: 'Lakshmi R', city: 'Bangalore', bookings: 1080, conv: '81%', tier: 2, target: 1389 },
+            { name: 'Varun Malhotra', city: 'Delhi', bookings: 1050, conv: '84%', tier: 2, target: 1389 },
+            { name: 'Divya Patel', city: 'Ahmedabad', bookings: 1020, conv: '80%', tier: 2, target: 1389 },
+            { name: 'Suresh Babu', city: 'Chennai', bookings: 980, conv: '79%', tier: 1, target: 1389 },
+            { name: 'Ritu Agarwal', city: 'Kolkata', bookings: 960, conv: '82%', tier: 2, target: 1389 },
+            { name: 'Karthik S', city: 'Bangalore', bookings: 940, conv: '78%', tier: 1, target: 1389 },
+            { name: 'Nisha Chopra', city: 'Mumbai', bookings: 920, conv: '81%', tier: 2, target: 1389 },
+            { name: 'Manish Jain', city: 'Delhi', bookings: 900, conv: '77%', tier: 1, target: 1389 },
+            { name: 'Shalini Das', city: 'Kolkata', bookings: 880, conv: '80%', tier: 2, target: 1389 },
+            { name: 'Tarun Khanna', city: 'Hyderabad', bookings: 860, conv: '76%', tier: 1, target: 1389 }
+        ];
+
+        const routes = [
+            { route: 'Delhi - Turkey', flights: 45, capacity: '12,600', utilization: '78%' },
+            { route: 'Mumbai - Turkey', flights: 38, capacity: '10,640', utilization: '82%' },
+            { route: 'Bangalore - Turkey', flights: 28, capacity: '7,840', utilization: '65%' },
+            { route: 'Chennai - Turkey', flights: 22, capacity: '6,160', utilization: '71%' },
+            { route: 'Hyderabad - Turkey', flights: 25, capacity: '7,000', utilization: '58%' },
+            { route: 'Kolkata - Turkey', flights: 18, capacity: '5,040', utilization: '45%' }
+        ];
+
+        const actions = [
+            { priority: 'high', text: 'Contact top 5 agents in Delhi for immediate briefing', deadline: 'Schedule by Jan 15', color: 'red' },
+            { priority: 'high', text: 'Secure roadshow venues in 3 tier-1 cities', deadline: 'Book by Jan 20', color: 'red' },
+            { priority: 'medium', text: 'Finalize Turkey fam trip itinerary for top performers', deadline: 'Confirm by Feb 1', color: 'amber' },
+            { priority: 'medium', text: 'Prepare co-branded marketing materials', deadline: 'Complete by Feb 15', color: 'amber' },
+            { priority: 'low', text: 'Set up weekly tracking dashboard', deadline: 'Launch by Feb 1', color: 'emerald' },
+            { priority: 'low', text: 'Schedule quarterly review meetings', deadline: 'Plan by Mar 1', color: 'emerald' }
+        ];
+
+        const campaignEvents = [
+            { quarter: 'Q1 2024', events: ['Agent Onboarding', 'Delhi Roadshow', 'Training Webinar'], color: 'blue' },
+            { quarter: 'Q2 2024', events: ['Mumbai Roadshow', 'Campaign Launch', 'Mid-year Review'], color: 'amber' },
+            { quarter: 'Q3 2024', events: ['Bangalore Roadshow', 'Delhi Roadshow 2', 'Incentive Payout'], color: 'purple' },
+            { quarter: 'Q4 2024', events: ['Mumbai Roadshow 2', 'Year-end Push', '2025 Planning'], color: 'emerald' }
+        ];
+
+        let selectedCities = ['Delhi', 'Mumbai', 'Bangalore'];
+        let charts = {};
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderAgents();
+            renderRoutes();
+            renderActions();
+            renderCampaignCalendar();
+            renderCityBreakdown();
+            renderLeaderboard();
+            updateCalculations();
+            initCharts();
+        });
+
+        // Tab Switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active class from all nav buttons
+            document.querySelectorAll('.nav-tab').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('text-slate-600');
+            });
+
+            // Show selected tab
+            document.getElementById('content-' + tabName).classList.add('active');
+            document.getElementById('tab-' + tabName).classList.add('active');
+            document.getElementById('tab-' + tabName).classList.remove('text-slate-600');
+
+            showToast('Switched to ' + tabName.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()));
+        }
+
+        // Dropdown Functions
+        function toggleDropdown(id) {
+            const menu = document.getElementById(id + '-menu');
+            const allMenus = document.querySelectorAll('.dropdown-menu');
+            allMenus.forEach(m => { if (m !== menu) m.classList.remove('active'); });
+            menu.classList.toggle('active');
+        }
+
+        function selectDestination(dest) {
+            document.getElementById('destination-text').textContent = dest;
+            document.getElementById('destination-menu').classList.remove('active');
+            showToast('Destination changed to ' + dest);
+            updateCalculations();
+        }
+
+        function selectRegion(region) {
+            document.getElementById('region-text').textContent = region;
+            document.getElementById('region-menu').classList.remove('active');
+            showToast('Source region changed to ' + region);
+        }
+
+        function toggleCity(city) {
+            const index = selectedCities.indexOf(city);
+            if (index > -1) {
+                if (selectedCities.length > 1) selectedCities.splice(index, 1);
+            } else {
+                selectedCities.push(city);
+            }
+            document.getElementById('cities-text').textContent = selectedCities.join(', ');
+            updateCalculations();
+        }
+
+        function resetFilters() {
+            document.getElementById('target-passengers').value = 100000;
+            document.getElementById('package-value').value = 3000;
+            selectedCities = ['Delhi', 'Mumbai', 'Bangalore'];
+            document.getElementById('cities-text').textContent = 'Delhi, Mumbai, Bangalore';
+            updateCalculations();
+            showToast('Filters reset to default');
+        }
+
+        // Calculation Functions
+        function updateCalculations() {
+            const passengers = parseInt(document.getElementById('target-passengers').value) || 100000;
+            const packageValue = parseInt(document.getElementById('package-value').value) || 3000;
+            const groupSize = parseFloat(document.getElementById('calc-group-size')?.value) || 3.0;
+
+            const bookingsNeeded = Math.ceil(passengers / groupSize);
+            const revenue = (bookingsNeeded * packageValue / 1000000).toFixed(0);
+            const commission = (bookingsNeeded * packageValue * 0.12 / 1000000).toFixed(0);
+            const perAgent = Math.ceil(bookingsNeeded / 24);
+            const revenuePerAgent = (bookingsNeeded * packageValue / 24 / 1000000).toFixed(2);
+            const revPerAgentTotal = (bookingsNeeded * packageValue / 24 / 1000000).toFixed(1);
+
+            // Update top metrics
+            document.getElementById('metric-passengers').textContent = passengers.toLocaleString();
+            document.getElementById('metric-revenue').textContent = '€' + revenue + 'M';
+            document.getElementById('metric-bookings').textContent = bookingsNeeded.toLocaleString();
+            document.getElementById('metric-per-agent').textContent = perAgent.toLocaleString();
+
+            // Update calculator section
+            const calcPassengers = document.getElementById('calc-passengers');
+            if (calcPassengers) calcPassengers.value = passengers;
+
+            const calcPrice = document.getElementById('calc-price');
+            if (calcPrice) calcPrice.value = '€' + packageValue.toLocaleString();
+
+            const calcBookings = document.getElementById('calc-bookings');
+            if (calcBookings) calcBookings.textContent = bookingsNeeded.toLocaleString();
+
+            const calcRevenue = document.getElementById('calc-revenue');
+            if (calcRevenue) calcRevenue.textContent = '€' + revenue + 'M';
+
+            const calcCommission = document.getElementById('calc-commission');
+            if (calcCommission) calcCommission.textContent = '€' + commission + 'M';
+
+            // Update plan section
+            const planPassengers = document.getElementById('plan-passengers');
+            if (planPassengers) planPassengers.textContent = (passengers / 1000).toFixed(0) + 'K';
+
+            const planBookings = document.getElementById('plan-bookings');
+            if (planBookings) planBookings.textContent = bookingsNeeded.toLocaleString();
+
+            const planPerAgent = document.getElementById('plan-per-agent');
+            if (planPerAgent) planPerAgent.textContent = perAgent.toLocaleString();
+
+            const planRevAgent = document.getElementById('plan-rev-agent');
+            if (planRevAgent) planRevAgent.textContent = '€' + revenuePerAgent + 'M';
+
+            // Update overview section
+            const overviewPassengers = document.getElementById('overview-passengers');
+            if (overviewPassengers) overviewPassengers.textContent = (passengers / 1000).toFixed(0) + 'K';
+
+            const overviewRevenue = document.getElementById('overview-revenue');
+            if (overviewRevenue) overviewRevenue.textContent = '€' + revenue + 'M';
+
+            const overviewBookings = document.getElementById('overview-bookings');
+            if (overviewBookings) overviewBookings.textContent = bookingsNeeded.toLocaleString();
+
+            const overviewCommission = document.getElementById('overview-commission');
+            if (overviewCommission) overviewCommission.textContent = '€' + commission + 'M';
+
+            const overviewRevPerAgent = document.getElementById('overview-rev-per-agent');
+            if (overviewRevPerAgent) overviewRevPerAgent.textContent = '€' + revPerAgentTotal + 'M';
+
+            // Update insight text
+            const insightPassengers = document.getElementById('insight-passengers');
+            if (insightPassengers) insightPassengers.textContent = passengers.toLocaleString() + ' passengers';
+
+            const insightPerAgent = document.getElementById('insight-per-agent');
+            if (insightPerAgent) insightPerAgent.textContent = perAgent.toLocaleString() + ' bookings annually';
+
+            // Update target display in performance tab
+            const targetDisplay = document.getElementById('target-display');
+            if (targetDisplay) targetDisplay.textContent = passengers.toLocaleString();
+
+            // Update agent targets
+            agents.forEach(agent => { agent.target = perAgent; });
+            renderAgents();
+
+            // Update budget calculations
+            updateBudget();
+        }
+
+        function updateBudget() {
+            const passengers = parseInt(document.getElementById('target-passengers').value) || 100000;
+            const bookings = Math.ceil(passengers / 3);
+            const budget = 500000;
+
+            const costPerBooking = (budget / bookings).toFixed(2);
+            const costPerPax = (budget / passengers).toFixed(2);
+
+            const costPerBookingEl = document.getElementById('cost-per-booking');
+            if (costPerBookingEl) costPerBookingEl.textContent = '€' + costPerBooking;
+
+            const costPerPaxEl = document.getElementById('cost-per-pax');
+            if (costPerPaxEl) costPerPaxEl.textContent = '€' + costPerPax;
+        }
+
+        // Render Functions
+        function renderAgents() {
+            const tbody = document.getElementById('agent-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            agents.slice(0, 8).forEach((agent, index) => {
+                const row = document.createElement('tr');
+                row.className = 'agent-row border-b border-slate-100 transition-colors';
+                const tierStars = '★'.repeat(agent.tier);
+                const progressWidth = Math.min((agent.bookings / agent.target) * 100, 100);
+                const progressColor = agent.bookings >= agent.target ? 'bg-emerald-500' : agent.bookings >= agent.target * 0.8 ? 'bg-amber-500' : 'bg-orange-500';
+
+                row.innerHTML = `
+                    <td class="py-3 px-2">
+                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full ${index < 3 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'} text-xs font-bold">${index + 1}</span>
+                    </td>
+                    <td class="py-3 px-2 font-medium text-slate-800">${agent.name}</td>
+                    <td class="py-3 px-2 text-slate-600">${agent.city}</td>
+                    <td class="py-3 px-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-semibold text-slate-700">${agent.bookings.toLocaleString()}</span>
+                            <div class="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
+                                <div class="h-full ${progressColor} progress-bar" style="width: ${progressWidth}%"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3 px-2"><span class="text-emerald-600 font-medium">${agent.conv}</span></td>
+                    <td class="py-3 px-2 text-amber-500">${tierStars}</td>
+                    <td class="py-3 px-2">
+                        <button onclick="contactAgent('${agent.name}')" class="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded transition">Contact</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderRoutes() {
+            const tbody = document.getElementById('route-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            routes.forEach(route => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-slate-100';
+                row.innerHTML = `
+                    <td class="py-2 font-medium text-slate-800">${route.route}</td>
+                    <td class="py-2 text-slate-600">${route.flights}</td>
+                    <td class="py-2 text-slate-600">${route.capacity}</td>
+                    <td class="py-2">
+                        <span class="px-2 py-1 text-xs rounded ${parseInt(route.utilization) > 75 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">${route.utilization}</span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderActions() {
+            const container = document.getElementById('actions-list');
+            if (!container) return;
+            container.innerHTML = '';
+
+            actions.forEach((action, index) => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition';
+                const priorityLabel = action.priority.toUpperCase();
+                div.innerHTML = `
+                    <span class="px-2 py-1 text-xs font-bold text-${action.color}-700 bg-${action.color}-100 rounded">${priorityLabel}</span>
+                    <span class="flex-1 text-sm text-slate-700">${action.text}</span>
+                    <span class="text-xs text-slate-500 px-2 py-1 bg-white rounded border border-slate-200">${action.deadline}</span>
+                    <button onclick="completeAction(${index})" class="px-3 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded transition">Act</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderCampaignCalendar() {
+            const container = document.getElementById('campaign-calendar');
+            if (!container) return;
+            container.innerHTML = '';
+
+            campaignEvents.forEach(q => {
+                const div = document.createElement('div');
+                div.className = `p-4 bg-${q.color}-50 border border-${q.color}-200 rounded-lg`;
+                div.innerHTML = `
+                    <h4 class="font-bold text-${q.color}-700 mb-2">${q.quarter}</h4>
+                    <ul class="text-xs text-slate-700 space-y-1">
+                        ${q.events.map(e => `<li>• ${e}</li>`).join('')}
+                    </ul>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderCityBreakdown() {
+            const container = document.getElementById('city-breakdown');
+            if (!container) return;
+
+            const cityData = [
+                { city: 'Delhi', agents: 6, percentage: 25 },
+                { city: 'Mumbai', agents: 5, percentage: 21 },
+                { city: 'Bangalore', agents: 4, percentage: 17 },
+                { city: 'Chennai', agents: 3, percentage: 12 },
+                { city: 'Hyderabad', agents: 3, percentage: 12 },
+                { city: 'Others', agents: 3, percentage: 13 }
+            ];
+
+            container.innerHTML = cityData.map(c => `
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div>
+                        <div class="font-medium text-slate-800">${c.city}</div>
+                        <div class="text-xs text-slate-500">${c.agents} agents</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
+                            <div class="h-full bg-blue-500 rounded-full" style="width: ${c.percentage}%"></div>
+                        </div>
+                        <span class="text-sm font-bold text-slate-700">${c.percentage}%</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderLeaderboard() {
+            const container = document.getElementById('leaderboard');
+            if (!container) return;
+
+            const topAgents = agents.slice(0, 5);
+            container.innerHTML = topAgents.map((agent, index) => `
+                <div class="flex items-center gap-3 p-3 ${index < 3 ? 'bg-amber-50 border border-amber-200' : 'bg-slate-50'} rounded-lg">
+                    <span class="w-8 h-8 ${index < 3 ? 'bg-amber-500 text-white' : 'bg-slate-300 text-slate-600'} rounded-full flex items-center justify-center text-sm font-bold">${index + 1}</span>
+                    <div class="flex-1">
+                        <div class="font-medium text-slate-800">${agent.name}</div>
+                        <div class="text-xs text-slate-500">${agent.city}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-slate-800">${agent.bookings.toLocaleString()}</div>
+                        <div class="text-xs text-slate-500">bookings</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Charts
+        function initCharts() {
+            // Trend Chart
+            const trendCtx = document.getElementById('trendChart');
+            if (trendCtx) {
+                charts.trend = new Chart(trendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        datasets: [{
+                            label: 'Projected Passengers',
+                            data: [8000, 12000, 18000, 25000, 35000, 45000, 58000, 70000, 82000, 90000, 96000, 100000],
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }, {
+                            label: 'Target',
+                            data: [8333, 16666, 25000, 33333, 41666, 50000, 58333, 66666, 75000, 83333, 91666, 100000],
+                            borderColor: '#f59e0b',
+                            borderDash: [5, 5],
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } },
+                        scales: { y: { beginAtZero: true, ticks: { callback: function(value) { return value / 1000 + 'K'; } } } }
+                    }
+                });
+            }
+
+            // Agent Network Chart
+            const networkCtx = document.getElementById('agentNetworkChart');
+            if (networkCtx) {
+                charts.network = new Chart(networkCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Delhi', 'Mumbai', 'Bangalore', 'Chennai', 'Hyderabad', 'Others'],
+                        datasets: [{
+                            data: [6, 5, 4, 3, 3, 3],
+                            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#64748b']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right' } }
+                    }
+                });
+            }
+
+            // Budget Chart
+            const budgetCtx = document.getElementById('budgetChart');
+            if (budgetCtx) {
+                charts.budget = new Chart(budgetCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Agent Incentives', 'Roadshows', 'Marketing', 'Fam Trips'],
+                        datasets: [{
+                            data: [40, 30, 20, 10],
+                            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } }
+                    }
+                });
+            }
+
+            // Performance Chart
+            const perfCtx = document.getElementById('performanceChart');
+            if (perfCtx) {
+                charts.performance = new Chart(perfCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                        datasets: [{
+                            label: 'Bookings',
+                            data: [850, 920, 880, 950],
+                            backgroundColor: '#3b82f6'
+                        }, {
+                            label: 'Target',
+                            data: [800, 800, 800, 800],
+                            backgroundColor: '#f59e0b'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            }
+        }
+
+        // Utility Functions
+        function showAirportInfo(airport, flights) {
+            const info = document.getElementById('airport-info');
+            if (!info) return;
+            info.innerHTML = `<p class="text-sm text-blue-800"><strong>${airport}:</strong> ${flights} weekly flights to Turkey. ${flights > 30 ? 'Major hub - Priority for roadshows.' : 'Secondary market - Monitor growth potential.'}</p>`;
+            info.classList.remove('hidden');
+        }
+
+        function contactAgent(name) {
+            showToast('Opening contact dialog for ' + name + '...');
+        }
+
+        function completeAction(index) {
+            showToast('Action marked as complete!');
+        }
+
+        function filterAgents(query) {
+            const rows = document.querySelectorAll('.agent-row');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query.toLowerCase()) ? '' : 'none';
+            });
+        }
+
+        function addCampaignEvent() {
+            showToast('Add event dialog opened');
+        }
+
+        function exportPlan() {
+            showToast('Exporting plan... Download will start shortly.');
+        }
+
+        function generateCampaign() {
+            showToast('Generating campaign... Please wait.');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.remove('translate-y-20');
+            setTimeout(() => { toast.classList.add('translate-y-20'); }, 3000);
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.relative')) {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => { menu.classList.remove('active'); });
+            }
+        });
+    </script>
+</body>
+</html>

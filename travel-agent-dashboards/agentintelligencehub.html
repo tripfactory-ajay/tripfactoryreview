@@ -1,0 +1,2239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory - Agent Intelligence Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+        }
+        
+        /* Progress Steps */
+        .step-indicator {
+            transition: all 0.3s ease;
+        }
+        
+        .step-active {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .step-completed {
+            background: #10b981;
+            color: white;
+        }
+        
+        /* Form Sections */
+        .form-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .form-section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Custom Checkboxes */
+        .custom-checkbox {
+            transition: all 0.2s ease;
+        }
+        
+        .custom-checkbox:hover {
+            transform: translateX(5px);
+            background: #eff6ff;
+        }
+        
+        .custom-checkbox input:checked + div {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        /* Glass Panel */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Dashboard Cards */
+        .metric-card {
+            transition: all 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.15);
+        }
+        
+        /* Chart Containers */
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        /* Filter Pills */
+        .filter-pill {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .filter-pill:hover {
+            transform: scale(1.05);
+        }
+        
+        .filter-pill.active {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+        }
+        
+        /* Heat Map Grid */
+        .heat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+        }
+        
+        .heat-cell {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .heat-cell:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
+        }
+        
+        /* Agent Profile Card */
+        .agent-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        
+        .agent-card:hover {
+            border-left-color: #f59e0b;
+            transform: translateX(8px);
+        }
+        
+        /* Tag Styles */
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        /* Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e2e8f0;
+            outline: none;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        }
+        
+        /* Tab Navigation */
+        .tab-btn {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+        }
+        
+        /* Pulse Animation */
+        .pulse-ring {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.8; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-lg sticky top-0 z-50 border-b-4 border-blue-900">
+        <div class="px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="bg-blue-900 text-white px-4 py-2 rounded-xl font-bold text-2xl tracking-tight">
+                        <i class="fas fa-plane-departure mr-2 text-amber-400"></i>TripFactory
+                    </div>
+                    <div class="hidden md:block">
+                        <h1 class="text-2xl font-bold text-blue-900">Agent Intelligence Hub</h1>
+                        <p class="text-sm text-slate-500">88,000 Agents • Survey & Analytics Platform</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <div class="text-right hidden lg:block">
+                        <div class="text-3xl font-bold text-blue-900">88,000</div>
+                        <div class="text-xs text-slate-500 font-semibold">Total Registered Agents</div>
+                    </div>
+                    <div class="text-right hidden lg:block border-l pl-4">
+                        <div class="text-3xl font-bold text-green-600">12,450</div>
+                        <div class="text-xs text-slate-500 font-semibold">Surveys Completed (14.1%)</div>
+                    </div>
+                    <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full flex items-center justify-center text-white border-2 border-amber-400 shadow-lg">
+                        <i class="fas fa-user-tie text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Navigation -->
+    <div class="bg-white border-b border-slate-200 px-6 py-3">
+        <div class="flex gap-4">
+            <button onclick="switchView('survey')" id="nav-survey" class="tab-btn active px-6 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2">
+                <i class="fas fa-clipboard-list"></i>Agent Survey
+            </button>
+            <button onclick="switchView('dashboard')" id="nav-dashboard" class="tab-btn px-6 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100 transition flex items-center gap-2">
+                <i class="fas fa-chart-pie"></i>Analytics Dashboard
+            </button>
+            <button onclick="switchView('agents')" id="nav-agents" class="tab-btn px-6 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100 transition flex items-center gap-2">
+                <i class="fas fa-users"></i>Agent Database
+            </button>
+            <button onclick="switchView('insights')" id="nav-insights" class="tab-btn px-6 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100 transition flex items-center gap-2">
+                <i class="fas fa-lightbulb"></i>Smart Insights
+            </button>
+        </div>
+    </div>
+
+    <!-- VIEW 1: AGENT SURVEY -->
+    <div id="view-survey" class="p-6 max-w-6xl mx-auto">
+        
+        <!-- Progress Header -->
+        <div class="glass-panel rounded-2xl p-6 mb-6 shadow-xl">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Agent Profile & Capability Survey</h2>
+                    <p class="text-sm text-slate-500 mt-1">Help us understand your business to serve you better</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-3xl font-bold text-blue-900" id="progress-percent">0%</div>
+                    <div class="text-xs text-slate-500">Complete</div>
+                </div>
+            </div>
+            
+            <!-- Progress Steps -->
+            <div class="flex justify-between items-center relative">
+                <div class="absolute top-1/2 left-0 right-0 h-1 bg-slate-200 -z-10"></div>
+                <div class="step-indicator w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center font-bold text-sm step-active" data-step="1">1</div>
+                <div class="step-indicator w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center font-bold text-sm" data-step="2">2</div>
+                <div class="step-indicator w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center font-bold text-sm" data-step="3">3</div>
+                <div class="step-indicator w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center font-bold text-sm" data-step="4">4</div>
+                <div class="step-indicator w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center font-bold text-sm" data-step="5">5</div>
+                <div class="step-indicator w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center font-bold text-sm" data-step="6">6</div>
+            </div>
+            <div class="flex justify-between mt-2 text-xs text-slate-500">
+                <span>Business Profile</span>
+                <span>Demographics</span>
+                <span>Destinations</span>
+                <span>Specializations</span>
+                <span>Preferences</span>
+                <span>Training</span>
+            </div>
+        </div>
+
+        <form id="agent-survey" onsubmit="return false;">
+            
+            <!-- SECTION 1: BUSINESS PROFILE -->
+            <div class="form-section active glass-panel rounded-2xl p-8 shadow-xl mb-6" data-section="1">
+                <h3 class="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <i class="fas fa-building text-blue-600"></i>
+                    Business Profile & Infrastructure
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Agency Name</label>
+                        <input type="text" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter your agency name">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Years in Business</label>
+                        <select class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <option>Less than 1 year</option>
+                            <option>1-3 years</option>
+                            <option>3-5 years</option>
+                            <option>5-10 years</option>
+                            <option>10-20 years</option>
+                            <option>20+ years</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Total Staff Count</label>
+                        <input type="number" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Number of employees">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Number of Branch Offices</label>
+                        <select class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <option>Single Location</option>
+                            <option>2-3 branches</option>
+                            <option>4-6 branches</option>
+                            <option>7-10 branches</option>
+                            <option>10+ branches</option>
+                            <option>Pan-India Network</option>
+                        </select>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Primary Office Location</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="radio" name="location" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-blue-400 transition">
+                                    <i class="fas fa-map-marker-alt text-2xl mb-1 block"></i>
+                                    <span class="text-sm">Metro Tier 1</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="radio" name="location" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-blue-400 transition">
+                                    <i class="fas fa-city text-2xl mb-1 block"></i>
+                                    <span class="text-sm">Tier 2 City</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="radio" name="location" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-blue-400 transition">
+                                    <i class="fas fa-home text-2xl mb-1 block"></i>
+                                    <span class="text-sm">Tier 3 Town</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="radio" name="location" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-blue-400 transition">
+                                    <i class="fas fa-laptop-house text-2xl mb-1 block"></i>
+                                    <span class="text-sm">Home Based</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Annual Revenue (Approximate)</label>
+                        <input type="range" min="10" max="1000" value="100" class="w-full mb-2" oninput="document.getElementById('revenue-display').textContent = '₹' + this.value + ' Lakhs'">
+                        <div class="text-center font-bold text-blue-900 text-lg" id="revenue-display">₹100 Lakhs</div>
+                        <div class="flex justify-between text-xs text-slate-400 mt-1">
+                            <span>₹10L</span>
+                            <span>₹500L</span>
+                            <span>₹1000L+</span>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold text-slate-700 mb-3">Business Type (Select all that apply)</label>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-3 hover:border-blue-400 transition">
+                                    <i class="fas fa-store text-blue-600"></i>
+                                    <span class="text-sm">Retail Walk-ins</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-3 hover:border-blue-400 transition">
+                                    <i class="fas fa-briefcase text-amber-600"></i>
+                                    <span class="text-sm">Corporate/B2B</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-3 hover:border-blue-400 transition">
+                                    <i class="fas fa-users text-green-600"></i>
+                                    <span class="text-sm">Groups/MICE</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-3 hover:border-blue-400 transition">
+                                    <i class="fas fa-laptop text-purple-600"></i>
+                                    <span class="text-sm">Online/Digital</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-3 hover:border-blue-400 transition">
+                                    <i class="fas fa-handshake text-red-600"></i>
+                                    <span class="text-sm">Affiliate/Referral</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-3 hover:border-blue-400 transition">
+                                    <i class="fas fa-mobile-alt text-cyan-600"></i>
+                                    <span class="text-sm">App-based</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end mt-8">
+                    <button onclick="nextSection()" class="px-8 py-3 bg-blue-900 text-white rounded-xl font-semibold hover:bg-blue-800 transition flex items-center gap-2">
+                        Next Step <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SECTION 2: CUSTOMER DEMOGRAPHICS -->
+            <div class="form-section glass-panel rounded-2xl p-8 shadow-xl mb-6" data-section="2">
+                <h3 class="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <i class="fas fa-users text-green-600"></i>
+                    Customer Demographics & Segments
+                </h3>
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-3">Primary Customer Age Groups (Select top 3)</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 text-center hover:border-green-400 transition">
+                                    <div class="text-2xl mb-1">🎓</div>
+                                    <div class="text-sm font-semibold">18-25</div>
+                                    <div class="text-xs text-slate-500">Students/Young</div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 text-center hover:border-green-400 transition">
+                                    <div class="text-2xl mb-1">💼</div>
+                                    <div class="text-sm font-semibold">26-35</div>
+                                    <div class="text-xs text-slate-500">Young Professionals</div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 text-center hover:border-green-400 transition">
+                                    <div class="text-2xl mb-1">👨‍👩‍👧</div>
+                                    <div class="text-sm font-semibold">36-50</div>
+                                    <div class="text-xs text-slate-500">Families</div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 text-center hover:border-green-400 transition">
+                                    <div class="text-2xl mb-1">🌴</div>
+                                    <div class="text-sm font-semibold">50-65</div>
+                                    <div class="text-xs text-slate-500">Pre-retirement</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-3">Customer Travel Budget Profile</label>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-white rounded-xl p-4 border-2 border-slate-200 hover:border-green-400 transition cursor-pointer">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600">
+                                        <i class="fas fa-wallet"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-slate-900">Budget Conscious</div>
+                                        <div class="text-xs text-slate-500">Under ₹50K per person</div>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-slate-600">Price-sensitive, looks for deals, EMI options important</div>
+                                <input type="radio" name="budget" class="mt-3">
+                            </div>
+                            
+                            <div class="bg-white rounded-xl p-4 border-2 border-slate-200 hover:border-blue-400 transition cursor-pointer">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                                        <i class="fas fa-balance-scale"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-slate-900">Mid-Range</div>
+                                        <div class="text-xs text-slate-500">₹50K - ₹1.5L per person</div>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-slate-600">Value seekers, balance of price and quality</div>
+                                <input type="radio" name="budget" class="mt-3">
+                            </div>
+                            
+                            <div class="bg-white rounded-xl p-4 border-2 border-slate-200 hover:border-purple-400 transition cursor-pointer">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600">
+                                        <i class="fas fa-crown"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-slate-900">Luxury</div>
+                                        <div class="text-xs text-slate-500">Above ₹1.5L per person</div>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-slate-600">Experience-focused, brand conscious, exclusive access</div>
+                                <input type="radio" name="budget" class="mt-3">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-3">Group Size Typically Booked</label>
+                        <div class="flex gap-4 flex-wrap">
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-full px-6 py-2 hover:border-green-400 transition">
+                                    <span class="text-sm">Individual (FIT)</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-full px-6 py-2 hover:border-green-400 transition">
+                                    <span class="text-sm">Couples</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-full px-6 py-2 hover:border-green-400 transition">
+                                    <span class="text-sm">Small Families (3-4)</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-full px-6 py-2 hover:border-green-400 transition">
+                                    <span class="text-sm">Large Families (5+)</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-full px-6 py-2 hover:border-green-400 transition">
+                                    <span class="text-sm">Groups (10-30)</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-full px-6 py-2 hover:border-green-400 transition">
+                                    <span class="text-sm">MICE/Corporate</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-3">Geographic Markets Served</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden" checked>
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-2 hover:border-green-400 transition">
+                                    <span class="text-lg">🇮🇳</span>
+                                    <span class="text-sm">North India</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-2 hover:border-green-400 transition">
+                                    <span class="text-lg">🇮🇳</span>
+                                    <span class="text-sm">South India</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-2 hover:border-green-400 transition">
+                                    <span class="text-lg">🇮🇳</span>
+                                    <span class="text-sm">West India</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-2 hover:border-green-400 transition">
+                                    <span class="text-lg">🇮🇳</span>
+                                    <span class="text-sm">East India</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-2 hover:border-green-400 transition">
+                                    <span class="text-lg">🌍</span>
+                                    <span class="text-sm">NRI/International</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between mt-8">
+                    <button onclick="prevSection()" class="px-8 py-3 bg-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-300 transition flex items-center gap-2">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    <button onclick="nextSection()" class="px-8 py-3 bg-blue-900 text-white rounded-xl font-semibold hover:bg-blue-800 transition flex items-center gap-2">
+                        Next Step <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SECTION 3: DESTINATIONS -->
+            <div class="form-section glass-panel rounded-2xl p-8 shadow-xl mb-6" data-section="3">
+                <h3 class="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <i class="fas fa-globe text-amber-600"></i>
+                    Key Destinations & Markets
+                </h3>
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-3">Top 5 Selling Destinations (Rank by volume)</label>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-4">
+                                <span class="w-8 h-8 bg-amber-500 text-white rounded-full flex items-center justify-center font-bold">1</span>
+                                <select class="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-400">
+                                    <option>Select destination...</option>
+                                    <option selected>Dubai/UAE</option>
+                                    <option>Thailand</option>
+                                    <option>Singapore</option>
+                                    <option>Malaysia</option>
+                                    <option>Maldives</option>
+                                    <option>Turkey</option>
+                                    <option>Europe</option>
+                                    <option>USA</option>
+                                    <option>Australia</option>
+                                    <option>Japan</option>
+                                    <option>Vietnam</option>
+                                    <option>Sri Lanka</option>
+                                    <option>Mauritius</option>
+                                    <option>Bali/Indonesia</option>
+                                    <option>Egypt</option>
+                                    <option>South Africa</option>
+                                    <option>New Zealand</option>
+                                    <option>UK</option>
+                                    <option>Schengen Europe</option>
+                                    <option>Cruise</option>
+                                </select>
+                                <input type="number" placeholder="% of sales" class="w-32 px-4 py-3 rounded-xl border border-slate-200" value="35">
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="w-8 h-8 bg-slate-400 text-white rounded-full flex items-center justify-center font-bold">2</span>
+                                <select class="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-400">
+                                    <option>Select destination...</option>
+                                    <option>Dubai/UAE</option>
+                                    <option selected>Thailand</option>
+                                    <option>Singapore</option>
+                                    <option>Malaysia</option>
+                                    <option>Maldives</option>
+                                    <option>Turkey</option>
+                                    <option>Europe</option>
+                                    <option>USA</option>
+                                    <option>Australia</option>
+                                    <option>Japan</option>
+                                    <option>Vietnam</option>
+                                    <option>Sri Lanka</option>
+                                    <option>Mauritius</option>
+                                    <option>Bali/Indonesia</option>
+                                    <option>Egypt</option>
+                                    <option>South Africa</option>
+                                    <option>New Zealand</option>
+                                    <option>UK</option>
+                                    <option>Schengen Europe</option>
+                                    <option>Cruise</option>
+                                </select>
+                                <input type="number" placeholder="% of sales" class="w-32 px-4 py-3 rounded-xl border border-slate-200" value="25">
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="w-8 h-8 bg-slate-400 text-white rounded-full flex items-center justify-center font-bold">3</span>
+                                <select class="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-400">
+                                    <option>Select destination...</option>
+                                    <option>Dubai/UAE</option>
+                                    <option>Thailand</option>
+                                    <option selected>Singapore</option>
+                                    <option>Malaysia</option>
+                                    <option>Maldives</option>
+                                    <option>Turkey</option>
+                                    <option>Europe</option>
+                                    <option>USA</option>
+                                    <option>Australia</option>
+                                    <option>Japan</option>
+                                    <option>Vietnam</option>
+                                    <option>Sri Lanka</option>
+                                    <option>Mauritius</option>
+                                    <option>Bali/Indonesia</option>
+                                    <option>Egypt</option>
+                                    <option>South Africa</option>
+                                    <option>New Zealand</option>
+                                    <option>UK</option>
+                                    <option>Schengen Europe</option>
+                                    <option>Cruise</option>
+                                </select>
+                                <input type="number" placeholder="% of sales" class="w-32 px-4 py-3 rounded-xl border border-slate-200" value="20">
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="w-8 h-8 bg-slate-400 text-white rounded-full flex items-center justify-center font-bold">4</span>
+                                <select class="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-400">
+                                    <option>Select destination...</option>
+                                    <option>Dubai/UAE</option>
+                                    <option>Thailand</option>
+                                    <option>Singapore</option>
+                                    <option>Malaysia</option>
+                                    <option selected>Maldives</option>
+                                    <option>Turkey</option>
+                                    <option>Europe</option>
+                                    <option>USA</option>
+                                    <option>Australia</option>
+                                    <option>Japan</option>
+                                    <option>Vietnam</option>
+                                    <option>Sri Lanka</option>
+                                    <option>Mauritius</option>
+                                    <option>Bali/Indonesia</option>
+                                    <option>Egypt</option>
+                                    <option>South Africa</option>
+                                    <option>New Zealand</option>
+                                    <option>UK</option>
+                                    <option>Schengen Europe</option>
+                                    <option>Cruise</option>
+                                </select>
+                                <input type="number" placeholder="% of sales" class="w-32 px-4 py-3 rounded-xl border border-slate-200" value="12">
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="w-8 h-8 bg-slate-400 text-white rounded-full flex items-center justify-center font-bold">5</span>
+                                <select class="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-400">
+                                    <option>Select destination...</option>
+                                    <option>Dubai/UAE</option>
+                                    <option>Thailand</option>
+                                    <option>Singapore</option>
+                                    <option>Malaysia</option>
+                                    <option>Maldives</option>
+                                    <option selected>Turkey</option>
+                                    <option>Europe</option>
+                                    <option>USA</option>
+                                    <option>Australia</option>
+                                    <option>Japan</option>
+                                    <option>Vietnam</option>
+                                    <option>Sri Lanka</option>
+                                    <option>Mauritius</option>
+                                    <option>Bali/Indonesia</option>
+                                    <option>Egypt</option>
+                                    <option>South Africa</option>
+                                    <option>New Zealand</option>
+                                    <option>UK</option>
+                                    <option>Schengen Europe</option>
+                                    <option>Cruise</option>
+                                </select>
+                                <input type="number" placeholder="% of sales" class="w-32 px-4 py-3 rounded-xl border border-slate-200" value="8">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-3">Domestic vs International Split</label>
+                        <div class="bg-white rounded-xl p-6 border-2 border-slate-200">
+                            <input type="range" min="0" max="100" value="85" class="w-full mb-4" oninput="document.getElementById('intl-split').textContent = this.value + '% International'">
+                            <div class="flex justify-between items-center">
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-green-600" id="domestic-split">15%</div>
+                                    <div class="text-xs text-slate-500">Domestic India</div>
+                                </div>
+                                <div class="flex-1 mx-4 h-4 bg-gradient-to-r from-green-500 to-blue-500 rounded-full relative">
+                                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full shadow-lg border-4 border-blue-500"></div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-blue-600" id="intl-split">85% International</div>
+                                    <div class="text-xs text-slate-500">International</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-3">Emerging Destinations You're Promoting</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-amber-400 transition">
+                                    <div class="text-2xl mb-1">🇬🇪</div>
+                                    <div class="text-sm">Georgia</div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-amber-400 transition">
+                                    <div class="text-2xl mb-1">🇦🇿</div>
+                                    <div class="text-sm">Azerbaijan</div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-amber-400 transition">
+                                    <div class="text-2xl mb-1">🇺🇿</div>
+                                    <div class="text-sm">Uzbekistan</div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-amber-400 transition">
+                                    <div class="text-2xl mb-1">🇻🇳</div>
+                                    <div class="text-sm">Vietnam</div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-amber-400 transition">
+                                    <div class="text-2xl mb-1">🇰🇿</div>
+                                    <div class="text-sm">Kazakhstan</div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-amber-400 transition">
+                                    <div class="text-2xl mb-1">🇷🇸</div>
+                                    <div class="text-sm">Serbia</div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-amber-400 transition">
+                                    <div class="text-2xl mb-1">🇲🇳</div>
+                                    <div class="text-sm">Mongolia</div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-amber-400 transition">
+                                    <div class="text-2xl mb-1">🚢</div>
+                                    <div class="text-sm">River Cruises</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between mt-8">
+                    <button onclick="prevSection()" class="px-8 py-3 bg-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-300 transition flex items-center gap-2">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    <button onclick="nextSection()" class="px-8 py-3 bg-blue-900 text-white rounded-xl font-semibold hover:bg-blue-800 transition flex items-center gap-2">
+                        Next Step <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SECTION 4: SPECIALIZATIONS -->
+            <div class="form-section glass-panel rounded-2xl p-8 shadow-xl mb-6" data-section="4">
+                <h3 class="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <i class="fas fa-star text-purple-600"></i>
+                    Specializations & Niche Markets
+                </h3>
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-3">Dietary Requirements You Regularly Handle</label>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden" checked>
+                                <div class="border-2 border-slate-200 rounded-xl p-4 hover:border-purple-400 transition">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600">
+                                            <i class="fas fa-leaf"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-slate-900">Vegetarian</div>
+                                            <div class="text-xs text-slate-500">Pure veg meals</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 hover:border-purple-400 transition">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600">
+                                            <i class="fas fa-seedling"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-slate-900">Jain Food</div>
+                                            <div class="text-xs text-slate-500">No onion/garlic</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 hover:border-purple-400 transition">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600">
+                                            <i class="fas fa-moon"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-slate-900">Halal</div>
+                                            <div class="text-xs text-slate-500">Halal certified</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 hover:border-purple-400 transition">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                                            <i class="fas fa-fish"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-slate-900">Seafood Only</div>
+                                            <div class="text-xs text-slate-500">Pescatarian</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 hover:border-purple-400 transition">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center text-red-600">
+                                            <i class="fas fa-allergies"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-slate-900">Allergies</div>
+                                            <div class="text-xs text-slate-500">Special requests</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 hover:border-purple-400 transition">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600">
+                                            <i class="fas fa-dumbbell"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-slate-900">Vegan/Protein</div>
+                                            <div class="text-xs text-slate-500">Fitness diets</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-3">Religious/Spiritual Tourism Specializations</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-purple-400 transition">
+                                    <i class="fas fa-om text-2xl text-orange-600 mb-2 block"></i>
+                                    <span class="text-sm font-semibold">Hindu Pilgrimage</span>
+                                    <span class="text-xs text-slate-500 block">Char Dham, Tirupati</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-purple-400 transition">
+                                    <i class="fas fa-kaaba text-2xl text-emerald-600 mb-2 block"></i>
+                                    <span class="text-sm font-semibold">Umrah/Hajj</span>
+                                    <span class="text-xs text-slate-500 block">Saudi Arabia</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-purple-400 transition">
+                                    <i class="fas fa-cross text-2xl text-blue-600 mb-2 block"></i>
+                                    <span class="text-sm font-semibold">Christian Pilgrimage</span>
+                                    <span class="text-xs text-slate-500 block">Israel, Europe</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-purple-400 transition">
+                                    <i class="fas fa-vihara text-2xl text-amber-600 mb-2 block"></i>
+                                    <span class="text-sm font-semibold">Buddhist Circuit</span>
+                                    <span class="text-xs text-slate-500 block">India, Nepal</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-purple-400 transition">
+                                    <i class="fas fa-gurdwara text-2xl text-orange-500 mb-2 block"></i>
+                                    <span class="text-sm font-semibold">Sikh Pilgrimage</span>
+                                    <span class="text-xs text-slate-500 block">Pakistan, India</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-purple-400 transition">
+                                    <i class="fas fa-torah text-2xl text-indigo-600 mb-2 block"></i>
+                                    <span class="text-sm font-semibold">Jewish Heritage</span>
+                                    <span class="text-xs text-slate-500 block">Israel tours</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-purple-400 transition">
+                                    <i class="fas fa-spa text-2xl text-teal-600 mb-2 block"></i>
+                                    <span class="text-sm font-semibold">Wellness/Yoga</span>
+                                    <span class="text-xs text-slate-500 block">Rishikesh, Kerala</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 text-center hover:border-purple-400 transition">
+                                    <i class="fas fa-monument text-2xl text-red-600 mb-2 block"></i>
+                                    <span class="text-sm font-semibold">Heritage/Culture</span>
+                                    <span class="text-xs text-slate-500 block">Historical sites</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-3">Holiday Types You Specialize In</label>
+                        <div class="flex flex-wrap gap-3">
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden" checked>
+                                <div class="border-2 border-slate-200 rounded-full px-4 py-2 hover:border-purple-400 transition flex items-center gap-2">
+                                    <i class="fas fa-heart text-pink-500"></i>
+                                    <span class="text-sm">Honeymoon</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden" checked>
+                                <div class="border-2 border-slate-200 rounded-full px-4 py-2 hover:border-purple-400 transition flex items-center gap-2">
+                                    <i class="fas fa-users text-blue-500"></i>
+                                    <span class="text-sm">Family</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-full px-4 py-2 hover:border-purple-400 transition flex items-center gap-2">
+                                    <i class="fas fa-user-friends text-purple-500"></i>
+                                    <span class="text-sm">Couples</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-full px-4 py-2 hover:border-purple-400 transition flex items-center gap-2">
+                                    <i class="fas fa-hiking text-green-500"></i>
+                                    <span class="text-sm">Adventure</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-full px-4 py-2 hover:border-purple-400 transition flex items-center gap-2">
+                                    <i class="fas fa-umbrella-beach text-cyan-500"></i>
+                                    <span class="text-sm">Beach/Relaxation</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-full px-4 py-2 hover:border-purple-400 transition flex items-center gap-2">
+                                    <i class="fas fa-shopping-bag text-amber-500"></i>
+                                    <span class="text-sm">Shopping</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-full px-4 py-2 hover:border-purple-400 transition flex items-center gap-2">
+                                    <i class="fas fa-snowflake text-blue-400"></i>
+                                    <span class="text-sm">Winter/Ski</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-full px-4 py-2 hover:border-purple-400 transition flex items-center gap-2">
+                                    <i class="fas fa-camera text-red-500"></i>
+                                    <span class="text-sm">Photography</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-full px-4 py-2 hover:border-purple-400 transition flex items-center gap-2">
+                                    <i class="fas fa-graduation-cap text-indigo-500"></i>
+                                    <span class="text-sm">Educational</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-full px-4 py-2 hover:border-purple-400 transition flex items-center gap-2">
+                                    <i class="fas fa-briefcase text-slate-600"></i>
+                                    <span class="text-sm">MICE/Corporate</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-full px-4 py-2 hover:border-purple-400 transition flex items-center gap-2">
+                                    <i class="fas fa-wheelchair text-teal-500"></i>
+                                    <span class="text-sm">Accessible/Senior</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-full px-4 py-2 hover:border-purple-400 transition flex items-center gap-2">
+                                    <i class="fas fa-child text-orange-500"></i>
+                                    <span class="text-sm">Kids/Family Fun</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between mt-8">
+                    <button onclick="prevSection()" class="px-8 py-3 bg-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-300 transition flex items-center gap-2">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    <button onclick="nextSection()" class="px-8 py-3 bg-blue-900 text-white rounded-xl font-semibold hover:bg-blue-800 transition flex items-center gap-2">
+                        Next Step <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SECTION 5: PREFERENCES -->
+            <div class="form-section glass-panel rounded-2xl p-8 shadow-xl mb-6" data-section="5">
+                <h3 class="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <i class="fas fa-heart text-red-600"></i>
+                    Preferred Suppliers & Partnerships
+                </h3>
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-3">Preferred Airlines (Select top 5)</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden" checked>
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-2 hover:border-red-400 transition">
+                                    <span class="text-lg">🇦🇪</span>
+                                    <span class="text-sm">Emirates</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden" checked>
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-2 hover:border-red-400 transition">
+                                    <span class="text-lg">🇶🇦</span>
+                                    <span class="text-sm">Qatar Airways</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-2 hover:border-red-400 transition">
+                                    <span class="text-lg">🇸🇬</span>
+                                    <span class="text-sm">Singapore Air</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-2 hover:border-red-400 transition">
+                                    <span class="text-lg">🇹🇭</span>
+                                    <span class="text-sm">Thai Airways</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-2 hover:border-red-400 transition">
+                                    <span class="text-lg">🇮🇳</span>
+                                    <span class="text-sm">Air India</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-2 hover:border-red-400 transition">
+                                    <span class="text-lg">🇹🇷</span>
+                                    <span class="text-sm">Turkish Airlines</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-2 hover:border-red-400 transition">
+                                    <span class="text-lg">🇪🇹</span>
+                                    <span class="text-sm">Etihad</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 flex items-center gap-2 hover:border-red-400 transition">
+                                    <span class="text-lg">🇲🇾</span>
+                                    <span class="text-sm">Malaysia Air</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-3">Preferred Hotel Chains/Brands</label>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 hover:border-red-400 transition">
+                                    <div class="font-semibold text-slate-900">Marriott</div>
+                                    <div class="text-xs text-slate-500">Luxury & Business</div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden" checked>
+                                <div class="border-2 border-slate-200 rounded-xl p-3 hover:border-red-400 transition">
+                                    <div class="font-semibold text-slate-900">IHG</div>
+                                    <div class="text-xs text-slate-500">Holiday Inn, Crowne Plaza</div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 hover:border-red-400 transition">
+                                    <div class="font-semibold text-slate-900">Hilton</div>
+                                    <div class="text-xs text-slate-500">Premium & Resorts</div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 hover:border-red-400 transition">
+                                    <div class="font-semibold text-slate-900">Accor</div>
+                                    <div class="text-xs text-slate-500">Novotel, Ibis, Fairmont</div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden" checked>
+                                <div class="border-2 border-slate-200 rounded-xl p-3 hover:border-red-400 transition">
+                                    <div class="font-semibold text-slate-900">Local Chains</div>
+                                    <div class="text-xs text-slate-500">Regional properties</div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-3 hover:border-red-400 transition">
+                                    <div class="font-semibold text-slate-900">Boutique</div>
+                                    <div class="text-xs text-slate-500">Independent hotels</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-3">Last TripFactory Sales Visit</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="radio" name="last-visit" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 text-center hover:border-red-400 transition">
+                                    <i class="fas fa-calendar-check text-2xl text-green-600 mb-2 block"></i>
+                                    <span class="text-sm font-semibold">Within 1 month</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="radio" name="last-visit" class="hidden" checked>
+                                <div class="border-2 border-slate-200 rounded-xl p-4 text-center hover:border-red-400 transition">
+                                    <i class="fas fa-calendar text-2xl text-blue-600 mb-2 block"></i>
+                                    <span class="text-sm font-semibold">1-3 months ago</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="radio" name="last-visit" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 text-center hover:border-red-400 transition">
+                                    <i class="fas fa-calendar-alt text-2xl text-amber-600 mb-2 block"></i>
+                                    <span class="text-sm font-semibold">3-6 months ago</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="radio" name="last-visit" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 text-center hover:border-red-400 transition">
+                                    <i class="fas fa-exclamation-circle text-2xl text-red-600 mb-2 block"></i>
+                                    <span class="text-sm font-semibold">6+ months / Never</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Preferred Communication Channel</label>
+                        <select class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-400">
+                            <option>WhatsApp Business</option>
+                            <option selected>Email</option>
+                            <option>Phone Calls</option>
+                            <option>In-Person Visits</option>
+                            <option>Video Calls</option>
+                            <option>Agent Portal/App</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-between mt-8">
+                    <button onclick="prevSection()" class="px-8 py-3 bg-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-300 transition flex items-center gap-2">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    <button onclick="nextSection()" class="px-8 py-3 bg-blue-900 text-white rounded-xl font-semibold hover:bg-blue-800 transition flex items-center gap-2">
+                        Next Step <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SECTION 6: TRAINING NEEDS -->
+            <div class="form-section glass-panel rounded-2xl p-8 shadow-xl mb-6" data-section="6">
+                <h3 class="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <i class="fas fa-graduation-cap text-indigo-600"></i>
+                    Training & Support Requirements
+                </h3>
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-3">Areas You Need Training On (Select all that apply)</label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 hover:border-indigo-400 transition flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                                        <i class="fas fa-laptop"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-slate-900">Booking Platform/Portal</div>
+                                        <div class="text-xs text-slate-500">How to use TripFactory systems</div>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden" checked>
+                                <div class="border-2 border-slate-200 rounded-xl p-4 hover:border-indigo-400 transition flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600">
+                                        <i class="fas fa-map-marked-alt"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-slate-900">New Destinations</div>
+                                        <div class="text-xs text-slate-500">Product knowledge updates</div>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 hover:border-indigo-400 transition flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600">
+                                        <i class="fas fa-dollar-sign"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-slate-900">Pricing & Margins</div>
+                                        <div class="text-xs text-slate-500">Commission structures, deals</div>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 hover:border-indigo-400 transition flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600">
+                                        <i class="fas fa-bullhorn"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-slate-900">Sales & Marketing</div>
+                                        <div class="text-xs text-slate-500">Closing techniques, promotions</div>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden" checked>
+                                <div class="border-2 border-slate-200 rounded-xl p-4 hover:border-indigo-400 transition flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                                        <i class="fas fa-mobile-alt"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-slate-900">Digital Marketing</div>
+                                        <div class="text-xs text-slate-500">Social media, WhatsApp business</div>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 hover:border-indigo-400 transition flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center text-red-600">
+                                        <i class="fas fa-headset"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-slate-900">Customer Service</div>
+                                        <div class="text-xs text-slate-500">Handling complaints, retention</div>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 hover:border-indigo-400 transition flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center text-cyan-600">
+                                        <i class="fas fa-passport"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-slate-900">Visa & Documentation</div>
+                                        <div class="text-xs text-slate-500">Latest requirements, processes</div>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="checkbox" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 hover:border-indigo-400 transition flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center text-pink-600">
+                                        <i class="fas fa-puzzle-piece"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-slate-900">Itinerary Building</div>
+                                        <div class="text-xs text-slate-500">Custom packages, add-ons</div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-3">Preferred Training Format</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="radio" name="training-format" class="hidden" checked>
+                                <div class="border-2 border-slate-200 rounded-xl p-4 text-center hover:border-indigo-400 transition">
+                                    <i class="fas fa-video text-2xl text-indigo-600 mb-2 block"></i>
+                                    <span class="text-sm font-semibold">Live Webinar</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="radio" name="training-format" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 text-center hover:border-indigo-400 transition">
+                                    <i class="fas fa-users text-2xl text-green-600 mb-2 block"></i>
+                                    <span class="text-sm font-semibold">In-Person</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="radio" name="training-format" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 text-center hover:border-indigo-400 transition">
+                                    <i class="fas fa-play-circle text-2xl text-red-600 mb-2 block"></i>
+                                    <span class="text-sm font-semibold">Recorded</span>
+                                </div>
+                            </label>
+                            <label class="custom-checkbox cursor-pointer">
+                                <input type="radio" name="training-format" class="hidden">
+                                <div class="border-2 border-slate-200 rounded-xl p-4 text-center hover:border-indigo-400 transition">
+                                    <i class="fas fa-book text-2xl text-amber-600 mb-2 block"></i>
+                                    <span class="text-sm font-semibold">Self-Paced</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Additional Comments or Requirements</label>
+                        <textarea class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 h-32 resize-none" placeholder="Tell us what else you need from TripFactory to grow your business..."></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-between mt-8">
+                    <button onclick="prevSection()" class="px-8 py-3 bg-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-300 transition flex items-center gap-2">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    <button onclick="submitSurvey()" class="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transition flex items-center gap-2 text-lg">
+                        <i class="fas fa-check-circle"></i> Submit Survey
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- VIEW 2: ANALYTICS DASHBOARD -->
+    <div id="view-dashboard" class="p-6 max-w-[1920px] mx-auto hidden">
+        
+        <!-- Filter Bar -->
+        <div class="glass-panel rounded-xl p-4 mb-6 shadow-lg flex flex-wrap gap-4 items-center">
+            <span class="font-bold text-slate-700"><i class="fas fa-filter mr-2"></i>Filters:</span>
+            
+            <select class="px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <option>All Regions</option>
+                <option>North India</option>
+                <option>South India</option>
+                <option>West India</option>
+                <option>East India</option>
+            </select>
+            
+            <select class="px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <option>All Business Types</option>
+                <option>Retail</option>
+                <option>Corporate</option>
+                <option>Online</option>
+            </select>
+            
+            <select class="px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <option>Survey Status: All</option>
+                <option>Completed</option>
+                <option>In Progress</option>
+                <option>Not Started</option>
+            </select>
+            
+            <div class="flex gap-2 ml-auto">
+                <button class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition font-semibold">
+                    <i class="fas fa-download mr-1"></i>Export
+                </button>
+                <button class="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition font-semibold">
+                    <i class="fas fa-sync mr-1"></i>Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="metric-card glass-panel rounded-xl p-5 border-l-4 border-blue-600">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 uppercase">Total Agents</p>
+                        <h3 class="text-3xl font-bold text-slate-900 mt-1">88,000</h3>
+                        <p class="text-xs text-slate-500 mt-1">Across India</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+                        <i class="fas fa-users text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-card glass-panel rounded-xl p-5 border-l-4 border-green-600">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 uppercase">Surveys Completed</p>
+                        <h3 class="text-3xl font-bold text-slate-900 mt-1">12,450</h3>
+                        <p class="text-xs text-green-600 font-semibold mt-1">14.1% completion</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600">
+                        <i class="fas fa-check-circle text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-card glass-panel rounded-xl p-5 border-l-4 border-amber-500">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 uppercase">In Progress</p>
+                        <h3 class="text-3xl font-bold text-slate-900 mt-1">3,280</h3>
+                        <p class="text-xs text-amber-600 font-semibold mt-1">3.7% started</p>
+                    </div>
+                    <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600">
+                        <i class="fas fa-clock text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-card glass-panel rounded-xl p-5 border-l-4 border-red-500">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 uppercase">Pending</p>
+                        <h3 class="text-3xl font-bold text-slate-900 mt-1">72,270</h3>
+                        <p class="text-xs text-red-600 font-semibold mt-1">82.2% not started</p>
+                    </div>
+                    <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600">
+                        <i class="fas fa-exclamation-circle text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 1 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-map-marker-alt text-blue-600"></i>
+                    Geographic Distribution
+                </h3>
+                <div class="chart-container">
+                    <canvas id="geoChart"></canvas>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-briefcase text-amber-600"></i>
+                    Business Type Breakdown
+                </h3>
+                <div class="chart-container">
+                    <canvas id="businessChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-globe text-green-600"></i>
+                    Top Destinations
+                </h3>
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-slate-700">Dubai/UAE</span>
+                            <span class="font-bold text-blue-600">68%</span>
+                        </div>
+                        <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-blue-600 rounded-full" style="width: 68%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-slate-700">Thailand</span>
+                            <span class="font-bold text-blue-600">54%</span>
+                        </div>
+                        <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-cyan-500 rounded-full" style="width: 54%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-slate-700">Singapore</span>
+                            <span class="font-bold text-blue-600">48%</span>
+                        </div>
+                        <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-red-500 rounded-full" style="width: 48%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-slate-700">Maldives</span>
+                            <span class="font-bold text-blue-600">42%</span>
+                        </div>
+                        <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-teal-500 rounded-full" style="width: 42%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-slate-700">Turkey</span>
+                            <span class="font-bold text-blue-600">35%</span>
+                        </div>
+                        <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-amber-500 rounded-full" style="width: 35%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-utensils text-purple-600"></i>
+                    Dietary Specializations
+                </h3>
+                <div class="chart-container">
+                    <canvas id="dietChart"></canvas>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-graduation-cap text-indigo-600"></i>
+                    Training Needs
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3 p-3 bg-indigo-50 rounded-lg">
+                        <div class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
+                            <i class="fas fa-map-marked-alt"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-semibold text-slate-900 text-sm">New Destinations</div>
+                            <div class="text-xs text-slate-500">4,280 agents requested</div>
+                        </div>
+                        <span class="text-indigo-600 font-bold">34%</span>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-semibold text-slate-900 text-sm">Digital Marketing</div>
+                            <div class="text-xs text-slate-500">3,890 agents requested</div>
+                        </div>
+                        <span class="text-blue-600 font-bold">31%</span>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                        <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center text-white">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-semibold text-slate-900 text-sm">Pricing & Margins</div>
+                            <div class="text-xs text-slate-500">2,650 agents requested</div>
+                        </div>
+                        <span class="text-green-600 font-bold">21%</span>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-amber-50 rounded-lg">
+                        <div class="w-10 h-10 bg-amber-600 rounded-lg flex items-center justify-center text-white">
+                            <i class="fas fa-laptop"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-semibold text-slate-900 text-sm">Booking Platform</div>
+                            <div class="text-xs text-slate-500">1,740 agents requested</div>
+                        </div>
+                        <span class="text-amber-600 font-bold">14%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Heat Map Section -->
+        <div class="glass-panel rounded-2xl p-6 shadow-xl mb-6">
+            <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-fire text-red-600"></i>
+                Agent Density Heat Map (Top Cities)
+            </h3>
+            <div class="heat-grid">
+                <div class="heat-cell bg-blue-900 text-white">
+                    <span class="text-lg font-bold">12,450</span>
+                    <span class="text-xs">Delhi</span>
+                </div>
+                <div class="heat-cell bg-blue-800 text-white">
+                    <span class="text-lg font-bold">10,280</span>
+                    <span class="text-xs">Mumbai</span>
+                </div>
+                <div class="heat-cell bg-blue-700 text-white">
+                    <span class="text-lg font-bold">8,640</span>
+                    <span class="text-xs">Bangalore</span>
+                </div>
+                <div class="heat-cell bg-blue-600 text-white">
+                    <span class="text-lg font-bold">7,220</span>
+                    <span class="text-xs">Chennai</span>
+                </div>
+                <div class="heat-cell bg-blue-500 text-white">
+                    <span class="text-lg font-bold">6,890</span>
+                    <span class="text-xs">Hyderabad</span>
+                </div>
+                <div class="heat-cell bg-blue-400 text-white">
+                    <span class="text-lg font-bold">5,430</span>
+                    <span class="text-xs">Pune</span>
+                </div>
+                <div class="heat-cell bg-blue-300 text-slate-900">
+                    <span class="text-lg font-bold">4,280</span>
+                    <span class="text-xs">Ahmedabad</span>
+                </div>
+                <div class="heat-cell bg-blue-200 text-slate-900">
+                    <span class="text-lg font-bold">3,650</span>
+                    <span class="text-xs">Kolkata</span>
+                </div>
+                <div class="heat-cell bg-slate-300 text-slate-900">
+                    <span class="text-lg font-bold">2,980</span>
+                    <span class="text-xs">Jaipur</span>
+                </div>
+                <div class="heat-cell bg-slate-200 text-slate-900">
+                    <span class="text-lg font-bold">2,340</span>
+                    <span class="text-xs">Lucknow</span>
+                </div>
+                <div class="heat-cell bg-slate-100 text-slate-900">
+                    <span class="text-lg font-bold">1,890</span>
+                    <span class="text-xs">Chandigarh</span>
+                </div>
+                <div class="heat-cell bg-slate-50 text-slate-900 border-2 border-slate-200">
+                    <span class="text-lg font-bold">890+</span>
+                    <span class="text-xs">Others</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Religious Tourism & Specializations -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-pray text-purple-600"></i>
+                    Religious Tourism Specializations
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-200">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center text-white text-xl">
+                                <i class="fas fa-om"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-slate-900">Hindu Pilgrimage</div>
+                                <div class="text-xs text-slate-500">Char Dham, Tirupati, Varanasi</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-orange-600">4,280</div>
+                            <div class="text-xs text-slate-500">agents</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-200">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-xl">
+                                <i class="fas fa-kaaba"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-slate-900">Umrah & Hajj</div>
+                                <div class="text-xs text-slate-500">Saudi Arabia specialists</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-emerald-600">2,890</div>
+                            <div class="text-xs text-slate-500">agents</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white text-xl">
+                                <i class="fas fa-cross"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-slate-900">Christian Pilgrimage</div>
+                                <div class="text-xs text-slate-500">Israel, Europe, Kerala</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-blue-600">1,650</div>
+                            <div class="text-xs text-slate-500">agents</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-star text-amber-600"></i>
+                    Holiday Type Preferences
+                </h3>
+                <div class="chart-container">
+                    <canvas id="holidayChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- VIEW 3: AGENT DATABASE -->
+    <div id="view-agents" class="p-6 max-w-[1920px] mx-auto hidden">
+        <div class="glass-panel rounded-2xl p-6 shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Agent Database</h2>
+                    <p class="text-sm text-slate-500">Browse and filter agent profiles</p>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" placeholder="Search agents..." class="px-4 py-2 rounded-lg border border-slate-200 w-64">
+                    <button class="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Agent</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Location</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Top Destinations</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Specializations</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Survey Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Last Contact</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        <tr class="agent-card hover:bg-slate-50 transition">
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">VS</div>
+                                    <div>
+                                        <div class="font-bold text-slate-900">Vikram Sharma</div>
+                                        <div class="text-xs text-slate-500">Elite Travels</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="text-sm text-slate-700">Delhi, India</div>
+                                <div class="text-xs text-slate-500">Tier 1 Metro</div>
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="flex gap-1 flex-wrap">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">Dubai</span>
+                                    <span class="px-2 py-1 bg-cyan-100 text-cyan-700 text-xs rounded">Thailand</span>
+                                    <span class="px-2 py-1 bg-teal-100 text-teal-700 text-xs rounded">Maldives</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="flex gap-1 flex-wrap">
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Vegetarian</span>
+                                    <span class="px-2 py-1 bg-pink-100 text-pink-700 text-xs rounded">Honeymoon</span>
+                                    <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">Family</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4">
+                                <span class="px-3 py-1 bg-green-500 text-white text-xs rounded-full font-semibold">Completed</span>
+                            </td>
+                            <td class="px-4 py-4 text-sm text-slate-600">2 weeks ago</td>
+                            <td class="px-4 py-4">
+                                <button class="text-blue-600 hover:text-blue-800"><i class="fas fa-eye"></i></button>
+                                <button class="text-green-600 hover:text-green-800 ml-2"><i class="fas fa-phone"></i></button>
+                            </td>
+                        </tr>
+                        <tr class="agent-card hover:bg-slate-50 transition">
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-amber-600 rounded-full flex items-center justify-center text-white font-bold">PK</div>
+                                    <div>
+                                        <div class="font-bold text-slate-900">Priya Kumar</div>
+                                        <div class="text-xs text-slate-500">Wanderlust Tours</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="text-sm text-slate-700">Mumbai, India</div>
+                                <div class="text-xs text-slate-500">Tier 1 Metro</div>
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="flex gap-1 flex-wrap">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">Europe</span>
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">Singapore</span>
+                                    <span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded">Turkey</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="flex gap-1 flex-wrap">
+                                    <span class="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs rounded">Halal</span>
+                                    <span class="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded">MICE</span>
+                                    <span class="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded">Luxury</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4">
+                                <span class="px-3 py-1 bg-amber-500 text-white text-xs rounded-full font-semibold">In Progress</span>
+                            </td>
+                            <td class="px-4 py-4 text-sm text-slate-600">1 month ago</td>
+                            <td class="px-4 py-4">
+                                <button class="text-blue-600 hover:text-blue-800"><i class="fas fa-eye"></i></button>
+                                <button class="text-green-600 hover:text-green-800 ml-2"><i class="fas fa-phone"></i></button>
+                            </td>
+                        </tr>
+                        <tr class="agent-card hover:bg-slate-50 transition">
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">RJ</div>
+                                    <div>
+                                        <div class="font-bold text-slate-900">Rajesh Jain</div>
+                                        <div class="text-xs text-slate-500">Pilgrim Travels</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="text-sm text-slate-700">Jaipur, India</div>
+                                <div class="text-xs text-slate-500">Tier 2 City</div>
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="flex gap-1 flex-wrap">
+                                    <span class="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded">Domestic</span>
+                                    <span class="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs rounded">Nepal</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="flex gap-1 flex-wrap">
+                                    <span class="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded">Hindu Pilgrimage</span>
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Jain Food</span>
+                                    <span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded">Groups</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4">
+                                <span class="px-3 py-1 bg-red-500 text-white text-xs rounded-full font-semibold">Not Started</span>
+                            </td>
+                            <td class="px-4 py-4 text-sm text-slate-600">3 months ago</td>
+                            <td class="px-4 py-4">
+                                <button class="text-blue-600 hover:text-blue-800"><i class="fas fa-eye"></i></button>
+                                <button class="text-green-600 hover:text-green-800 ml-2"><i class="fas fa-phone"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 4: SMART INSIGHTS -->
+    <div id="view-insights" class="p-6 max-w-[1920px] mx-auto hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 space-y-6">
+                <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                    <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <i class="fas fa-lightbulb text-amber-500"></i>
+                        AI-Powered Insights
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-5 border-l-4 border-blue-600">
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white flex-shrink-0">
+                                    <i class="fas fa-chart-line text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-900 mb-1">High Opportunity Segment</h3>
+                                    <p class="text-sm text-slate-600 mb-2">4,280 agents specialize in Hindu pilgrimage but only 12% have been offered Char Dham packages. Potential revenue: ₹8.5Cr</p>
+                                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">Launch Campaign</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl p-5 border-l-4 border-amber-500">
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center text-white flex-shrink-0">
+                                    <i class="fas fa-exclamation-triangle text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-900 mb-1">At-Risk Agents</h3>
+                                    <p class="text-sm text-slate-600 mb-2">2,340 agents in Tier 2 cities haven't had sales contact in 6+ months. 68% specialize in domestic tourism.</p>
+                                    <button class="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-semibold hover:bg-amber-600">Schedule Visits</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-5 border-l-4 border-green-600">
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center text-white flex-shrink-0">
+                                    <i class="fas fa-trophy text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-900 mb-1">Top Performer Pattern</h3>
+                                    <p class="text-sm text-slate-600 mb-2">Agents with 3+ specializations (dietary + religious + holiday type) show 2.4x higher booking volumes.</p>
+                                    <button class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700">View Analysis</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-5 border-l-4 border-purple-600">
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center text-white flex-shrink-0">
+                                    <i class="fas fa-graduation-cap text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-900 mb-1">Training Priority</h3>
+                                    <p class="text-sm text-slate-600 mb-2">3,890 agents requested digital marketing training. 78% are from Tier 2/3 cities with high growth potential.</p>
+                                    <button class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700">Schedule Webinars</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                    <h3 class="font-bold text-slate-900 mb-4">Quick Actions</h3>
+                    <div class="space-y-3">
+                        <button class="w-full p-4 bg-blue-50 hover:bg-blue-100 rounded-xl text-left transition flex items-center gap-3">
+                            <i class="fas fa-envelope text-blue-600"></i>
+                            <div>
+                                <div class="font-semibold text-slate-900">Send Survey Reminder</div>
+                                <div class="text-xs text-slate-500">75,550 agents pending</div>
+                            </div>
+                        </button>
+                        <button class="w-full p-4 bg-green-50 hover:bg-green-100 rounded-xl text-left transition flex items-center gap-3">
+                            <i class="fas fa-phone text-green-600"></i>
+                            <div>
+                                <div class="font-semibold text-slate-900">Schedule Sales Visits</div>
+                                <div class="text-xs text-slate-500">Prioritize 6+ months</div>
+                            </div>
+                        </button>
+                        <button class="w-full p-4 bg-amber-50 hover:bg-amber-100 rounded-xl text-left transition flex items-center gap-3">
+                            <i class="fas fa-bullhorn text-amber-600"></i>
+                            <div>
+                                <div class="font-semibold text-slate-900">Launch Targeted Campaign</div>
+                                <div class="text-xs text-slate-500">Based on survey data</div>
+                            </div>
+                        </button>
+                        <button class="w-full p-4 bg-purple-50 hover:bg-purple-100 rounded-xl text-left transition flex items-center gap-3">
+                            <i class="fas fa-users text-purple-600"></i>
+                            <div>
+                                <div class="font-semibold text-slate-900">Export Agent Lists</div>
+                                <div class="text-xs text-slate-500">By specialization</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-6 shadow-xl bg-gradient-to-br from-blue-900 to-blue-700 text-white">
+                    <h3 class="font-bold mb-2">Survey Completion Goal</h3>
+                    <div class="text-4xl font-bold mb-2">14.1%</div>
+                    <div class="text-blue-200 text-sm mb-4">Target: 50% by March 2024</div>
+                    <div class="h-3 bg-blue-800 rounded-full overflow-hidden">
+                        <div class="h-full bg-amber-400 rounded-full" style="width: 28%"></div>
+                    </div>
+                    <p class="text-xs text-blue-200 mt-3">Need 31,550 more completions to reach target</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSection = 1;
+        const totalSections = 6;
+
+        function updateProgress() {
+            const percent = Math.round((currentSection / totalSections) * 100);
+            document.getElementById('progress-percent').textContent = percent + '%';
+            
+            // Update step indicators
+            document.querySelectorAll('.step-indicator').forEach((step, index) => {
+                const stepNum = index + 1;
+                step.classList.remove('step-active', 'step-completed');
+                
+                if (stepNum === currentSection) {
+                    step.classList.add('step-active');
+                } else if (stepNum < currentSection) {
+                    step.classList.add('step-completed');
+                }
+            });
+        }
+
+        function nextSection() {
+            if (currentSection < totalSections) {
+                document.querySelector(`.form-section[data-section="${currentSection}"]`).classList.remove('active');
+                currentSection++;
+                document.querySelector(`.form-section[data-section="${currentSection}"]`).classList.add('active');
+                updateProgress();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function prevSection() {
+            if (currentSection > 1) {
+                document.querySelector(`.form-section[data-section="${currentSection}"]`).classList.remove('active');
+                currentSection--;
+                document.querySelector(`.form-section[data-section="${currentSection}"]`).classList.add('active');
+                updateProgress();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function submitSurvey() {
+            alert('Survey submitted successfully! Thank you for your input.');
+            // Here you would normally submit the form data
+        }
+
+        function switchView(viewName) {
+            const views = ['survey', 'dashboard', 'agents', 'insights'];
+            views.forEach(v => {
+                document.getElementById('view-' + v).classList.add('hidden');
+                document.getElementById('nav-' + v).classList.remove('active', 'bg-blue-900', 'text-white');
+                document.getElementById('nav-' + v).classList.add('text-slate-700');
+            });
+            
+            document.getElementById('view-' + viewName).classList.remove('hidden');
+            document.getElementById('nav-' + viewName).classList.add('active', 'bg-blue-900', 'text-white');
+            document.getElementById('nav-' + viewName).classList.remove('text-slate-700');
+            
+            if (viewName === 'dashboard') {
+                initCharts();
+            }
+        }
+
+        // Initialize Charts
+        function initCharts() {
+            // Geographic Chart
+            const geoCtx = document.getElementById('geoChart').getContext('2d');
+            new Chart(geoCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['North India', 'South India', 'West India', 'East India', 'Central'],
+                    datasets: [{
+                        data: [35, 25, 22, 12, 6],
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Business Type Chart
+            const businessCtx = document.getElementById('businessChart').getContext('2d');
+            new Chart(businessCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Retail', 'Corporate', 'Online', 'Mixed'],
+                    datasets: [{
+                        label: 'Number of Agents',
+                        data: [42500, 18900, 15200, 11400],
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Dietary Chart
+            const dietCtx = document.getElementById('dietChart').getContext('2d');
+            new Chart(dietCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Vegetarian', 'Halal', 'Jain', 'Vegan', 'No Special'],
+                    datasets: [{
+                        data: [45, 18, 12, 8, 17],
+                        backgroundColor: ['#10b981', '#059669', '#f59e0b', '#8b5cf6', '#94a3b8']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Holiday Type Chart
+            const holidayCtx = document.getElementById('holidayChart').getContext('2d');
+            new Chart(holidayCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Honeymoon', 'Family', 'Adventure', 'Pilgrimage', 'Luxury', 'MICE'],
+                    datasets: [{
+                        label: 'Agent Specializations (%)',
+                        data: [65, 78, 42, 38, 35, 28],
+                        backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                        borderColor: '#f59e0b',
+                        pointBackgroundColor: '#f59e0b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize progress on load
+        updateProgress();
+    </script>
+</body>
+</html>

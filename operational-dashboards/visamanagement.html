@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory - Visa & Documentation Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .urgent { border-left: 4px solid #ef4444; }
+        .warning { border-left: 4px solid #f59e0b; }
+        .success { border-left: 4px solid #22c55e; }
+        .info { border-left: 4px solid #0066cc; }
+        .metric-card { transition: all 0.3s; }
+        .metric-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .visa-card { transition: all 0.3s; cursor: pointer; }
+        .visa-card:hover { transform: translateX(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .timeline-item { position: relative; padding-left: 24px; }
+        .timeline-item::before { content: ''; position: absolute; left: 0; top: 8px; width: 12px; height: 12px; border-radius: 50%; background: #e2e8f0; border: 2px solid #fff; }
+        .timeline-item.urgent::before { background: #ef4444; }
+        .timeline-item.warning::before { background: #f59e0b; }
+        .timeline-item.success::before { background: #22c55e; }
+        .timeline-item::after { content: ''; position: absolute; left: 5px; top: 22px; bottom: -8px; width: 2px; background: #e2e8f0; }
+        .timeline-item:last-child::after { display: none; }
+        .country-flag { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .pulse-alert { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .progress-fill { transition: width 1s ease-out; }
+        .risk-critical { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-left: 4px solid #dc2626; }
+        .risk-high { background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); border-left: 4px solid #ea580c; }
+        .risk-medium { background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%); border-left: 4px solid #ca8a04; }
+        .booking-card { transition: all 0.3s ease; }
+        .booking-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .countdown-badge { font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white border-b-2 border-[#0066cc] px-6 py-4 shadow-lg sticky top-0 z-50">
+        <div class="max-w-[1920px] mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#0066cc] to-[#1e3a5f] rounded-xl flex items-center justify-center text-white text-2xl">
+                    <i class="fas fa-passport"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-[#1e3a5f]">Visa & Documentation Centre</h1>
+                    <p class="text-xs text-slate-500">Application tracking, document management & compliance monitoring</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- Quick Stats -->
+                <div class="flex bg-slate-100 rounded-lg p-1">
+                    <div class="px-4 py-2 text-center">
+                        <div class="text-lg font-bold text-[#1e3a5f]">156</div>
+                        <div class="text-xs text-slate-500">Active</div>
+                    </div>
+                    <div class="px-4 py-2 text-center border-l border-slate-200">
+                        <div class="text-lg font-bold text-orange-600">23</div>
+                        <div class="text-xs text-slate-500">Pending</div>
+                    </div>
+                    <div class="px-4 py-2 text-center border-l border-slate-200">
+                        <div class="text-lg font-bold text-green-600">89%</div>
+                        <div class="text-xs text-slate-500">Approval</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 px-4 py-2 bg-red-50 rounded-lg border border-red-200">
+                    <i class="fas fa-exclamation-triangle text-red-500 pulse-alert"></i>
+                    <span class="text-sm font-bold text-red-600" id="expiringCount">5 Expiring</span>
+                </div>
+
+                <button onclick="window.location.href='menu.html'" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-300 transition">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filter Bar -->
+    <div class="bg-white border-b border-slate-200 px-6 py-3">
+        <div class="max-w-[1920px] mx-auto flex flex-wrap items-center gap-4">
+            <span class="text-sm font-bold text-slate-500 uppercase">Filters:</span>
+            
+            <div class="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-1.5 border border-slate-300">
+                <i class="fas fa-search text-slate-400"></i>
+                <input type="text" placeholder="Search applicant, passport, or ID..." class="bg-transparent border-none outline-none text-sm w-64">
+            </div>
+
+            <select id="statusFilter" onchange="updateDashboard()" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc]">
+                <option value="all">All Statuses</option>
+                <option value="approved">Approved</option>
+                <option value="processing">Processing</option>
+                <option value="pending">Pending Docs</option>
+                <option value="rejected">Rejected</option>
+                <option value="draft">Draft</option>
+            </select>
+
+            <select id="visaTypeFilter" onchange="updateDashboard()" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc]">
+                <option value="all">All Visa Types</option>
+                <option value="tourist">Tourist</option>
+                <option value="business">Business</option>
+                <option value="student">Student</option>
+                <option value="work">Work</option>
+                <option value="transit">Transit</option>
+                <option value="medical">Medical</option>
+            </select>
+
+            <select id="destinationFilter" onchange="updateDashboard()" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc]">
+                <option value="all">All Destinations</option>
+                <option value="usa">🇺🇸 USA</option>
+                <option value="uk">🇬🇧 UK</option>
+                <option value="schengen">🇪🇺 Schengen</option>
+                <option value="uae">🇦🇪 UAE</option>
+                <option value="singapore">🇸🇬 Singapore</option>
+                <option value="thailand">🇹🇭 Thailand</option>
+                <option value="australia">🇦🇺 Australia</option>
+                <option value="canada">🇨🇦 Canada</option>
+            </select>
+
+            <select id="priorityFilter" onchange="updateDashboard()" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc]">
+                <option value="all">All Priorities</option>
+                <option value="critical">Critical - < 7 days</option>
+                <option value="high">High - < 30 days</option>
+                <option value="medium">Medium - < 90 days</option>
+                <option value="low">Low - > 90 days</option>
+            </select>
+
+            <select id="dateRangeFilter" onchange="updateDashboard()" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc]">
+                <option value="today">Today</option>
+                <option value="week" selected>This Week</option>
+                <option value="month">This Month</option>
+                <option value="quarter">This Quarter</option>
+            </select>
+
+            <button onclick="exportData()" class="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700 flex items-center gap-2">
+                <i class="fas fa-download"></i>Export
+            </button>
+
+            <button onclick="resetFilters()" class="px-3 py-1.5 text-sm text-[#0066cc] hover:underline ml-auto">
+                <i class="fas fa-undo mr-1"></i>Reset
+            </button>
+        </div>
+    </div>
+
+    <main class="max-w-[1920px] mx-auto p-6 space-y-6">
+
+        <!-- CRITICAL: Visa Risk & Booking Protection Section -->
+        <div class="bg-gradient-to-r from-red-600 to-orange-600 rounded-xl shadow-2xl p-1">
+            <div class="bg-white rounded-lg p-6">
+                <div class="flex justify-between items-start mb-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center text-red-600 animate-pulse">
+                            <i class="fas fa-shield-alt text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-red-800 flex items-center gap-2">
+                                <i class="fas fa-exclamation-circle"></i>
+                                Bookings at Risk Due to Visa Issues
+                            </h2>
+                            <p class="text-red-600 font-medium">URGENT: Immediate action required to prevent booking cancellations and revenue loss</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="contactAllAtRisk()" class="px-6 py-3 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 flex items-center gap-2 shadow-lg">
+                            <i class="fas fa-phone-alt"></i>
+                            Contact All At-Risk
+                        </button>
+                        <button onclick="escalateAllCritical()" class="px-6 py-3 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-700 flex items-center gap-2 shadow-lg">
+                            <i class="fas fa-level-up-alt"></i>
+                            Escalate Critical
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Risk Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-red-50 border-2 border-red-200 rounded-xl p-4 text-center">
+                        <div class="text-3xl font-bold text-red-700 mb-1">12</div>
+                        <div class="text-sm font-bold text-red-600 uppercase tracking-wide">Critical Risk</div>
+                        <div class="text-xs text-red-500 mt-1">Travel in < 7 days</div>
+                        <div class="text-lg font-bold text-red-800 mt-2">₹24L Revenue</div>
+                    </div>
+                    <div class="bg-orange-50 border-2 border-orange-200 rounded-xl p-4 text-center">
+                        <div class="text-3xl font-bold text-orange-700 mb-1">28</div>
+                        <div class="text-sm font-bold text-orange-600 uppercase tracking-wide">High Risk</div>
+                        <div class="text-xs text-orange-500 mt-1">Travel in 7-14 days</div>
+                        <div class="text-lg font-bold text-orange-800 mt-2">₹56L Revenue</div>
+                    </div>
+                    <div class="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 text-center">
+                        <div class="text-3xl font-bold text-yellow-700 mb-1">45</div>
+                        <div class="text-sm font-bold text-yellow-600 uppercase tracking-wide">Medium Risk</div>
+                        <div class="text-xs text-yellow-500 mt-1">Travel in 14-30 days</div>
+                        <div class="text-lg font-bold text-yellow-800 mt-2">₹89L Revenue</div>
+                    </div>
+                    <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 text-center">
+                        <div class="text-3xl font-bold text-blue-700 mb-1">₹1.69Cr</div>
+                        <div class="text-sm font-bold text-blue-600 uppercase tracking-wide">Total at Risk</div>
+                        <div class="text-xs text-blue-500 mt-1">85 bookings total</div>
+                        <div class="text-lg font-bold text-blue-800 mt-2">Act Now</div>
+                    </div>
+                </div>
+
+                <!-- Critical Bookings Table -->
+                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                    <div class="px-6 py-4 bg-red-50 border-b border-red-200 flex justify-between items-center">
+                        <h3 class="font-bold text-red-800 flex items-center gap-2">
+                            <i class="fas fa-fire-alt"></i>
+                            Critical: Visa Not Applied/At Risk (< 7 Days to Travel)
+                        </h3>
+                        <div class="flex gap-2">
+                            <button onclick="sendBulkReminder('critical')" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700">
+                                <i class="fas fa-paper-plane mr-2"></i>Send Bulk Reminders
+                            </button>
+                            <button onclick="exportRiskReport()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-300">
+                                <i class="fas fa-file-export mr-2"></i>Export Risk Report
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Booking ID</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Customer</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Contact</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Destination</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Travel Date</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Days Left</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Risk Reason</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Booking Value</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="criticalRiskTable">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- High Risk Bookings (Condensed) -->
+                <div class="mt-4 bg-white rounded-xl border border-slate-200 overflow-hidden">
+                    <div class="px-6 py-3 bg-orange-50 border-b border-orange-200 flex justify-between items-center cursor-pointer" onclick="toggleHighRisk()">
+                        <h3 class="font-bold text-orange-800 flex items-center gap-2">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            High Risk: 7-14 Days to Travel (28 bookings)
+                        </h3>
+                        <i class="fas fa-chevron-down text-orange-600" id="highRiskChevron"></i>
+                    </div>
+                    <div class="hidden" id="highRiskContent">
+                        <div class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="highRiskCards">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Items -->
+                <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div class="bg-red-50 rounded-xl p-4 border border-red-200">
+                        <h4 class="font-bold text-red-800 mb-3 flex items-center gap-2">
+                            <i class="fas fa-tasks"></i> Immediate Actions Required
+                        </h4>
+                        <ul class="space-y-2 text-sm" id="immediateActions">
+                            <!-- Populated by JS -->
+                        </ul>
+                    </div>
+                    <div class="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                        <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">
+                            <i class="fas fa-headset"></i> Follow-up Queue
+                        </h4>
+                        <div class="space-y-2" id="followUpQueue">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                    <div class="bg-green-50 rounded-xl p-4 border border-green-200">
+                        <h4 class="font-bold text-green-800 mb-3 flex items-center gap-2">
+                            <i class="fas fa-check-circle"></i> Successfully Saved (Today)
+                        </h4>
+                        <div class="space-y-2" id="savedBookings">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Critical Alert Banner -->
+        <div class="bg-red-50 border-2 border-red-200 rounded-xl p-4 flex items-center justify-between" id="criticalBanner">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+                    <i class="fas fa-passport text-2xl pulse-alert"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-red-800 text-lg">5 Passports Expiring Within 30 Days</h3>
+                    <p class="text-sm text-red-600">Immediate renewal required to avoid travel disruptions</p>
+                </div>
+            </div>
+            <button onclick="viewExpiring()" class="px-6 py-3 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700">
+                View All <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4">
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Total Applications</div>
+                <div class="text-2xl font-bold text-[#1e3a5f]">1,284</div>
+                <div class="text-xs text-green-500"><i class="fas fa-arrow-up"></i> 12% vs last month</div>
+            </div>
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Approved This Month</div>
+                <div class="text-2xl font-bold text-green-600">892</div>
+                <div class="text-xs text-green-500"><i class="fas fa-arrow-up"></i> 8% vs last month</div>
+            </div>
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Processing Time</div>
+                <div class="text-2xl font-bold text-[#1e3a5f]">5.2 days</div>
+                <div class="text-xs text-green-500"><i class="fas fa-arrow-down"></i> 0.8 days faster</div>
+            </div>
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Approval Rate</div>
+                <div class="text-2xl font-bold text-green-600">89%</div>
+                <div class="text-xs text-green-500"><i class="fas fa-arrow-up"></i> 3%</div>
+            </div>
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Pending Docs</div>
+                <div class="text-2xl font-bold text-orange-600">23</div>
+                <div class="text-xs text-orange-500"><i class="fas fa-exclamation"></i> Action needed</div>
+            </div>
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Rejected</div>
+                <div class="text-2xl font-bold text-red-600">18</div>
+                <div class="text-xs text-red-500"><i class="fas fa-arrow-up"></i> 2 this week</div>
+            </div>
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Expiring Soon</div>
+                <div class="text-2xl font-bold text-blue-600">5</div>
+                <div class="text-xs text-blue-500">Within 30 days</div>
+            </div>
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Revenue at Risk</div>
+                <div class="text-2xl font-bold text-[#1e3a5f]">₹18L</div>
+                <div class="text-xs text-slate-400">From pending apps</div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Left Column: Applications -->
+            <div class="space-y-6">
+                
+                <!-- Urgent Applications -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-200 bg-red-50 flex justify-between items-center">
+                        <h3 class="font-bold text-red-700 flex items-center gap-2">
+                            <i class="fas fa-fire"></i> Urgent - < 7 Days
+                        </h3>
+                        <span class="px-2 py-1 bg-red-200 text-red-700 rounded text-xs font-bold">5 Active</span>
+                    </div>
+                    <div class="max-h-96 overflow-y-auto" id="urgentApplications">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Recent Applications -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-200 bg-blue-50 flex justify-between items-center">
+                        <h3 class="font-bold text-blue-700 flex items-center gap-2">
+                            <i class="fas fa-clock"></i> Recent Submissions
+                        </h3>
+                        <button class="text-xs text-[#0066cc] hover:underline">View All</button>
+                    </div>
+                    <div class="p-4 space-y-3" id="recentApplications">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-gradient-to-br from-[#1e3a5f] to-[#0066cc] rounded-xl shadow-lg p-5 text-white">
+                    <h3 class="font-bold mb-4 flex items-center gap-2">
+                        <i class="fas fa-bolt text-yellow-400"></i> Quick Visa Actions
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="actionModal('new')" class="p-3 bg-white/10 rounded-lg text-sm font-bold hover:bg-white/20 transition text-left">
+                            <i class="fas fa-plus mr-2"></i>New Application
+                        </button>
+                        <button onclick="actionModal('upload')" class="p-3 bg-white/10 rounded-lg text-sm font-bold hover:bg-white/20 transition text-left">
+                            <i class="fas fa-upload mr-2"></i>Upload Documents
+                        </button>
+                        <button onclick="actionModal('track')" class="p-3 bg-white/10 rounded-lg text-sm font-bold hover:bg-white/20 transition text-left">
+                            <i class="fas fa-search mr-2"></i>Track Status
+                        </button>
+                        <button onclick="actionModal('renew')" class="p-3 bg-white/10 rounded-lg text-sm font-bold hover:bg-white/20 transition text-left">
+                            <i class="fas fa-redo mr-2"></i>Renew Visa
+                        </button>
+                        <button onclick="actionModal('appointment')" class="p-3 bg-white/10 rounded-lg text-sm font-bold hover:bg-white/20 transition text-left">
+                            <i class="fas fa-calendar mr-2"></i>Book Appointment
+                        </button>
+                        <button onclick="actionModal('contact')" class="p-3 bg-white/10 rounded-lg text-sm font-bold hover:bg-white/20 transition text-left">
+                            <i class="fas fa-phone mr-2"></i>Contact Embassy
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Middle Column: Analytics -->
+            <div class="space-y-6">
+
+                <!-- Visa Type Distribution -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-pie text-blue-500"></i> Visa Types Distribution
+                    </h3>
+                    <div class="h-48">
+                        <canvas id="visaTypeChart"></canvas>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mt-4" id="visaTypeBreakdown">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Destination Analysis -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                        <i class="fas fa-globe text-indigo-500"></i> Top Destinations
+                    </h3>
+                    <div class="space-y-3" id="destinationAnalysis">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Processing Time by Country -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                        <i class="fas fa-clock text-orange-500"></i> Processing Times
+                    </h3>
+                    <div class="space-y-3" id="processingTimes">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Document Checklist Status -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-[#1e3a5f] flex items-center gap-2">
+                            <i class="fas fa-clipboard-check text-green-500"></i> Document Compliance
+                        </h3>
+                        <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-bold">82% Complete</span>
+                    </div>
+                    <div class="space-y-3" id="documentStatus">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Tracking & Alerts -->
+            <div class="space-y-6">
+
+                <!-- Application Timeline -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                        <i class="fas fa-stream text-purple-500"></i> Application Pipeline
+                    </h3>
+                    <div class="space-y-4" id="applicationPipeline">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Upcoming Renewals -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                        <i class="fas fa-calendar-alt text-red-500"></i> Expiring Soon
+                    </h3>
+                    <div class="space-y-3" id="upcomingRenewals">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Embassy Updates -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                        <i class="fas fa-landmark text-yellow-500"></i> Embassy Alerts
+                    </h3>
+                    <div class="space-y-3" id="embassyAlerts">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- AI Recommendations -->
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-lg border border-blue-200 p-6">
+                    <h3 class="font-bold text-blue-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-robot text-blue-600"></i> Smart Recommendations
+                    </h3>
+                    <div class="space-y-3" id="aiRecommendations">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Bottom Section: Detailed Analysis -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Application Trends -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                    <i class="fas fa-chart-line text-blue-500"></i> Application Trends & Approval Rates
+                </h3>
+                <div class="h-64">
+                    <canvas id="trendChart"></canvas>
+                </div>
+                <div class="grid grid-cols-3 gap-4 mt-4">
+                    <div class="text-center p-3 bg-green-50 rounded-lg">
+                        <div class="text-lg font-bold text-green-600">+24%</div>
+                        <div class="text-xs text-slate-600">Tourist Visas</div>
+                    </div>
+                    <div class="text-center p-3 bg-blue-50 rounded-lg">
+                        <div class="text-lg font-bold text-blue-600">+18%</div>
+                        <div class="text-xs text-slate-600">Business Visas</div>
+                    </div>
+                    <div class="text-center p-3 bg-purple-50 rounded-lg">
+                        <div class="text-lg font-bold text-purple-600">+32%</div>
+                        <div class="text-xs text-slate-600">Student Visas</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rejection Analysis -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                    <i class="fas fa-exclamation-triangle text-red-500"></i> Rejection Analysis & Prevention
+                </h3>
+                <div class="space-y-4" id="rejectionAnalysis">
+                    <!-- Populated by JS -->
+                </div>
+                <div class="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-lightbulb text-yellow-600 mt-1"></i>
+                        <div>
+                            <div class="font-bold text-yellow-800 text-sm">Top Prevention Tip</div>
+                            <div class="text-xs text-yellow-700">68% of rejections are due to insufficient financial documentation. Implement pre-check for 6-month bank statements.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Applications Table -->
+        <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="font-bold text-[#1e3a5f] flex items-center gap-2">
+                    <i class="fas fa-list text-slate-500"></i> All Applications
+                </h3>
+                <div class="flex gap-2">
+                    <button class="px-4 py-2 bg-[#0066cc] text-white rounded-lg text-sm font-bold hover:bg-blue-700">
+                        <i class="fas fa-plus mr-2"></i>New Application
+                    </button>
+                    <button class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-300">
+                        <i class="fas fa-download mr-2"></i>Export
+                    </button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Application ID</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Applicant</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Destination</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Type</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Submitted</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Priority</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="applicationsTable">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Action Modal -->
+    <div id="actionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 p-6">
+            <h3 class="font-bold text-xl text-[#1e3a5f] mb-4" id="modalTitle">Visa Action</h3>
+            <div id="modalContent"></div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg font-bold">Cancel</button>
+                <button onclick="executeAction()" class="px-4 py-2 bg-[#0066cc] text-white rounded-lg font-bold">Execute</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Models
+        const urgentApplications = [
+            { id: 'VIS-2026-0892', customer: 'Rajesh Kumar', destination: 'USA', type: 'Tourist', travelDate: '3 days', status: 'processing', docs: 'complete', passport: 'valid' },
+            { id: 'VIS-2026-0895', customer: 'Sarah Patel', destination: 'UK', type: 'Student', travelDate: '5 days', status: 'pending', docs: 'incomplete', passport: 'valid' },
+            { id: 'VIS-2026-0898', customer: 'Ahmed Mohammed', destination: 'Schengen', type: 'Business', travelDate: '6 days', status: 'processing', docs: 'complete', passport: 'expiring' },
+            { id: 'VIS-2026-0901', customer: 'Jennifer Lee', destination: 'Australia', type: 'Tourist', travelDate: '7 days', status: 'approved', docs: 'complete', passport: 'valid' }
+        ];
+
+        const recentApplications = [
+            { id: 'VIS-2026-0912', customer: 'David Wilson', destination: 'Canada', type: 'Work', status: 'draft', time: '2 hours ago' },
+            { id: 'VIS-2026-0910', customer: 'Priya Sharma', destination: 'Singapore', type: 'Tourist', status: 'submitted', time: '4 hours ago' },
+            { id: 'VIS-2026-0908', customer: 'Michael Chen', destination: 'Thailand', type: 'Business', status: 'processing', time: '6 hours ago' }
+        ];
+
+        const destinationStats = [
+            { country: 'USA', count: 245, trend: 'up', avgDays: 12 },
+            { country: 'UK', count: 189, trend: 'up', avgDays: 15 },
+            { country: 'Schengen', count: 156, trend: 'down', avgDays: 18 },
+            { country: 'UAE', count: 134, trend: 'up', avgDays: 3 },
+            { country: 'Singapore', count: 98, trend: 'same', avgDays: 7 }
+        ];
+
+        const processingTimes = [
+            { country: 'USA', days: 12, target: 10, status: 'over' },
+            { country: 'UK', days: 15, target: 15, status: 'ontrack' },
+            { country: 'Schengen', days: 18, target: 15, status: 'over' },
+            { country: 'UAE', days: 3, target: 5, status: 'ahead' },
+            { country: 'Singapore', days: 7, target: 7, status: 'ontrack' }
+        ];
+
+        const documentChecklist = [
+            { doc: 'Passport Copy', complete: 98, total: 100 },
+            { doc: 'Photographs', complete: 95, total: 100 },
+            { doc: 'Bank Statements', complete: 87, total: 100 },
+            { doc: 'Flight Itinerary', complete: 92, total: 100 },
+            { doc: 'Hotel Booking', complete: 89, total: 100 },
+            { doc: 'Travel Insurance', complete: 76, total: 100 }
+        ];
+
+        const upcomingExpirations = [
+            { customer: 'Rajesh Kumar', type: 'Passport', expiry: '15 days', action: 'Renewal Required' },
+            { customer: 'Sarah Patel', type: 'Visa', expiry: '22 days', action: 'Extension Needed' },
+            { customer: 'Jennifer Lee', type: 'Travel Insurance', expiry: '5 days', action: 'Update Policy' },
+            { customer: 'Ahmed Mohammed', type: 'Passport', expiry: '28 days', action: 'Renewal Required' }
+        ];
+
+        const embassyAlerts = [
+            { country: 'USA', alert: 'Additional interview slots opened for Mumbai consulate', type: 'info', time: '2 hours ago' },
+            { country: 'UK', alert: 'Processing delayed due to high volume - add 3 days', type: 'warning', time: '5 hours ago' },
+            { country: 'Schengen', alert: 'New financial documentation requirements effective March 1', type: 'urgent', time: '1 day ago' }
+        ];
+
+        const rejectionReasons = [
+            { reason: 'Insufficient Funds', count: 12, trend: 'down', action: 'Pre-check bank statements' },
+            { reason: 'Incomplete Application', count: 8, trend: 'down', action: 'Mandatory review process' },
+            { reason: 'Invalid Travel Purpose', count: 5, trend: 'up', action: 'Enhanced agent training' },
+            { reason: 'Previous Overstay', count: 3, trend: 'same', action: 'Background check flag' }
+        ];
+
+        // NEW: Visa Risk Data
+        const criticalRiskBookings = [
+            { 
+                id: 'BK-2026-4521', 
+                customer: 'Vikram Mehta', 
+                phone: '+91 98765 43210', 
+                email: 'vikram.m@email.com',
+                destination: 'USA', 
+                travelDate: '2026-02-15', 
+                daysLeft: 3,
+                riskReason: 'Visa not yet applied - Documents pending',
+                value: '₹2,45,000',
+                status: 'payment_received',
+                lastContact: '2 days ago',
+                assignedTo: 'Priya S.'
+            },
+            { 
+                id: 'BK-2026-4528', 
+                customer: 'Ananya Sharma', 
+                phone: '+91 98765 12345', 
+                email: 'ananya.s@email.com',
+                destination: 'UK', 
+                travelDate: '2026-02-16', 
+                daysLeft: 4,
+                riskReason: 'Interview scheduled but passport expired',
+                value: '₹1,89,000',
+                status: 'visa_rejected',
+                lastContact: '1 day ago',
+                assignedTo: 'Rahul K.'
+            },
+            { 
+                id: 'BK-2026-4533', 
+                customer: 'Rohan Gupta', 
+                phone: '+91 98765 67890', 
+                email: 'rohan.g@email.com',
+                destination: 'Schengen', 
+                travelDate: '2026-02-14', 
+                daysLeft: 2,
+                riskReason: 'Bank statements rejected - Insufficient funds shown',
+                value: '₹3,20,000',
+                status: 'documents_pending',
+                lastContact: '5 hours ago',
+                assignedTo: 'Priya S.'
+            },
+            { 
+                id: 'BK-2026-4541', 
+                customer: 'Meera Patel', 
+                phone: '+91 98765 11111', 
+                email: 'meera.p@email.com',
+                destination: 'Canada', 
+                travelDate: '2026-02-17', 
+                daysLeft: 5,
+                riskReason: 'Biometrics appointment missed - Needs rescheduling',
+                value: '₹2,75,000',
+                status: 'processing_delayed',
+                lastContact: '3 days ago',
+                assignedTo: 'Rahul K.'
+            },
+            { 
+                id: 'BK-2026-4545', 
+                customer: 'Arjun Reddy', 
+                phone: '+91 98765 22222', 
+                email: 'arjun.r@email.com',
+                destination: 'Australia', 
+                travelDate: '2026-02-13', 
+                daysLeft: 1,
+                riskReason: 'Medical clearance pending - Chest X-ray required',
+                value: '₹4,50,000',
+                status: 'medical_pending',
+                lastContact: '1 day ago',
+                assignedTo: 'Priya S.'
+            }
+        ];
+
+        const highRiskBookings = [
+            { id: 'BK-2026-4550', customer: 'Sneha Iyer', destination: 'USA', travelDate: '2026-02-20', daysLeft: 8, riskReason: 'Documents under review', value: '₹2,10,000' },
+            { id: 'BK-2026-4552', customer: 'Karan Malhotra', destination: 'UK', travelDate: '2026-02-22', daysLeft: 10, riskReason: 'Financial docs incomplete', value: '₹1,65,000' },
+            { id: 'BK-2026-4555', customer: 'Divya Nair', destination: 'Schengen', travelDate: '2026-02-21', daysLeft: 9, riskReason: 'Travel insurance pending', value: '₹1,95,000' },
+            { id: 'BK-2026-4560', customer: 'Varun Khanna', destination: 'Canada', travelDate: '2026-02-24', daysLeft: 12, riskReason: 'Employment letter missing', value: '₹2,80,000' }
+        ];
+
+        function init() {
+            updateDashboard();
+            initCharts();
+            updateCriticalRiskTable();
+            updateHighRiskCards();
+            updateActionItems();
+        }
+
+        function updateDashboard() {
+            updateUrgentApplications();
+            updateRecentApplications();
+            updateDestinationAnalysis();
+            updateProcessingTimes();
+            updateDocumentStatus();
+            updateApplicationPipeline();
+            updateUpcomingRenewals();
+            updateEmbassyAlerts();
+            updateAiRecommendations();
+            updateRejectionAnalysis();
+            updateApplicationsTable();
+        }
+
+        // NEW: Critical Risk Functions
+        function updateCriticalRiskTable() {
+            const container = document.getElementById('criticalRiskTable');
+            
+            container.innerHTML = criticalRiskBookings.map(booking => {
+                const daysClass = booking.daysLeft <= 2 ? 'text-red-700 bg-red-100' : 'text-orange-700 bg-orange-100';
+                const statusColors = {
+                    'payment_received': 'bg-green-100 text-green-700',
+                    'visa_rejected': 'bg-red-100 text-red-700',
+                    'documents_pending': 'bg-yellow-100 text-yellow-700',
+                    'processing_delayed': 'bg-orange-100 text-orange-700',
+                    'medical_pending': 'bg-purple-100 text-purple-700'
+                };
+                
+                return `
+                    <tr class="border-b border-slate-100 hover:bg-red-50 transition-colors">
+                        <td class="px-4 py-3 font-bold text-slate-800">${booking.id}</td>
+                        <td class="px-4 py-3">
+                            <div class="font-bold text-slate-800">${booking.customer}</div>
+                            <div class="text-xs text-slate-500">Agent: ${booking.assignedTo}</div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="text-sm text-slate-700">${booking.phone}</div>
+                            <div class="text-xs text-slate-500">${booking.email}</div>
+                        </td>
+                        <td class="px-4 py-3 font-bold text-slate-700">${booking.destination}</td>
+                        <td class="px-4 py-3 text-sm text-slate-600">${booking.travelDate}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-1 ${daysClass} rounded-lg text-xs font-bold countdown-badge">
+                                ${booking.daysLeft} days
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="text-sm text-red-700 font-medium">${booking.riskReason}</div>
+                            <div class="text-xs text-slate-500">Last contact: ${booking.lastContact}</div>
+                        </td>
+                        <td class="px-4 py-3 font-bold text-slate-800">${booking.value}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-1 ${statusColors[booking.status] || 'bg-slate-100 text-slate-700'} rounded text-xs font-bold uppercase">
+                                ${booking.status.replace('_', ' ')}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex gap-2">
+                                <button onclick="contactCustomer('${booking.id}')" class="w-8 h-8 rounded-lg bg-green-100 text-green-600 hover:bg-green-600 hover:text-white flex items-center justify-center transition" title="Call Customer">
+                                    <i class="fas fa-phone"></i>
+                                </button>
+                                <button onclick="sendEmail('${booking.id}')" class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white flex items-center justify-center transition" title="Send Email">
+                                    <i class="fas fa-envelope"></i>
+                                </button>
+                                <button onclick="escalateBooking('${booking.id}')" class="w-8 h-8 rounded-lg bg-red-100 text-red-600 hover:bg-red-600 hover:text-white flex items-center justify-center transition" title="Escalate">
+                                    <i class="fas fa-flag"></i>
+                                </button>
+                                <button onclick="viewBooking('${booking.id}')" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 hover:bg-[#0066cc] hover:text-white flex items-center justify-center transition" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateHighRiskCards() {
+            const container = document.getElementById('highRiskCards');
+            
+            container.innerHTML = highRiskBookings.map(booking => `
+                <div class="booking-card bg-orange-50 rounded-lg p-4 border border-orange-200">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="px-2 py-1 bg-orange-200 text-orange-800 rounded text-xs font-bold">${booking.id}</span>
+                        <span class="text-xs font-bold text-orange-600">${booking.daysLeft} days left</span>
+                    </div>
+                    <div class="font-bold text-slate-800 mb-1">${booking.customer}</div>
+                    <div class="text-sm text-slate-600 mb-2">${booking.destination} • ${booking.value}</div>
+                    <div class="text-xs text-orange-700 mb-3">${booking.riskReason}</div>
+                    <div class="flex gap-2">
+                        <button onclick="contactCustomer('${booking.id}')" class="flex-1 py-2 bg-orange-600 text-white rounded text-xs font-bold hover:bg-orange-700">
+                            <i class="fas fa-phone mr-1"></i>Call
+                        </button>
+                        <button onclick="viewBooking('${booking.id}')" class="flex-1 py-2 bg-white text-orange-600 border border-orange-300 rounded text-xs font-bold hover:bg-orange-50">
+                            View
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateActionItems() {
+            // Immediate Actions
+            document.getElementById('immediateActions').innerHTML = `
+                <li class="flex items-center gap-2 text-red-700">
+                    <i class="fas fa-check-circle text-xs"></i>
+                    <span>Contact Vikram Mehta (BK-4521) - Documents pending 3 days</span>
+                </li>
+                <li class="flex items-center gap-2 text-red-700">
+                    <i class="fas fa-check-circle text-xs"></i>
+                    <span>Urgent passport renewal for Ananya Sharma (BK-4528)</span>
+                </li>
+                <li class="flex items-center gap-2 text-orange-700">
+                    <i class="fas fa-check-circle text-xs"></i>
+                    <span>Reschedule biometrics for Meera Patel (BK-4541)</span>
+                </li>
+                <li class="flex items-center gap-2 text-orange-700">
+                    <i class="fas fa-check-circle text-xs"></i>
+                    <span>Medical clearance follow-up for Arjun Reddy (BK-4545)</span>
+                </li>
+            `;
+
+            // Follow-up Queue
+            document.getElementById('followUpQueue').innerHTML = `
+                <div class="flex justify-between items-center p-2 bg-white rounded border border-blue-200">
+                    <div class="text-sm">
+                        <div class="font-bold text-slate-800">Rohan Gupta (BK-4533)</div>
+                        <div class="text-xs text-slate-500">New bank statements requested</div>
+                    </div>
+                    <span class="text-xs text-blue-600 font-bold">Today 2PM</span>
+                </div>
+                <div class="flex justify-between items-center p-2 bg-white rounded border border-blue-200">
+                    <div class="text-sm">
+                        <div class="font-bold text-slate-800">Sneha Iyer (BK-4550)</div>
+                        <div class="text-xs text-slate-500">Document verification call</div>
+                    </div>
+                    <span class="text-xs text-blue-600 font-bold">Today 4PM</span>
+                </div>
+            `;
+
+            // Saved Bookings
+            document.getElementById('savedBookings').innerHTML = `
+                <div class="flex items-center gap-3 p-2 bg-white rounded border border-green-200">
+                    <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                        <i class="fas fa-check text-xs"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-bold text-sm text-slate-800">Rajesh Kumar (BK-4510)</div>
+                        <div class="text-xs text-green-600">Visa approved - Travel saved</div>
+                    </div>
+                    <span class="text-xs font-bold text-green-700">₹1,85,000</span>
+                </div>
+                <div class="flex items-center gap-3 p-2 bg-white rounded border border-green-200">
+                    <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                        <i class="fas fa-check text-xs"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-bold text-sm text-slate-800">Priya Verma (BK-4515)</div>
+                        <div class="text-xs text-green-600">Documents received - Processing</div>
+                    </div>
+                    <span class="text-xs font-bold text-green-700">₹2,20,000</span>
+                </div>
+            `;
+        }
+
+        function toggleHighRisk() {
+            const content = document.getElementById('highRiskContent');
+            const chevron = document.getElementById('highRiskChevron');
+            content.classList.toggle('hidden');
+            chevron.classList.toggle('fa-chevron-down');
+            chevron.classList.toggle('fa-chevron-up');
+        }
+
+        function contactAllAtRisk() {
+            alert('Initiating bulk contact sequence for all at-risk customers...');
+        }
+
+        function escalateAllCritical() {
+            alert('Escalating all critical bookings to senior management...');
+        }
+
+        function sendBulkReminder(type) {
+            alert(`Sending bulk reminders to ${type} risk customers...`);
+        }
+
+        function exportRiskReport() {
+            alert('Exporting comprehensive risk report to Excel...');
+        }
+
+        function contactCustomer(bookingId) {
+            const booking = criticalRiskBookings.find(b => b.id === bookingId);
+            alert(`Calling ${booking.customer} at ${booking.phone}...`);
+        }
+
+        function sendEmail(bookingId) {
+            alert(`Opening email composer for booking ${bookingId}...`);
+        }
+
+        function escalateBooking(bookingId) {
+            alert(`Escalating booking ${bookingId} to senior visa consultant...`);
+        }
+
+        function viewBooking(bookingId) {
+            alert(`Opening detailed view for booking ${bookingId}...`);
+        }
+
+        // Existing functions remain the same...
+        function updateUrgentApplications() {
+            const container = document.getElementById('urgentApplications');
+            
+            container.innerHTML = urgentApplications.map(app => {
+                let statusColor = 'bg-blue-100 text-blue-700';
+                let statusText = 'Processing';
+                if (app.status === 'approved') { statusColor = 'bg-green-100 text-green-700'; statusText = 'Approved'; }
+                if (app.status === 'pending') { statusColor = 'bg-yellow-100 text-yellow-700'; statusText = 'Pending'; }
+                
+                let alertBadge = '';
+                if (app.passport === 'expiring') alertBadge = '<span class="px-2 py-1 bg-red-200 text-red-700 rounded text-xs font-bold ml-2">Passport Expiring</span>';
+                if (app.docs === 'incomplete') alertBadge = '<span class="px-2 py-1 bg-orange-200 text-orange-700 rounded text-xs font-bold ml-2">Docs Missing</span>';
+                
+                return `
+                    <div class="visa-card p-4 border-b border-slate-100 ${app.passport === 'expiring' ? 'bg-red-50' : 'bg-white'}">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs font-bold">${app.id}</span>
+                                    <span class="text-xs text-slate-500"><i class="fas fa-plane mr-1"></i>Travel in ${app.travelDate}</span>
+                                </div>
+                                <div class="font-bold text-slate-800 mt-1">${app.customer}</div>
+                                <div class="text-sm text-slate-600">${app.destination} • ${app.type}</div>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-2 py-1 ${statusColor} rounded text-xs font-bold">${statusText}</span>
+                                ${alertBadge}
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center mt-3">
+                            <div class="flex gap-2">
+                                <button class="px-3 py-1 bg-[#0066cc] text-white rounded text-xs font-bold">View</button>
+                                <button class="px-3 py-1 bg-slate-200 text-slate-700 rounded text-xs font-bold">Docs</button>
+                            </div>
+                            <button class="text-xs text-[#0066cc] hover:underline">Track Status</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateRecentApplications() {
+            const container = document.getElementById('recentApplications');
+            
+            container.innerHTML = recentApplications.map(app => {
+                let statusColor = 'bg-slate-100 text-slate-700';
+                if (app.status === 'submitted') statusColor = 'bg-blue-100 text-blue-700';
+                if (app.status === 'processing') statusColor = 'bg-yellow-100 text-yellow-700';
+                
+                return `
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                        <div>
+                            <div class="font-bold text-sm text-slate-800">${app.id}</div>
+                            <div class="text-xs text-slate-500">${app.customer} • ${app.destination}</div>
+                        </div>
+                        <div class="text-right">
+                            <span class="px-2 py-1 ${statusColor} rounded text-xs font-bold uppercase">${app.status}</span>
+                            <div class="text-xs text-slate-400 mt-1">${app.time}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateDestinationAnalysis() {
+            const container = document.getElementById('destinationAnalysis');
+            
+            container.innerHTML = destinationStats.map(dest => {
+                let trendIcon = 'fa-minus text-slate-400';
+                let trendColor = 'text-slate-500';
+                if (dest.trend === 'up') { trendIcon = 'fa-arrow-up text-green-500'; trendColor = 'text-green-600'; }
+                if (dest.trend === 'down') { trendIcon = 'fa-arrow-down text-red-500'; trendColor = 'text-red-600'; }
+                
+                return `
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <div class="country-flag bg-blue-100 text-blue-600">
+                                <i class="fas fa-flag"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-sm text-slate-800">${dest.country}</div>
+                                <div class="text-xs text-slate-500">${dest.avgDays} days avg</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-sm ${trendColor}">${dest.count} <i class="fas ${trendIcon} text-xs"></i></div>
+                            <div class="text-xs text-slate-400">applications</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateProcessingTimes() {
+            const container = document.getElementById('processingTimes');
+            
+            container.innerHTML = processingTimes.map(pt => {
+                let color = 'bg-green-500';
+                let statusText = 'On Track';
+                if (pt.status === 'over') { color = 'bg-red-500'; statusText = 'Delayed'; }
+                if (pt.status === 'ahead') { color = 'bg-blue-500'; statusText = 'Ahead'; }
+                
+                const percentage = Math.min((pt.days / pt.target) * 100, 100);
+                
+                return `
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-slate-600 font-bold">${pt.country}</span>
+                            <span class="text-slate-800">${pt.days} days <span class="text-xs text-slate-400">(target: ${pt.target})</span></span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2">
+                            <div class="${color} h-2 rounded-full" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="text-xs ${pt.status === 'over' ? 'text-red-500' : 'text-green-500'} mt-1">${statusText}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateDocumentStatus() {
+            const container = document.getElementById('documentStatus');
+            
+            container.innerHTML = documentChecklist.map(doc => {
+                const percentage = (doc.complete / doc.total) * 100;
+                let color = 'bg-green-500';
+                if (percentage < 80) color = 'bg-yellow-500';
+                if (percentage < 60) color = 'bg-red-500';
+                
+                return `
+                    <div class="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-sm text-slate-800">${doc.doc}</div>
+                                <div class="w-24 bg-slate-200 rounded-full h-1.5 mt-1">
+                                    <div class="${color} h-1.5 rounded-full" style="width: ${percentage}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-sm ${percentage < 80 ? 'text-yellow-600' : 'text-green-600'}">${doc.complete}%</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateApplicationPipeline() {
+            const container = document.getElementById('applicationPipeline');
+            
+            const stages = [
+                { name: 'Draft', count: 23, percentage: 8 },
+                { name: 'Submitted', count: 45, percentage: 15 },
+                { name: 'Under Review', count: 89, percentage: 30 },
+                { name: 'Processing', count: 67, percentage: 22 },
+                { name: 'Approved', count: 56, percentage: 19 },
+                { name: 'Rejected', count: 18, percentage: 6 }
+            ];
+            
+            container.innerHTML = stages.map(stage => `
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-slate-600">${stage.name}</span>
+                        <span class="font-bold text-slate-800">${stage.count} (${stage.percentage}%)</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2">
+                        <div class="bg-[#0066cc] h-2 rounded-full" style="width: ${stage.percentage * 3}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateUpcomingRenewals() {
+            const container = document.getElementById('upcomingRenewals');
+            
+            container.innerHTML = upcomingExpirations.map(exp => {
+                let color = 'bg-red-100 text-red-700';
+                let icon = 'fa-exclamation-circle';
+                if (exp.expiry.includes('2')) { color = 'bg-yellow-100 text-yellow-700'; icon = 'fa-clock'; }
+                
+                return `
+                    <div class="flex items-center justify-between p-3 ${color} rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-white/50 flex items-center justify-center">
+                                <i class="fas ${icon}"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-sm">${exp.customer}</div>
+                                <div class="text-xs opacity-75">${exp.type} expires in ${exp.expiry}</div>
+                            </div>
+                        </div>
+                        <button class="px-3 py-1 bg-white rounded text-xs font-bold shadow-sm">Renew</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateEmbassyAlerts() {
+            const container = document.getElementById('embassyAlerts');
+            
+            container.innerHTML = embassyAlerts.map(alert => {
+                let colorClass = 'info';
+                let icon = 'fa-info-circle text-blue-500';
+                if (alert.type === 'warning') { colorClass = 'warning'; icon = 'fa-exclamation-triangle text-yellow-500'; }
+                if (alert.type === 'urgent') { colorClass = 'urgent'; icon = 'fa-exclamation-circle text-red-500'; }
+                
+                return `
+                    <div class="alert-card ${colorClass} p-3 bg-slate-50 rounded-lg border-l-4 ${alert.type === 'urgent' ? 'border-red-500' : alert.type === 'warning' ? 'border-yellow-500' : 'border-blue-500'}">
+                        <div class="flex items-start gap-3">
+                            <i class="fas ${icon} mt-1"></i>
+                            <div class="flex-1">
+                                <div class="font-bold text-sm text-slate-800">${alert.country}: ${alert.alert}</div>
+                                <div class="text-xs text-slate-500 mt-1">${alert.time}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateAiRecommendations() {
+            const container = document.getElementById('aiRecommendations');
+            
+            const recommendations = [
+                { text: 'Predicted 85% approval rate for application VIS-2026-0892. All documents complete.', impact: 'High' },
+                { text: 'Application VIS-2026-0895 missing financial docs. Rejection risk: 65%.', impact: 'Critical' },
+                { text: 'USA visa interview slots available next week. 12 clients pending interviews.', impact: 'Medium' }
+            ];
+            
+            container.innerHTML = recommendations.map(rec => `
+                <div class="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-200">
+                    <i class="fas fa-robot text-blue-500 mt-1"></i>
+                    <div class="flex-1">
+                        <div class="text-sm text-blue-800">${rec.text}</div>
+                        <div class="text-xs text-blue-600 mt-1">Impact: ${rec.impact}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateRejectionAnalysis() {
+            const container = document.getElementById('rejectionAnalysis');
+            
+            container.innerHTML = rejectionReasons.map(reason => {
+                let trendIcon = 'fa-minus text-slate-400';
+                let trendColor = 'text-slate-500';
+                if (reason.trend === 'down') { trendIcon = 'fa-arrow-down text-green-500'; trendColor = 'text-green-600'; }
+                if (reason.trend === 'up') { trendIcon = 'fa-arrow-up text-red-500'; trendColor = 'text-red-600'; }
+                
+                return `
+                    <div class="p-3 bg-slate-50 rounded-lg border-l-4 ${reason.trend === 'down' ? 'border-green-500' : reason.trend === 'up' ? 'border-red-500' : 'border-yellow-500'}">
+                        <div class="flex justify-between items-start mb-1">
+                            <div class="font-bold text-sm text-slate-800">${reason.reason}</div>
+                            <span class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs font-bold">${reason.count}</span>
+                        </div>
+                        <div class="text-xs text-slate-600 mb-2">${reason.action}</div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-400">Trend: <span class="${trendColor}"><i class="fas ${trendIcon}"></i> ${reason.trend}</span></span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateApplicationsTable() {
+            const container = document.getElementById('applicationsTable');
+            
+            const applications = [
+                { id: 'VIS-2026-001', customer: 'Rajesh Kumar', passport: 'A1234567', destination: 'USA', type: 'Tourist', submitted: '12 Feb 2026', status: 'processing', priority: 'High' },
+                { id: 'VIS-2026-002', customer: 'Sarah Patel', passport: 'B9876543', destination: 'UK', type: 'Student', submitted: '10 Feb 2026', status: 'approved', priority: 'Medium' },
+                { id: 'VIS-2026-003', customer: 'Ahmed Mohammed', passport: 'C4567890', destination: 'Schengen', type: 'Business', submitted: '08 Feb 2026', status: 'pending', priority: 'High' },
+                { id: 'VIS-2026-004', customer: 'Jennifer Lee', passport: 'D7890123', destination: 'UAE', type: 'Tourist', submitted: '05 Feb 2026', status: 'approved', priority: 'Low' },
+                { id: 'VIS-2026-005', customer: 'David Wilson', passport: 'E3216549', destination: 'Singapore', type: 'Work', submitted: '01 Feb 2026', status: 'rejected', priority: 'High' }
+            ];
+            
+            container.innerHTML = applications.map(app => {
+                let statusColor = 'bg-blue-100 text-blue-700';
+                let statusText = 'Processing';
+                if (app.status === 'approved') { statusColor = 'bg-green-100 text-green-700'; statusText = 'Approved'; }
+                if (app.status === 'pending') { statusColor = 'bg-yellow-100 text-yellow-700'; statusText = 'Pending'; }
+                if (app.status === 'rejected') { statusColor = 'bg-red-100 text-red-700'; statusText = 'Rejected'; }
+                
+                let priorityColor = 'text-green-600';
+                if (app.priority === 'High') priorityColor = 'text-red-600';
+                if (app.priority === 'Medium') priorityColor = 'text-yellow-600';
+                
+                return `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                        <td class="px-4 py-3 font-bold text-slate-800">${app.id}</td>
+                        <td class="px-4 py-3">
+                            <div class="font-bold text-slate-800">${app.customer}</div>
+                            <div class="text-xs text-slate-500">PP: ${app.passport}</div>
+                        </td>
+                        <td class="px-4 py-3">${app.destination}</td>
+                        <td class="px-4 py-3">${app.type}</td>
+                        <td class="px-4 py-3 text-sm text-slate-600">${app.submitted}</td>
+                        <td class="px-4 py-3"><span class="px-2 py-1 ${statusColor} rounded text-xs font-bold">${statusText}</span></td>
+                        <td class="px-4 py-3 font-bold ${priorityColor}">${app.priority}</td>
+                        <td class="px-4 py-3">
+                            <div class="flex gap-2">
+                                <button class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-[#0066cc] hover:text-white flex items-center justify-center transition"><i class="fas fa-eye"></i></button>
+                                <button class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-[#0066cc] hover:text-white flex items-center justify-center transition"><i class="fas fa-edit"></i></button>
+                                <button class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-[#0066cc] hover:text-white flex items-center justify-center transition"><i class="fas fa-folder"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function actionModal(type) {
+            const titles = {
+                new: 'New Visa Application',
+                upload: 'Upload Documents',
+                track: 'Track Application Status',
+                renew: 'Renew Visa',
+                appointment: 'Book Embassy Appointment',
+                contact: 'Contact Embassy'
+            };
+            
+            document.getElementById('modalTitle').textContent = titles[type];
+            document.getElementById('modalContent').innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Select Application</label>
+                        <select class="w-full p-2 border border-slate-300 rounded-lg">
+                            <option>VIS-2026-0892 - Rajesh Kumar - USA</option>
+                            <option>VIS-2026-0895 - Sarah Patel - UK</option>
+                            <option>VIS-2026-0898 - Ahmed Mohammed - Schengen</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Notes</label>
+                        <textarea class="w-full p-2 border border-slate-300 rounded-lg" rows="3" placeholder="Enter details..."></textarea>
+                    </div>
+                </div>
+            `;
+            document.getElementById('actionModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('actionModal').classList.add('hidden');
+        }
+
+        function executeAction() {
+            alert('Action executed successfully!');
+            closeModal();
+        }
+
+        function viewExpiring() {
+            document.getElementById('upcomingRenewals').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function exportData() {
+            alert('Exporting visa data to Excel...');
+        }
+
+        function resetFilters() {
+            document.querySelectorAll('select').forEach(s => s.value = 'all');
+            document.getElementById('dateRangeFilter').value = 'week';
+            updateDashboard();
+        }
+
+        function initCharts() {
+            // Visa Type Chart
+            new Chart(document.getElementById('visaTypeChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Tourist', 'Business', 'Student', 'Work', 'Medical', 'Transit'],
+                    datasets: [{
+                        data: [45, 25, 15, 10, 3, 2],
+                        backgroundColor: ['#0066cc', '#11998e', '#f093fb', '#fa709a', '#4facfe', '#64748b']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // Trend Chart
+            new Chart(document.getElementById('trendChart'), {
+                type: 'line',
+                data: {
+                    labels: ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb'],
+                    datasets: [{
+                        label: 'Applications',
+                        data: [180, 220, 195, 240, 210, 284],
+                        borderColor: '#0066cc',
+                        backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                        fill: true
+                    }, {
+                        label: 'Approved',
+                        data: [150, 195, 170, 210, 185, 245],
+                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        fill: true
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory - Customer Experience & Resolution Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .urgent { border-left: 4px solid #ef4444; }
+        .warning { border-left: 4px solid #f59e0b; }
+        .success { border-left: 4px solid #22c55e; }
+        .info { border-left: 4px solid #0066cc; }
+        .metric-card { transition: all 0.3s; }
+        .metric-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .issue-card { transition: all 0.3s; cursor: pointer; }
+        .issue-card:hover { transform: translateX(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .timeline-item { position: relative; padding-left: 24px; }
+        .timeline-item::before { content: ''; position: absolute; left: 0; top: 8px; width: 12px; height: 12px; border-radius: 50%; background: #e2e8f0; border: 2px solid #fff; }
+        .timeline-item.urgent::before { background: #ef4444; }
+        .timeline-item.warning::before { background: #f59e0b; }
+        .timeline-item.success::before { background: #22c55e; }
+        .timeline-item::after { content: ''; position: absolute; left: 5px; top: 22px; bottom: -8px; width: 2px; background: #e2e8f0; }
+        .timeline-item:last-child::after { display: none; }
+        .heatmap-cell { transition: all 0.3s; cursor: pointer; }
+        .heatmap-cell:hover { transform: scale(1.05); z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .pulse-alert { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .progress-fill { transition: width 1s ease-out; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white border-b-2 border-[#0066cc] px-6 py-4 shadow-lg sticky top-0 z-50">
+        <div class="max-w-[1920px] mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#0066cc] to-[#1e3a5f] rounded-xl flex items-center justify-center text-white text-2xl">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-[#1e3a5f]">Customer Experience & Resolution Center</h1>
+                    <p class="text-xs text-slate-500">Escalation, Complaints & Pre-Booking Issue Prevention</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- Department Toggle -->
+                <div class="flex bg-slate-100 rounded-lg p-1">
+                    <button onclick="setDepartment('overview')" class="dept-btn active px-4 py-2 rounded-md text-sm font-bold bg-[#0066cc] text-white" id="dept-overview">Overview</button>
+                    <button onclick="setDepartment('escalation')" class="dept-btn px-4 py-2 rounded-md text-sm font-bold text-slate-600" id="dept-escalation">Escalations</button>
+                    <button onclick="setDepartment('complaints')" class="dept-btn px-4 py-2 rounded-md text-sm font-bold text-slate-600" id="dept-complaints">Complaints</button>
+                    <button onclick="setDepartment('cancellations')" class="dept-btn px-4 py-2 rounded-md text-sm font-bold text-slate-600" id="dept-cancellations">Cancellations</button>
+                    <button onclick="setDepartment('prevention')" class="dept-btn px-4 py-2 rounded-md text-sm font-bold text-slate-600" id="dept-prevention">Prevention</button>
+                </div>
+
+                <div class="flex items-center gap-2 px-4 py-2 bg-red-50 rounded-lg border border-red-200">
+                    <i class="fas fa-bell text-red-500 pulse-alert"></i>
+                    <span class="text-sm font-bold text-red-600" id="criticalCount">8 Critical</span>
+                </div>
+
+                <button onclick="window.location.href='menu.html'" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-300 transition">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filter Bar -->
+    <div class="bg-white border-b border-slate-200 px-6 py-3">
+        <div class="max-w-[1920px] mx-auto flex flex-wrap items-center gap-4">
+            <span class="text-sm font-bold text-slate-500 uppercase">Filters:</span>
+            
+            <select id="issueTypeFilter" onchange="updateDashboard()" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc]">
+                <option value="all">All Issue Types</option>
+                <option value="oversold">Hotel Oversold</option>
+                <option value="transfer">Transfer Not Booked</option>
+                <option value="room">Room Not Available</option>
+                <option value="wrong">Wrong Hotel Booked</option>
+                <option value="rate">Rate Discrepancy</option>
+                <option value="amenity">Missing Amenities</option>
+                <option value="flight">Flight Issues</option>
+                <option value="visa">Visa Problems</option>
+            </select>
+
+            <select id="statusFilter" onchange="updateDashboard()" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc]">
+                <option value="all">All Statuses</option>
+                <option value="open">Open</option>
+                <option value="inprogress">In Progress</option>
+                <option value="resolved">Resolved</option>
+                <option value="escalated">Escalated to Mgmt</option>
+            </select>
+
+            <select id="destinationFilter" onchange="updateDashboard()" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc]">
+                <option value="all">All Destinations</option>
+                <option value="maldives">Maldives</option>
+                <option value="thailand">Thailand</option>
+                <option value="dubai">Dubai</option>
+                <option value="europe">Europe</option>
+                <option value="bali">Bali</option>
+                <option value="singapore">Singapore</option>
+            </select>
+
+            <select id="supplierFilter" onchange="updateDashboard()" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc]">
+                <option value="all">All Suppliers</option>
+                <option value="marriott">Marriott</option>
+                <option value="hilton">Hilton</option>
+                <option value="accor">Accor</option>
+                <option value="local">Local Partners</option>
+            </select>
+
+            <select id="severityFilter" onchange="updateDashboard()" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc]">
+                <option value="all">All Severities</option>
+                <option value="critical">Critical - Pax Arrived</option>
+                <option value="high">High - Within 24hrs</option>
+                <option value="medium">Medium - Within 7 days</option>
+                <option value="low">Low - Future booking</option>
+            </select>
+
+            <select id="dateRangeFilter" onchange="updateDashboard()" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded text-sm focus:outline-none focus:border-[#0066cc]">
+                <option value="today">Today</option>
+                <option value="week" selected>This Week</option>
+                <option value="month">This Month</option>
+                <option value="quarter">This Quarter</option>
+            </select>
+
+            <button onclick="exportIssues()" class="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700 flex items-center gap-2">
+                <i class="fas fa-download"></i>Export
+            </button>
+
+            <button onclick="resetFilters()" class="px-3 py-1.5 text-sm text-[#0066cc] hover:underline ml-auto">
+                <i class="fas fa-undo mr-1"></i>Reset
+            </button>
+        </div>
+    </div>
+
+    <main class="max-w-[1920px] mx-auto p-6 space-y-6">
+
+        <!-- Critical Alert Banner -->
+        <div class="bg-red-50 border-2 border-red-200 rounded-xl p-4 flex items-center justify-between" id="criticalBanner">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+                    <i class="fas fa-exclamation-triangle text-2xl pulse-alert"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-red-800 text-lg">8 Critical Issues - Customers On-Site</h3>
+                    <p class="text-sm text-red-600">Immediate action required for guests currently at destinations</p>
+                </div>
+            </div>
+            <button onclick="viewCriticalIssues()" class="px-6 py-3 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700">
+                View Critical <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4">
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Open Issues</div>
+                <div class="text-2xl font-bold text-[#1e3a5f]">142</div>
+                <div class="text-xs text-red-500"><i class="fas fa-arrow-up"></i> 12 vs yesterday</div>
+            </div>
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Critical (On-site)</div>
+                <div class="text-2xl font-bold text-red-600">8</div>
+                <div class="text-xs text-red-500"><i class="fas fa-exclamation"></i> Immediate</div>
+            </div>
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Avg Resolution Time</div>
+                <div class="text-2xl font-bold text-[#1e3a5f]">4.2 hrs</div>
+                <div class="text-xs text-green-500"><i class="fas fa-arrow-down"></i> 0.8 hrs</div>
+            </div>
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Resolution Rate</div>
+                <div class="text-2xl font-bold text-green-600">87%</div>
+                <div class="text-xs text-green-500"><i class="fas fa-arrow-up"></i> 3%</div>
+            </div>
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Complaints</div>
+                <div class="text-2xl font-bold text-[#1e3a5f]">38</div>
+                <div class="text-xs text-yellow-500"><i class="fas fa-minus"></i> Same</div>
+            </div>
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Cancellations</div>
+                <div class="text-2xl font-bold text-orange-600">24</div>
+                <div class="text-xs text-orange-500"><i class="fas fa-arrow-up"></i> 4</div>
+            </div>
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Prevention Alerts</div>
+                <div class="text-2xl font-bold text-blue-600">156</div>
+                <div class="text-xs text-blue-500">Proactive</div>
+            </div>
+            <div class="metric-card bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div class="text-xs text-slate-500 uppercase font-bold mb-1">Cost of Issues</div>
+                <div class="text-2xl font-bold text-[#1e3a5f]">₹24L</div>
+                <div class="text-xs text-slate-400">This month</div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Left Column: Live Issues & Actions -->
+            <div class="space-y-6">
+                
+                <!-- Critical Issues Requiring Immediate Action -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-200 bg-red-50 flex justify-between items-center">
+                        <h3 class="font-bold text-red-700 flex items-center gap-2">
+                            <i class="fas fa-fire"></i> Critical - Pax On-Site
+                        </h3>
+                        <span class="px-2 py-1 bg-red-200 text-red-700 rounded text-xs font-bold">8 Active</span>
+                    </div>
+                    <div class="max-h-96 overflow-y-auto" id="criticalIssues">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Recent Escalations -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-200 bg-orange-50 flex justify-between items-center">
+                        <h3 class="font-bold text-orange-700 flex items-center gap-2">
+                            <i class="fas fa-level-up-alt"></i> Recent Escalations
+                        </h3>
+                        <button class="text-xs text-[#0066cc] hover:underline">View All</button>
+                    </div>
+                    <div class="p-4 space-y-3" id="recentEscalations">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-gradient-to-br from-[#1e3a5f] to-[#0066cc] rounded-xl shadow-lg p-5 text-white">
+                    <h3 class="font-bold mb-4 flex items-center gap-2">
+                        <i class="fas fa-bolt text-yellow-400"></i> Quick Resolution Actions
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="actionModal('alternative')" class="p-3 bg-white/10 rounded-lg text-sm font-bold hover:bg-white/20 transition text-left">
+                            <i class="fas fa-hotel mr-2"></i>Find Alternative Hotel
+                        </button>
+                        <button onclick="actionModal('upgrade')" class="p-3 bg-white/10 rounded-lg text-sm font-bold hover:bg-white/20 transition text-left">
+                            <i class="fas fa-arrow-up mr-2"></i>Process Upgrade
+                        </button>
+                        <button onclick="actionModal('refund')" class="p-3 bg-white/10 rounded-lg text-sm font-bold hover:bg-white/20 transition text-left">
+                            <i class="fas fa-rupee-sign mr-2"></i>Issue Refund
+                        </button>
+                        <button onclick="actionModal('compensation')" class="p-3 bg-white/10 rounded-lg text-sm font-bold hover:bg-white/20 transition text-left">
+                            <i class="fas fa-gift mr-2"></i>Offer Compensation
+                        </button>
+                        <button onclick="actionModal('transfer')" class="p-3 bg-white/10 rounded-lg text-sm font-bold hover:bg-white/20 transition text-left">
+                            <i class="fas fa-taxi mr-2"></i>Book Emergency Transfer
+                        </button>
+                        <button onclick="actionModal('escalate')" class="p-3 bg-white/10 rounded-lg text-sm font-bold hover:bg-white/20 transition text-left">
+                            <i class="fas fa-user-tie mr-2"></i>Escalate to Manager
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Middle Column: Issue Analysis & Patterns -->
+            <div class="space-y-6">
+
+                <!-- Issue Category Breakdown -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-pie text-blue-500"></i> Issues by Category
+                    </h3>
+                    <div class="h-48">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mt-4" id="categoryBreakdown">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Top Root Causes -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                        <i class="fas fa-search text-red-500"></i> Root Cause Analysis
+                    </h3>
+                    <div class="space-y-3" id="rootCauses">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Supplier Performance Issues -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                        <i class="fas fa-building text-purple-500"></i> Supplier Issue Tracker
+                    </h3>
+                    <div class="space-y-3" id="supplierIssues">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Prevention Alerts -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-[#1e3a5f] flex items-center gap-2">
+                            <i class="fas fa-shield-alt text-green-500"></i> Pre-Booking Prevention Alerts
+                        </h3>
+                        <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-bold">156 Active</span>
+                    </div>
+                    <div class="space-y-3" id="preventionAlerts">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Resolution & Prevention -->
+            <div class="space-y-6">
+
+                <!-- Issue Resolution Timeline -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                        <i class="fas fa-clock text-indigo-500"></i> Resolution Performance
+                    </h3>
+                    <div class="space-y-4" id="resolutionTimeline">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Contracting Insights -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                        <i class="fas fa-file-contract text-orange-500"></i> Contracting Action Items
+                    </h3>
+                    <div class="space-y-3" id="contractingActions">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Customer Feedback Trends -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                        <i class="fas fa-comments text-pink-500"></i> Customer Sentiment
+                    </h3>
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="relative w-32 h-32">
+                            <svg class="w-full h-full transform -rotate-90">
+                                <circle cx="64" cy="64" r="56" stroke="#e2e8f0" stroke-width="12" fill="none"/>
+                                <circle cx="64" cy="64" r="56" stroke="#22c55e" stroke-width="12" fill="none" 
+                                    stroke-dasharray="351.86" stroke-dashoffset="70.37" stroke-linecap="round"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-green-600">4.2</div>
+                                    <div class="text-xs text-slate-400">of 5</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-600">Pre-trip Communication</span>
+                            <span class="font-bold text-green-600">4.5</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-600">Hotel Quality</span>
+                            <span class="font-bold text-yellow-600">3.8</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-600">Transfer Services</span>
+                            <span class="font-bold text-red-600">3.2</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-600">Issue Resolution</span>
+                            <span class="font-bold text-green-600">4.4</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Recommendations -->
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-lg border border-blue-200 p-6">
+                    <h3 class="font-bold text-blue-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-robot text-blue-600"></i> AI Prevention Recommendations
+                    </h3>
+                    <div class="space-y-3" id="aiRecommendations">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Bottom Section: Detailed Analysis -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Issue Trend Analysis -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                    <i class="fas fa-chart-line text-blue-500"></i> Issue Trend & Prevention Impact
+                </h3>
+                <div class="h-64">
+                    <canvas id="trendChart"></canvas>
+                </div>
+                <div class="grid grid-cols-3 gap-4 mt-4">
+                    <div class="text-center p-3 bg-red-50 rounded-lg">
+                        <div class="text-lg font-bold text-red-600">-18%</div>
+                        <div class="text-xs text-slate-600">Hotel Oversell</div>
+                    </div>
+                    <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                        <div class="text-lg font-bold text-yellow-600">-12%</div>
+                        <div class="text-xs text-slate-600">Transfer Issues</div>
+                    </div>
+                    <div class="text-center p-3 bg-green-50 rounded-lg">
+                        <div class="text-lg font-bold text-green-600">-24%</div>
+                        <div class="text-xs text-slate-600">Wrong Bookings</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Destination Risk Matrix -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                    <i class="fas fa-globe text-indigo-500"></i> Destination Risk Heat Map
+                </h3>
+                <div class="grid grid-cols-4 gap-3" id="destinationRisk">
+                    <!-- Populated by JS -->
+                </div>
+                <div class="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-lightbulb text-yellow-600 mt-1"></i>
+                        <div>
+                            <div class="font-bold text-yellow-800 text-sm">Insight: Maldives Peak Season</div>
+                            <div class="text-xs text-yellow-700">Oversell risk increasing by 34% in Dec-Jan. Recommend securing additional room blocks with 3 backup properties.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Operational Excellence Metrics -->
+        <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+            <h3 class="font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                <i class="fas fa-trophy text-yellow-500"></i> Operational Excellence Scorecard
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="p-4 bg-slate-50 rounded-xl">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-bold text-slate-600">First Contact Resolution</span>
+                        <span class="text-lg font-bold text-green-600">68%</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2">
+                        <div class="bg-green-500 h-2 rounded-full" style="width: 68%"></div>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-1">Target: 75%</div>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-xl">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-bold text-slate-600">Prevention Rate</span>
+                        <span class="text-lg font-bold text-blue-600">82%</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2">
+                        <div class="bg-blue-500 h-2 rounded-full" style="width: 82%"></div>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-1">Target: 80%</div>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-xl">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-bold text-slate-600">Supplier Compliance</span>
+                        <span class="text-lg font-bold text-yellow-600">74%</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2">
+                        <div class="bg-yellow-500 h-2 rounded-full" style="width: 74%"></div>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-1">Target: 85%</div>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-xl">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-bold text-slate-600">Cost per Issue</span>
+                        <span class="text-lg font-bold text-green-600">₹4,200</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2">
+                        <div class="bg-green-500 h-2 rounded-full" style="width: 85%"></div>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-1">Target: ₹5,000</div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Action Modal -->
+    <div id="actionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 p-6">
+            <h3 class="font-bold text-xl text-[#1e3a5f] mb-4" id="modalTitle">Resolution Action</h3>
+            <div id="modalContent"></div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg font-bold">Cancel</button>
+                <button onclick="executeAction()" class="px-4 py-2 bg-[#0066cc] text-white rounded-lg font-bold">Execute</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Models
+        const criticalIssues = [
+            { id: 'ESC-2847', customer: 'Sharma Family', destination: 'Maldives', hotel: 'Paradise Resort', issue: 'Hotel oversold, no rooms available', pax: 4, arrival: '2 hours ago', status: 'critical', cost: 85000, action: 'Find alternative + compensation' },
+            { id: 'ESC-2856', customer: 'Gupta Corporate', destination: 'Dubai', hotel: 'Marriott Downtown', issue: 'Rooms not as booked (2 doubles vs 2 kings)', pax: 8, arrival: '4 hours ago', status: 'high', cost: 45000, action: 'Room change + upgrade' },
+            { id: 'ESC-2861', customer: 'Reddy Family', destination: 'Thailand', hotel: 'Phuket Beach Resort', issue: 'Transfer not booked, stranded at airport', pax: 6, arrival: '6 hours ago', status: 'critical', cost: 28000, action: 'Emergency transfer + refund' },
+            { id: 'ESC-2874', customer: 'Khan Group', destination: 'Bali', hotel: 'Ubud Valley Resort', issue: 'Wrong hotel booked - wanted beachfront', pax: 12, arrival: '1 hour ago', status: 'high', cost: 120000, action: 'Hotel change + compensation' }
+        ];
+
+        const rootCauses = [
+            { cause: 'Contracting - Overcommitment', count: 48, trend: 'up', action: 'Reduce allocation by 10%', owner: 'Contracting Team' },
+            { cause: 'Operations - Transfer missed', count: 32, trend: 'down', action: 'Double-check process', owner: 'Ops Team' },
+            { cause: 'System - Wrong hotel mapped', count: 24, trend: 'down', action: 'Audit hotel codes', owner: 'Tech Team' },
+            { cause: 'Supplier - Last minute changes', count: 18, trend: 'up', action: 'Penalty clauses', owner: 'Legal' },
+            { cause: 'Agent - Incorrect request', count: 12, trend: 'same', action: 'Additional training', owner: 'Training' }
+        ];
+
+        const supplierIssues = [
+            { name: 'Paradise Resort Maldives', issues: 12, type: 'Oversell', severity: 'high', lastIncident: '2 hours ago' },
+            { name: 'Phuket Transfers Co.', issues: 8, type: 'No-show', severity: 'critical', lastIncident: '6 hours ago' },
+            { name: 'Dubai Marriott Downtown', issues: 6, type: 'Room type', severity: 'medium', lastIncident: '4 hours ago' },
+            { name: 'Bali Beach Hotels', issues: 5, type: 'Amenities', severity: 'low', lastIncident: '1 day ago' }
+        ];
+
+        const preventionAlerts = [
+            { booking: 'BK-98234', customer: 'Mehta Family', destination: 'Maldives', risk: 'High oversell risk', action: 'Pre-confirm rooms', deadline: '24 hrs' },
+            { booking: 'BK-98256', customer: 'Patel Group', destination: 'Dubai', risk: 'Transfer not confirmed', action: 'Verify transfer', deadline: '48 hrs' },
+            { booking: 'BK-98289', customer: 'Singh Corporate', destination: 'Thailand', risk: 'Rate discrepancy', action: 'Reconfirm rate', deadline: '72 hrs' }
+        ];
+
+        const contractingActions = [
+            { issue: 'Maldives oversell peak season', action: 'Secure 50 additional rooms with 3 backup hotels', priority: 'high', savings: '₹12L' },
+            { issue: 'Dubai transfer reliability', action: 'Contract 2nd transfer operator as backup', priority: 'high', savings: '₹4L' },
+            { issue: 'Bali room type guarantees', action: 'Negotiate specific room category confirmations', priority: 'medium', savings: '₹3L' }
+        ];
+
+        function init() {
+            updateDashboard();
+            initCharts();
+        }
+
+        function updateDashboard() {
+            updateCriticalIssues();
+            updateRecentEscalations();
+            updateCategoryBreakdown();
+            updateRootCauses();
+            updateSupplierIssues();
+            updatePreventionAlerts();
+            updateResolutionTimeline();
+            updateContractingActions();
+            updateAiRecommendations();
+            updateDestinationRisk();
+        }
+
+        function updateCriticalIssues() {
+            const container = document.getElementById('criticalIssues');
+            
+            container.innerHTML = criticalIssues.map(i => `
+                <div class="issue-card p-4 border-b border-slate-100 ${i.status === 'critical' ? 'bg-red-50' : 'bg-orange-50'}">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-1 ${i.status === 'critical' ? 'bg-red-200 text-red-700' : 'bg-orange-200 text-orange-700'} rounded text-xs font-bold">${i.id}</span>
+                                <span class="text-xs text-slate-500"><i class="fas fa-clock mr-1"></i>Arrived ${i.arrival}</span>
+                            </div>
+                            <div class="font-bold text-slate-800 mt-1">${i.customer}</div>
+                            <div class="text-sm text-slate-600">${i.destination} • ${i.pax} pax</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-lg font-bold text-red-600">₹${(i.cost/1000).toFixed(0)}K</div>
+                            <div class="text-xs text-slate-400">Est. cost</div>
+                        </div>
+                    </div>
+                    <div class="p-2 bg-white rounded-lg mb-2">
+                        <div class="text-sm text-slate-700"><i class="fas fa-exclamation-circle text-red-500 mr-1"></i>${i.issue}</div>
+                        <div class="text-xs text-slate-500 mt-1">Hotel: ${i.hotel}</div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-slate-500"><i class="fas fa-lightbulb text-yellow-500 mr-1"></i>${i.action}</span>
+                        <button onclick="resolveIssue('${i.id}')" class="px-3 py-1 bg-[#0066cc] text-white rounded text-xs font-bold">Resolve</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateRecentEscalations() {
+            const container = document.getElementById('recentEscalations');
+            const escalations = [
+                { id: 'ESC-2892', issue: 'Flight delay compensation', status: 'resolved', time: '30 mins ago' },
+                { id: 'ESC-2890', issue: 'Missing honeymoon amenities', status: 'inprogress', time: '1 hour ago' },
+                { id: 'ESC-2887', issue: 'Wrong meal plan booked', status: 'open', time: '2 hours ago' }
+            ];
+            
+            container.innerHTML = escalations.map(e => `
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div>
+                        <div class="font-bold text-sm text-slate-800">${e.id}</div>
+                        <div class="text-xs text-slate-500">${e.issue}</div>
+                    </div>
+                    <div class="text-right">
+                        <span class="px-2 py-1 ${e.status === 'resolved' ? 'bg-green-100 text-green-700' : e.status === 'inprogress' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'} rounded text-xs font-bold uppercase">${e.status}</span>
+                        <div class="text-xs text-slate-400 mt-1">${e.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateCategoryBreakdown() {
+            const categories = [
+                { name: 'Hotel Oversold', count: 48, percentage: 32, color: 'red' },
+                { name: 'Transfer Issues', count: 32, percentage: 21, color: 'orange' },
+                { name: 'Room Not Available', count: 24, percentage: 16, color: 'yellow' },
+                { name: 'Wrong Hotel Booked', count: 18, percentage: 12, color: 'purple' },
+                { name: 'Rate Discrepancy', count: 16, percentage: 11, color: 'blue' },
+                { name: 'Other', count: 12, percentage: 8, color: 'slate' }
+            ];
+            
+            document.getElementById('categoryBreakdown').innerHTML = categories.slice(0, 4).map(c => `
+                <div class="flex items-center justify-between p-2 bg-${c.color}-50 rounded-lg">
+                    <span class="text-xs font-bold text-${c.color}-700">${c.name}</span>
+                    <span class="text-xs font-bold text-${c.color}-600">${c.count} (${c.percentage}%)</span>
+                </div>
+            `).join('');
+        }
+
+        function updateRootCauses() {
+            const container = document.getElementById('rootCauses');
+            
+            container.innerHTML = rootCauses.map(r => `
+                <div class="p-3 bg-slate-50 rounded-lg border-l-4 ${r.trend === 'up' ? 'border-red-500' : r.trend === 'down' ? 'border-green-500' : 'border-yellow-500'}">
+                    <div class="flex justify-between items-start mb-1">
+                        <div class="font-bold text-sm text-slate-800">${r.cause}</div>
+                        <span class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs font-bold">${r.count}</span>
+                    </div>
+                    <div class="text-xs text-slate-600 mb-2">${r.action}</div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-400">Owner: ${r.owner}</span>
+                        <span class="${r.trend === 'up' ? 'text-red-500' : r.trend === 'down' ? 'text-green-500' : 'text-yellow-500'}">
+                            <i class="fas fa-arrow-${r.trend === 'up' ? 'up' : r.trend === 'down' ? 'down' : 'right'}"></i> ${r.trend}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateSupplierIssues() {
+            const container = document.getElementById('supplierIssues');
+            
+            container.innerHTML = supplierIssues.map(s => `
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div>
+                        <div class="font-bold text-sm text-slate-800">${s.name}</div>
+                        <div class="text-xs text-slate-500">${s.type} • ${s.issues} issues</div>
+                    </div>
+                    <div class="text-right">
+                        <span class="px-2 py-1 ${s.severity === 'critical' ? 'bg-red-100 text-red-700' : s.severity === 'high' ? 'bg-orange-100 text-orange-700' : 'bg-yellow-100 text-yellow-700'} rounded text-xs font-bold">${s.severity}</span>
+                        <div class="text-xs text-slate-400 mt-1">${s.lastIncident}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updatePreventionAlerts() {
+            const container = document.getElementById('preventionAlerts');
+            
+            container.innerHTML = preventionAlerts.map(p => `
+                <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-sm text-blue-800">${p.booking}</span>
+                            <span class="px-2 py-1 bg-yellow-200 text-yellow-700 rounded text-xs">Risk</span>
+                        </div>
+                        <div class="text-xs text-blue-600">${p.customer} • ${p.destination}</div>
+                        <div class="text-xs text-slate-500 mt-1"><i class="fas fa-exclamation-triangle mr-1"></i>${p.risk}</div>
+                    </div>
+                    <div class="text-right">
+                        <button class="px-3 py-1 bg-[#0066cc] text-white rounded text-xs font-bold mb-1">Act</button>
+                        <div class="text-xs text-red-500"><i class="fas fa-clock mr-1"></i>${p.deadline}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateResolutionTimeline() {
+            const container = document.getElementById('resolutionTimeline');
+            
+            const timeline = [
+                { time: '< 2 hours', count: 48, percentage: 34, status: 'excellent' },
+                { time: '2-4 hours', count: 42, percentage: 30, status: 'good' },
+                { time: '4-8 hours', count: 28, percentage: 20, status: 'average' },
+                { time: '8-24 hours', count: 16, percentage: 11, status: 'poor' },
+                { time: '> 24 hours', count: 8, percentage: 5, status: 'critical' }
+            ];
+            
+            container.innerHTML = timeline.map(t => `
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-slate-600">${t.time}</span>
+                        <span class="font-bold text-slate-800">${t.count} (${t.percentage}%)</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2">
+                        <div class="bg-${t.status === 'excellent' ? 'green' : t.status === 'good' ? 'blue' : t.status === 'average' ? 'yellow' : t.status === 'poor' ? 'orange' : 'red'}-500 h-2 rounded-full" style="width: ${t.percentage * 3}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateContractingActions() {
+            const container = document.getElementById('contractingActions');
+            
+            container.innerHTML = contractingActions.map(c => `
+                <div class="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                    <div class="flex justify-between items-start mb-1">
+                        <div class="font-bold text-sm text-orange-800">${c.issue}</div>
+                        <span class="px-2 py-1 ${c.priority === 'high' ? 'bg-red-200 text-red-700' : 'bg-yellow-200 text-yellow-700'} rounded text-xs font-bold">${c.priority}</span>
+                    </div>
+                    <div class="text-xs text-orange-700 mb-2">${c.action}</div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-slate-500">Est. Savings: <span class="font-bold text-green-600">${c.savings}</span></span>
+                        <button class="px-3 py-1 bg-[#0066cc] text-white rounded text-xs font-bold">Assign</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateAiRecommendations() {
+            const container = document.getElementById('aiRecommendations');
+            
+            const recommendations = [
+                { text: 'Predicted 85% chance of oversell at Paradise Resort next week. Proactively secure 20 rooms at backup property.', impact: 'High' },
+                { text: 'Pattern detected: Transfer issues spike on weekends. Recommend pre-confirming all Friday-Sunday transfers.', impact: 'Medium' },
+                { text: 'Agent "Kumar Tours" has 3x higher wrong-booking rate. Schedule immediate refresher training.', impact: 'High' }
+            ];
+            
+            container.innerHTML = recommendations.map(r => `
+                <div class="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-200">
+                    <i class="fas fa-robot text-blue-500 mt-1"></i>
+                    <div class="flex-1">
+                        <div class="text-sm text-blue-800">${r.text}</div>
+                        <div class="text-xs text-blue-600 mt-1">Impact: ${r.impact}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateDestinationRisk() {
+            const container = document.getElementById('destinationRisk');
+            
+            const destinations = [
+                { name: 'Maldives', risk: 85, issues: 24 },
+                { name: 'Dubai', risk: 65, issues: 18 },
+                { name: 'Thailand', risk: 72, issues: 21 },
+                { name: 'Bali', risk: 58, issues: 15 },
+                { name: 'Europe', risk: 45, issues: 12 },
+                { name: 'Singapore', risk: 38, issues: 9 },
+                { name: 'Sri Lanka', risk: 42, issues: 11 },
+                { name: 'Mauritius', risk: 35, issues: 8 }
+            ];
+            
+            container.innerHTML = destinations.map(d => {
+                let color = 'bg-green-500';
+                if (d.risk >= 80) color = 'bg-red-500';
+                else if (d.risk >= 60) color = 'bg-orange-500';
+                else if (d.risk >= 40) color = 'bg-yellow-500';
+                
+                return `
+                    <div class="heatmap-cell ${color} rounded-lg p-3 text-center text-white">
+                        <div class="font-bold text-sm">${d.name}</div>
+                        <div class="text-2xl font-bold">${d.risk}%</div>
+                        <div class="text-xs opacity-75">${d.issues} issues</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function actionModal(type) {
+            const titles = {
+                alternative: 'Find Alternative Hotel',
+                upgrade: 'Process Upgrade',
+                refund: 'Issue Refund',
+                compensation: 'Offer Compensation',
+                transfer: 'Book Emergency Transfer',
+                escalate: 'Escalate to Manager'
+            };
+            
+            document.getElementById('modalTitle').textContent = titles[type];
+            document.getElementById('modalContent').innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Select Booking</label>
+                        <select class="w-full p-2 border border-slate-300 rounded-lg">
+                            <option>ESC-2847 - Sharma Family - Maldives</option>
+                            <option>ESC-2856 - Gupta Corporate - Dubai</option>
+                            <option>ESC-2861 - Reddy Family - Thailand</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Notes</label>
+                        <textarea class="w-full p-2 border border-slate-300 rounded-lg" rows="3" placeholder="Enter resolution notes..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Cost Impact</label>
+                        <input type="text" class="w-full p-2 border border-slate-300 rounded-lg" placeholder="₹">
+                    </div>
+                </div>
+            `;
+            document.getElementById('actionModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('actionModal').classList.add('hidden');
+        }
+
+        function executeAction() {
+            alert('Action executed successfully!');
+            closeModal();
+        }
+
+        function resolveIssue(id) {
+            alert('Opening resolution workflow for ' + id);
+        }
+
+        function viewCriticalIssues() {
+            document.getElementById('criticalIssues').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function setDepartment(dept) {
+            document.querySelectorAll('.dept-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-[#0066cc]', 'text-white');
+                btn.classList.add('text-slate-600');
+            });
+            document.getElementById('dept-' + dept).classList.add('active', 'bg-[#0066cc]', 'text-white');
+            document.getElementById('dept-' + dept).classList.remove('text-slate-600');
+        }
+
+        function exportIssues() {
+            alert('Exporting issues report to Excel...');
+        }
+
+        function resetFilters() {
+            document.querySelectorAll('select').forEach(s => s.value = 'all');
+            document.getElementById('dateRangeFilter').value = 'week';
+            updateDashboard();
+        }
+
+        function initCharts() {
+            // Category Chart
+            new Chart(document.getElementById('categoryChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Oversold', 'Transfer', 'Room NA', 'Wrong Hotel', 'Rate', 'Other'],
+                    datasets: [{
+                        data: [48, 32, 24, 18, 16, 12],
+                        backgroundColor: ['#ef4444', '#f97316', '#eab308', '#a855f7', '#3b82f6', '#64748b']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // Trend Chart
+            new Chart(document.getElementById('trendChart'), {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [{
+                        label: 'Issues',
+                        data: [168, 142, 156, 142],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239,68,68,0.1)',
+                        fill: true
+                    }, {
+                        label: 'Prevented',
+                        data: [45, 52, 68, 74],
+                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(34,197,94,0.1)',
+                        fill: true
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

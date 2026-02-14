@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enquiry Routing & Conversion Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .metric-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+        }
+        .alert-pulse {
+            animation: pulse-red 2s infinite;
+        }
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+        .tab-active {
+            border-bottom: 3px solid #3b82f6;
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        .expert-row:hover {
+            background-color: #f1f5f9;
+            transform: scale(1.01);
+            transition: all 0.2s ease;
+        }
+        .action-btn {
+            transition: all 0.2s ease;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        .routing-match {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .routing-mismatch {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        .live-indicator {
+            animation: pulse-live 2s infinite;
+        }
+        @keyframes pulse-live {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-gradient-to-br from-blue-600 to-purple-600 text-white p-3 rounded-xl shadow-lg">
+                        <i class="fas fa-route text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-900">Enquiry Routing Command Center</h1>
+                        <p class="text-sm text-slate-500">Smart Routing & Conversion Optimization</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-2 bg-red-50 px-4 py-2 rounded-lg border border-red-200 alert-pulse cursor-pointer">
+                        <div class="w-2 h-2 bg-red-600 rounded-full live-indicator"></div>
+                        <span class="text-sm font-semibold text-red-700">3 Routing Failures</span>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-amber-50 px-4 py-2 rounded-lg border border-amber-200">
+                        <i class="fas fa-phone-slash text-amber-600"></i>
+                        <span class="text-sm font-semibold text-amber-700">5 Missed Calls</span>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-green-50 px-4 py-2 rounded-lg border border-green-200">
+                        <i class="fas fa-chart-line text-green-600"></i>
+                        <span class="text-sm font-semibold text-green-700">68% Conversion</span>
+                    </div>
+                    <button class="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors">
+                        <i class="fas fa-cog mr-2"></i>Routing Rules
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Live Alert Banner -->
+    <div class="bg-gradient-to-r from-red-600 to-orange-600 text-white py-3">
+        <div class="max-w-7xl mx-auto px-4 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <i class="fas fa-exclamation-triangle text-2xl animate-pulse"></i>
+                <div>
+                    <span class="font-bold">ALERT:</span>
+                    <span class="ml-2">Thailand enquiry routed to Dubai expert (Sarah) - 0% Thailand conversion | 3 similar misroutings today</span>
+                </div>
+            </div>
+            <button class="bg-white text-red-600 px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-slate-100 transition-colors">
+                Fix Routing Now
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Executive KPIs -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <div class="metric-card bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                        <i class="fas fa-phone-alt text-blue-600"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-full">+12%</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">156</h3>
+                <p class="text-xs text-slate-600 mt-1">Today's Enquiries</p>
+                <div class="mt-2 text-xs text-slate-500">42 in queue | 14 active</div>
+            </div>
+
+            <div class="metric-card bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <i class="fas fa-check-circle text-green-600"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-full">+5%</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">68%</h3>
+                <p class="text-xs text-slate-600 mt-1">Conversion Rate</p>
+                <div class="mt-2 text-xs text-slate-500">Target: 75%</div>
+            </div>
+
+            <div class="metric-card bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-red-100 rounded-lg">
+                        <i class="fas fa-times-circle text-red-600"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-red-600 bg-red-100 px-2 py-1 rounded-full">Action</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">23%</h3>
+                <p class="text-xs text-slate-600 mt-1">Wrong Routing Loss</p>
+                <div class="mt-2 text-xs text-red-600 font-medium">₹8.5L revenue lost</div>
+            </div>
+
+            <div class="metric-card bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-amber-100 rounded-lg">
+                        <i class="fas fa-clock text-amber-600"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-amber-600 bg-amber-100 px-2 py-1 rounded-full">4 min</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">2.3</h3>
+                <p class="text-xs text-slate-600 mt-1">Avg Response (min)</p>
+                <div class="mt-2 text-xs text-slate-500">Target: <2min</div>
+            </div>
+
+            <div class="metric-card bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-purple-100 rounded-lg">
+                        <i class="fas fa-users text-purple-600"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">Live</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">18/24</h3>
+                <p class="text-xs text-slate-600 mt-1">Experts Online</p>
+                <div class="mt-2 text-xs text-slate-500">6 on break/training</div>
+            </div>
+        </div>
+
+        <!-- Live Enquiry Stream & Routing Intelligence -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            
+            <!-- Live Enquiry Stream -->
+            <div class="glass-panel rounded-2xl p-6 lg:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-slate-900 flex items-center">
+                        <div class="w-2 h-2 bg-red-600 rounded-full mr-2 live-indicator"></div>
+                        Live Enquiry Stream
+                    </h3>
+                    <div class="flex space-x-2">
+                        <button class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full">Auto-Routing ON</button>
+                        <button class="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full">Manual Override</button>
+                    </div>
+                </div>
+                
+                <div class="space-y-3 max-h-96 overflow-y-auto">
+                    <!-- Critical Mismatch -->
+                    <div class="p-4 bg-red-50 border border-red-200 rounded-xl border-l-4 border-l-red-600">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center space-x-3">
+                                <span class="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">URGENT</span>
+                                <span class="text-sm font-semibold text-slate-900">Enquiry #EQ-78945</span>
+                            </div>
+                            <span class="text-xs text-slate-500">Just now</span>
+                        </div>
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <p class="text-sm text-slate-700"><strong>Destination:</strong> Thailand (Phuket)</p>
+                                <p class="text-sm text-slate-700"><strong>Value:</strong> ₹1.2L | <strong>Customer:</strong> Premium</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-red-600 font-bold">ROUTED TO WRONG EXPERT</p>
+                                <p class="text-sm text-slate-900">Sarah (Dubai Specialist)</p>
+                                <p class="text-xs text-slate-500">Thailand conv: 8%</p>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="flex-1 bg-red-600 text-white text-xs py-2 rounded-lg action-btn font-medium">
+                                <i class="fas fa-random mr-1"></i> Re-route to Thailand Expert
+                            </button>
+                            <button class="bg-white text-red-600 border border-red-200 text-xs px-3 py-2 rounded-lg">
+                                <i class="fas fa-ban"></i> Block Future
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Good Match -->
+                    <div class="p-4 bg-green-50 border border-green-200 rounded-xl border-l-4 border-l-green-600">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center space-x-3">
+                                <span class="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded">OPTIMAL</span>
+                                <span class="text-sm font-semibold text-slate-900">Enquiry #EQ-78944</span>
+                            </div>
+                            <span class="text-xs text-slate-500">2 min ago</span>
+                        </div>
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <p class="text-sm text-slate-700"><strong>Destination:</strong> Maldives</p>
+                                <p class="text-sm text-slate-700"><strong>Value:</strong> ₹2.5L | <strong>Customer:</strong> New</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-green-600 font-bold">PERFECT MATCH</p>
+                                <p class="text-sm text-slate-900">Priya (Maldives Expert)</p>
+                                <p class="text-xs text-slate-500">Conv rate: 78%</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-slate-600"><i class="fas fa-clock mr-1"></i>Connected: 45 seconds</span>
+                            <span class="text-xs text-green-600 font-medium">In Progress</span>
+                        </div>
+                    </div>
+
+                    <!-- Queue Waiting -->
+                    <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl border-l-4 border-l-amber-600">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center space-x-3">
+                                <span class="bg-amber-600 text-white text-xs font-bold px-2 py-1 rounded">WAITING</span>
+                                <span class="text-sm font-semibold text-slate-900">Enquiry #EQ-78943</span>
+                            </div>
+                            <span class="text-xs text-slate-500">5 min ago</span>
+                        </div>
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <p class="text-sm text-slate-700"><strong>Destination:</strong> Dubai</p>
+                                <p class="text-sm text-slate-700"><strong>Value:</strong> ₹85K | <strong>Customer:</strong> Repeat</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-amber-600 font-bold">NO EXPERT AVAILABLE</p>
+                                <p class="text-xs text-slate-500">All Dubai experts busy</p>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="flex-1 bg-amber-600 text-white text-xs py-2 rounded-lg action-btn font-medium">
+                                <i class="fas fa-user-plus mr-1"></i> Assign to Cross-Trained Agent
+                            </button>
+                            <button class="bg-white text-amber-600 border border-amber-200 text-xs px-3 py-2 rounded-lg">
+                                Callback
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Missed Opportunity -->
+                    <div class="p-4 bg-slate-100 border border-slate-300 rounded-xl border-l-4 border-l-slate-600">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center space-x-3">
+                                <span class="bg-slate-600 text-white text-xs font-bold px-2 py-1 rounded">MISSED</span>
+                                <span class="text-sm font-semibold text-slate-900">Enquiry #EQ-78942</span>
+                            </div>
+                            <span class="text-xs text-slate-500">12 min ago</span>
+                        </div>
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <p class="text-sm text-slate-700"><strong>Destination:</strong> Bali</p>
+                                <p class="text-sm text-slate-700"><strong>Value:</strong> ₹1.8L | <strong>Customer:</strong> VIP</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-red-600 font-bold">CALL DROPPED</p>
+                                <p class="text-xs text-slate-500">No agent picked up in 60s</p>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="flex-1 bg-slate-800 text-white text-xs py-2 rounded-lg action-btn font-medium">
+                                <i class="fas fa-phone mr-1"></i> Immediate Callback
+                            </button>
+                            <button class="bg-white text-slate-600 border border-slate-300 text-xs px-3 py-2 rounded-lg">
+                                Assign to Best Agent
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Routing Intelligence Panel -->
+            <div class="glass-panel rounded-2xl p-6">
+                <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center">
+                    <i class="fas fa-brain text-purple-600 mr-2"></i>
+                    AI Routing Intelligence
+                </h3>
+                
+                <div class="space-y-4">
+                    <div class="p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                        <h4 class="font-bold text-purple-900 mb-2">Smart Routing Suggestion</h4>
+                        <p class="text-sm text-slate-700 mb-3">Create "Thailand Specialist" sub-team. 3 agents show high conversion (65%+) but low volume.</p>
+                        <button class="w-full bg-purple-600 text-white text-xs py-2 rounded-lg action-btn">Create Sub-Team</button>
+                    </div>
+
+                    <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                        <h4 class="font-bold text-blue-900 mb-2">Training Alert</h4>
+                        <p class="text-sm text-slate-700 mb-3">Sarah (Dubai) received 12 Thailand enquiries this week. Suggest cross-training or routing restriction.</p>
+                        <div class="flex space-x-2">
+                            <button class="flex-1 bg-blue-600 text-white text-xs py-2 rounded-lg action-btn">Schedule Training</button>
+                            <button class="bg-white text-blue-600 border border-blue-200 text-xs px-2 py-2 rounded-lg">Restrict</button>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                        <h4 class="font-bold text-amber-900 mb-2">Capacity Warning</h4>
+                        <p class="text-sm text-slate-700 mb-3">Dubai experts overloaded (85% utilization). Maldives experts underutilized (45%).</p>
+                        <button class="w-full bg-amber-600 text-white text-xs py-2 rounded-lg action-btn">Rebalance Load</button>
+                    </div>
+
+                    <div class="p-4 bg-green-50 border border-green-200 rounded-xl">
+                        <h4 class="font-bold text-green-900 mb-2">Win Pattern Detected</h4>
+                        <p class="text-sm text-slate-700 mb-3">Rahul (Thailand) converts 80% when handling enquiries >₹1L. Route high-value to him.</p>
+                        <button class="w-full bg-green-600 text-white text-xs py-2 rounded-lg action-btn">Apply Rule</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expert-Destination Performance Matrix -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+            <div class="p-6 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-purple-50">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Expert-Destination Performance Matrix</h3>
+                        <p class="text-sm text-slate-600">Conversion rates by expert-destination pairing | Green = Optimal | Red = Mismatch</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="bg-white border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-sm">
+                            <i class="fas fa-filter mr-1"></i> Filter
+                        </button>
+                        <button class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm">
+                            <i class="fas fa-magic mr-1"></i> Optimize Routing
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                        <tr>
+                            <th class="px-6 py-4 font-semibold">Expert</th>
+                            <th class="px-6 py-4 font-semibold text-center">Thailand</th>
+                            <th class="px-6 py-4 font-semibold text-center">Dubai</th>
+                            <th class="px-6 py-4 font-semibold text-center">Maldives</th>
+                            <th class="px-6 py-4 font-semibold text-center">Bali</th>
+                            <th class="px-6 py-4 font-semibold text-center">Singapore</th>
+                            <th class="px-6 py-4 font-semibold text-center">Primary Skill</th>
+                            <th class="px-6 py-4 font-semibold text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        <tr class="expert-row">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-slate-900">Rahul Sharma</p>
+                                        <p class="text-xs text-slate-500">Senior Expert</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-bold">78%</div>
+                                <p class="text-xs text-slate-500 mt-1">42 enquiries</p>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="inline-block px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-bold">12%</div>
+                                <p class="text-xs text-slate-500 mt-1">8 enquiries</p>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="inline-block px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-bold">35%</div>
+                                <p class="text-xs text-slate-500 mt-1">12 enquiries</p>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-bold">65%</div>
+                                <p class="text-xs text-slate-500 mt-1">18 enquiries</p>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="inline-block px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-bold">--</div>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">Thailand</span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <button class="text-blue-600 hover:text-blue-800 text-sm font-medium">Route Thailand →</button>
+                            </td>
+                        </tr>
+                        <tr class="expert-row bg-red-50">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user text-red-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-slate-900">Sarah Johnson</p>
+                                        <p class="text-xs text-slate-500">Expert</p>
+                                        <span class="text-xs text-red-600 font-bold">⚠️ Mismatch Issue</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="inline-block px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-bold">8%</div>
+                                <p class="text-xs text-slate-500 mt-1">24 enquiries ⚠️</p>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-bold">72%</div>
+                                <p class="text-xs text-slate-500 mt-1">56 enquiries</p>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="inline-block px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-bold">28%</div>
+                                <p class="text-xs text-slate-500 mt-1">15 enquiries</p>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="inline-block px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-bold">--</div>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="inline-block px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-bold">--</div>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium">Dubai</span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <button class="bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg action-btn">Block Thailand</button>
+                            </td>
+                        </tr>
+                        <tr class="expert-row">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user text-purple-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-slate-900">Priya Patel</p>
+                                        <p class="text-xs text-slate-500">Senior Expert</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="inline-block px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-bold">42%</div>
+                                <p class="text-xs text-slate-500 mt-1">18 enquiries</p>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="inline-block px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-bold">38%</div>
+                                <p class="text-xs text-slate-500 mt-1">22 enquiries</p>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-bold">82%</div>
+                                <p class="text-xs text-slate-500 mt-1">48 enquiries</p>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-bold">75%</div>
+                                <p class="text-xs text-slate-500 mt-1">32 enquiries</p>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-bold">68%</div>
+                                <p class="text-xs text-slate-500 mt-1">28 enquiries</p>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full font-medium">Maldives</span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <button class="text-blue-600 hover:text-blue-800 text-sm font-medium">Route Islands →</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Team Leader Action Center -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Daily Alerts & Actions -->
+            <div class="glass-panel rounded-2xl p-6">
+                <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center">
+                    <i class="fas fa-bullhorn text-red-600 mr-2"></i>
+                    Team Leader Action Center
+                </h3>
+                
+                <div class="space-y-3">
+                    <div class="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-red-900">Immediate Action Required</h4>
+                            <span class="text-xs text-red-600 font-bold">NOW</span>
+                        </div>
+                        <p class="text-sm text-slate-700 mb-2">3 Thailand enquiries routed to wrong experts in last hour. Estimated loss: ₹2.4L</p>
+                        <div class="flex space-x-2">
+                            <button class="bg-red-600 text-white text-xs px-3 py-1.5 rounded action-btn">Emergency Re-route</button>
+                            <button class="bg-white text-red-600 border border-red-200 text-xs px-3 py-1.5 rounded">Alert Team</button>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-amber-50 border-l-4 border-amber-500 rounded-r-xl">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-amber-900">Coaching Opportunity</h4>
+                            <span class="text-xs text-amber-600">Today</span>
+                        </div>
+                        <p class="text-sm text-slate-700 mb-2">Sarah's Thailand conversion (8%) vs team avg (45%). Schedule 1:1 coaching session.</p>
+                        <button class="bg-amber-600 text-white text-xs px-3 py-1.5 rounded action-btn">Schedule Coaching</button>
+                    </div>
+
+                    <div class="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-xl">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-blue-900">Sub-Team Creation</h4>
+                            <span class="text-xs text-blue-600">This Week</span>
+                        </div>
+                        <p class="text-sm text-slate-700 mb-2">Create dedicated "Southeast Asia" sub-team. 5 experts show >60% conversion.</p>
+                        <button class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded action-btn">Create Sub-Team</button>
+                    </div>
+
+                    <div class="p-4 bg-green-50 border-l-4 border-green-500 rounded-r-xl">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-green-900">Success Recognition</h4>
+                            <span class="text-xs text-green-600">Today</span>
+                        </div>
+                        <p class="text-sm text-slate-700 mb-2">Rahul achieved 80% conversion on high-value enquiries. Share best practices.</p>
+                        <button class="bg-green-600 text-white text-xs px-3 py-1.5 rounded action-btn">Share with Team</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conversion Funnel Analysis -->
+            <div class="glass-panel rounded-2xl p-6">
+                <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center">
+                    <i class="fas fa-filter text-blue-600 mr-2"></i>
+                    Conversion Funnel by Routing Quality
+                </h3>
+                
+                <div class="space-y-4">
+                    <div class="p-4 bg-white border border-slate-200 rounded-xl">
+                        <h4 class="font-bold text-slate-900 mb-3">Optimal Routing (Right Expert)</h4>
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex-1">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span>Enquiry → Quote</span>
+                                    <span class="font-bold">85%</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 85%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex-1">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span>Quote → Booking</span>
+                                    <span class="font-bold">72%</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 72%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center mt-3 p-2 bg-green-50 rounded">
+                            <span class="text-sm font-bold text-green-800">Overall Conversion: 61%</span>
+                            <span class="text-xs text-green-600">₹45L revenue</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-white border border-slate-200 rounded-xl">
+                        <h4 class="font-bold text-slate-900 mb-3">Poor Routing (Wrong Expert)</h4>
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex-1">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span>Enquiry → Quote</span>
+                                    <span class="font-bold">45%</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2">
+                                    <div class="bg-red-500 h-2 rounded-full" style="width: 45%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex-1">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span>Quote → Booking</span>
+                                    <span class="font-bold">28%</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2">
+                                    <div class="bg-red-500 h-2 rounded-full" style="width: 28%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center mt-3 p-2 bg-red-50 rounded">
+                            <span class="text-sm font-bold text-red-800">Overall Conversion: 13%</span>
+                            <span class="text-xs text-red-600">₹8.5L lost</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h4 class="font-bold text-amber-900">Revenue Recovery Opportunity</h4>
+                                <p class="text-sm text-slate-700">Fix routing to capture lost conversions</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-2xl font-bold text-amber-600">₹12L</p>
+                                <p class="text-xs text-slate-600">potential/month</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="bg-white rounded-t-2xl border-b border-slate-200 px-6 pt-4">
+            <nav class="flex space-x-8 overflow-x-auto">
+                <button onclick="switchTab('live')" id="tab-live" class="tab-active pb-4 text-sm font-medium text-slate-900 hover:text-slate-700 transition-colors whitespace-nowrap">
+                    <i class="fas fa-broadcast-tower mr-2"></i>Live Queue
+                </button>
+                <button onclick="switchTab('experts')" id="tab-experts" class="pb-4 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors whitespace-nowrap">
+                    <i class="fas fa-users mr-2"></i>Expert Management
+                </button>
+                <button onclick="switchTab('routing')" id="tab-routing" class="pb-4 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors whitespace-nowrap">
+                    <i class="fas fa-random mr-2"></i>Routing Rules
+                </button>
+                <button onclick="switchTab('analytics')" id="tab-analytics" class="pb-4 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors whitespace-nowrap">
+                    <i class="fas fa-chart-line mr-2"></i>Performance Analytics
+                </button>
+            </nav>
+        </div>
+
+        <!-- Tab Content: Live Queue -->
+        <div id="content-live" class="tab-content">
+            <div class="bg-white rounded-b-2xl shadow-sm border border-slate-200 p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <h4 class="font-bold text-blue-900 mb-3">Waiting Queue (12)</h4>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center p-2 bg-white rounded">
+                                <span class="text-sm">Thailand (5)</span>
+                                <span class="text-xs text-red-600 font-bold">Avg wait: 4min</span>
+                            </div>
+                            <div class="flex justify-between items-center p-2 bg-white rounded">
+                                <span class="text-sm">Dubai (3)</span>
+                                <span class="text-xs text-amber-600 font-bold">Avg wait: 2min</span>
+                            </div>
+                            <div class="flex justify-between items-center p-2 bg-white rounded">
+                                <span class="text-sm">Maldives (4)</span>
+                                <span class="text-xs text-green-600 font-bold">Avg wait: 1min</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-green-50 rounded-xl border border-green-200">
+                        <h4 class="font-bold text-green-900 mb-3">Active Calls (14)</h4>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center p-2 bg-white rounded">
+                                <span class="text-sm">Rahul → Thailand</span>
+                                <span class="text-xs text-green-600">12 min</span>
+                            </div>
+                            <div class="flex justify-between items-center p-2 bg-white rounded">
+                                <span class="text-sm">Sarah → Dubai</span>
+                                <span class="text-xs text-green-600">8 min</span>
+                            </div>
+                            <div class="flex justify-between items-center p-2 bg-white rounded">
+                                <span class="text-sm">Priya → Maldives</span>
+                                <span class="text-xs text-green-600">15 min</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-purple-50 rounded-xl border border-purple-200">
+                        <h4 class="font-bold text-purple-900 mb-3">Smart Suggestions</h4>
+                        <div class="space-y-2">
+                            <button class="w-full text-left p-2 bg-white rounded hover:bg-purple-100 transition-colors text-sm">
+                                <i class="fas fa-user-plus text-purple-600 mr-2"></i>
+                                Pull Dubai expert to Thailand
+                            </button>
+                            <button class="w-full text-left p-2 bg-white rounded hover:bg-purple-100 transition-colors text-sm">
+                                <i class="fas fa-phone text-purple-600 mr-2"></i>
+                                Callback 3 VIP missed calls
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Expert Management -->
+        <div id="content-experts" class="tab-content hidden">
+            <div class="bg-white rounded-b-2xl shadow-sm border border-slate-200 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-slate-900">Expert Skill Management</h3>
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">
+                        <i class="fas fa-plus mr-2"></i>Add New Expert
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 text-slate-600 text-xs uppercase">
+                            <tr>
+                                <th class="px-6 py-3">Expert</th>
+                                <th class="px-6 py-3">Assigned Destinations</th>
+                                <th class="px-6 py-3 text-center">Skill Level</th>
+                                <th class="px-6 py-3 text-center">Status</th>
+                                <th class="px-6 py-3 text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <tr>
+                                <td class="px-6 py-4 font-medium">Rahul Sharma</td>
+                                <td class="px-6 py-4">
+                                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-1">Thailand</span>
+                                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Bali</span>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <div class="flex justify-center space-x-1">
+                                        <i class="fas fa-star text-yellow-400"></i>
+                                        <i class="fas fa-star text-yellow-400"></i>
+                                        <i class="fas fa-star text-yellow-400"></i>
+                                        <i class="fas fa-star text-yellow-400"></i>
+                                        <i class="fas fa-star text-yellow-400"></i>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center"><span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Active</span></td>
+                                <td class="px-6 py-4 text-center">
+                                    <button class="text-blue-600 text-sm">Edit Skills</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Routing Rules -->
+        <div id="content-routing" class="tab-content hidden">
+            <div class="bg-white rounded-b-2xl shadow-sm border border-slate-200 p-6">
+                <div class="space-y-4">
+                    <div class="p-4 bg-slate-50 rounded-xl">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-bold text-slate-900">Rule #1: Destination-Based Routing</h4>
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Active</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Route enquiries to experts with >60% conversion for that destination</p>
+                        <div class="flex space-x-2">
+                            <button class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded">Edit Rule</button>
+                            <button class="bg-white text-slate-600 border border-slate-300 text-xs px-3 py-1.5 rounded">View Log</button>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 rounded-xl">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-bold text-slate-900">Rule #2: High-Value Priority</h4>
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Active</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Enquiries >₹1L go to top 3 converters regardless of load</p>
+                        <div class="flex space-x-2">
+                            <button class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded">Edit Rule</button>
+                            <button class="bg-white text-slate-600 border border-slate-300 text-xs px-3 py-1.5 rounded">View Log</button>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-red-50 rounded-xl border border-red-200">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-bold text-red-900">Rule #3: Block Mismatch Routing</h4>
+                            <span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full">Draft</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Prevent routing to experts with <20% conversion for destination</p>
+                        <div class="flex space-x-2">
+                            <button class="bg-green-600 text-white text-xs px-3 py-1.5 rounded action-btn">Activate Rule</button>
+                            <button class="bg-white text-slate-600 border border-slate-300 text-xs px-3 py-1.5 rounded">Edit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Analytics -->
+        <div id="content-analytics" class="tab-content hidden">
+            <div class="bg-white rounded-b-2xl shadow-sm border border-slate-200 p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-4 bg-slate-50 rounded-xl">
+                        <h4 class="font-bold text-slate-900 mb-3">Conversion by Routing Quality</h4>
+                        <canvas id="routingChart" width="400" height="300"></canvas>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-xl">
+                        <h4 class="font-bold text-slate-900 mb-3">Expert Utilization</h4>
+                        <canvas id="utilizationChart" width="400" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Tab Switching Logic
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+                tab.classList.remove('tab-active');
+                tab.classList.add('text-slate-500');
+            });
+            
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            
+            const activeTab = document.getElementById('tab-' + tabName);
+            activeTab.classList.add('tab-active');
+            activeTab.classList.remove('text-slate-500');
+        }
+
+        // Initialize Charts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Routing Quality Chart
+            const ctx1 = document.getElementById('routingChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['Optimal Routing', 'Poor Routing', 'No Routing (Random)'],
+                    datasets: [{
+                        label: 'Conversion Rate %',
+                        data: [61, 13, 35],
+                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Utilization Chart
+            const ctx2 = document.getElementById('utilizationChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Thailand Team', 'Dubai Team', 'Maldives Team', 'Cross-Trained'],
+                    datasets: [{
+                        data: [35, 28, 22, 15],
+                        backgroundColor: ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,2379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCP Roadshow Command Center - Complete Intelligence Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        
+        .metric-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .live-pulse {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        
+        .tab-active {
+            border-bottom: 3px solid #3b82f6;
+            color: #1e40af;
+            font-weight: 600;
+            background: linear-gradient(to bottom, rgba(59, 130, 246, 0.1), transparent);
+        }
+        
+        /* Calendar Styles */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #e2e8f0;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .calendar-day {
+            background: white;
+            min-height: 120px;
+            padding: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .calendar-day:hover {
+            background: #f8fafc;
+        }
+        
+        .calendar-day.other-month {
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+        
+        .calendar-day.today {
+            background: #eff6ff;
+            border: 2px solid #3b82f6;
+        }
+        
+        .roadshow-event {
+            font-size: 11px;
+            padding: 4px 6px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid;
+        }
+        
+        .roadshow-event:hover {
+            transform: translateX(2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .event-turkey { background: #fef2f2; border-left-color: #ef4444; color: #991b1b; }
+        .event-maldives { background: #ecfeff; border-left-color: #06b6d4; color: #155e75; }
+        .event-europe { background: #f3e8ff; border-left-color: #a855f7; color: #6b21a8; }
+        .event-thailand { background: #fff7ed; border-left-color: #f97316; color: #9a3412; }
+        .event-usa { background: #eff6ff; border-left-color: #3b82f6; color: #1e40af; }
+        .event-asia { background: #fef2f2; border-left-color: #dc2626; color: #991b1b; }
+        
+        /* Map Styles */
+        .india-map-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .city-node {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        
+        .city-node:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+            z-index: 20;
+        }
+        
+        .city-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .city-node.active .city-dot {
+            width: 24px;
+            height: 24px;
+            box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.3);
+        }
+        
+        .city-label {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.95);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .city-node:hover .city-label,
+        .city-node.active .city-label {
+            opacity: 1;
+        }
+        
+        .view-toggle {
+            transition: all 0.3s ease;
+        }
+        
+        .view-toggle.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .filter-chip {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .filter-chip:hover {
+            transform: translateY(-2px);
+        }
+        
+        .filter-chip.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        .action-card {
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+        }
+        
+        .action-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
+        }
+        
+        .priority-high { border-left-color: #ef4444; }
+        .priority-medium { border-left-color: #f59e0b; }
+        .priority-low { border-left-color: #3b82f6; }
+        
+        .demographic-bar {
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .insight-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        
+        .insight-card:hover {
+            transform: translateX(4px);
+            border-left-color: #3b82f6;
+        }
+        
+        .performance-bar {
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .score-ring {
+            transition: stroke-dashoffset 1s ease-in-out;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        
+        .proactive-alert {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .heatmap-cell {
+            transition: all 0.3s ease;
+        }
+        
+        .heatmap-cell:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .agent-row {
+            transition: all 0.2s ease;
+        }
+        
+        .agent-row:hover {
+            background-color: #f8fafc;
+            transform: scale(1.01);
+        }
+
+        /* Range Slider Styling */
+        .range-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #e2e8f0;
+            outline: none;
+        }
+        
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
+            border: 3px solid white;
+        }
+        
+        .range-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .custom-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .custom-checkbox:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .custom-checkbox input[type="checkbox"] {
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 0.25rem;
+            border: 2px solid #cbd5e1;
+            cursor: pointer;
+            accent-color: #3b82f6;
+        }
+
+        .custom-checkbox.checked {
+            background: #eff6ff;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center text-white shadow-lg">
+                        <i class="fas fa-network-wired text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">PCP Command Center</h1>
+                        <p class="text-sm text-slate-500">Partner Connect Program • Proactive Intelligence</p>
+                    </div>
+                    <div class="flex items-center gap-2 ml-6 px-4 py-2 bg-green-50 rounded-full border border-green-200">
+                        <div class="w-3 h-3 bg-green-500 rounded-full live-pulse"></div>
+                        <span class="text-sm font-bold text-green-700">LIVE</span>
+                        <span class="text-xs text-green-600 ml-2" id="live-clock">12:34:56 PM</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
+                        <i class="fas fa-exclamation-triangle text-amber-600"></i>
+                        <span class="text-sm font-semibold text-amber-800">12 Actions Pending</span>
+                    </div>
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium shadow-md">
+                        <i class="fas fa-robot mr-2"></i>AI Auto-Deploy
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="px-6 border-t border-slate-200 bg-slate-50/50">
+            <div class="flex gap-1">
+                <button onclick="switchTab('live')" id="tab-live" class="px-6 py-4 tab-active text-sm font-medium transition flex items-center gap-2">
+                    <i class="fas fa-satellite-dish"></i>Live Roadshow
+                </button>
+                <button onclick="switchTab('potential')" id="tab-potential" class="px-6 py-4 text-sm font-medium text-slate-600 hover:text-slate-900 transition flex items-center gap-2">
+                    <i class="fas fa-briefcase"></i>Potential Business
+                    <span class="ml-2 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">8</span>
+                </button>
+                <button onclick="switchTab('demographics')" id="tab-demographics" class="px-6 py-4 text-sm font-medium text-slate-600 hover:text-slate-900 transition flex items-center gap-2">
+                    <i class="fas fa-users-viewfinder"></i>Demographics & Agents
+                </button>
+                <button onclick="switchTab('calendar')" id="tab-calendar" class="px-6 py-4 text-sm font-medium text-slate-600 hover:text-slate-900 transition flex items-center gap-2">
+                    <i class="fas fa-calendar-alt"></i>Calendar & Map
+                </button>
+                <button onclick="switchTab('intelligence')" id="tab-intelligence" class="px-6 py-4 text-sm font-medium text-slate-600 hover:text-slate-900 transition flex items-center gap-2">
+                    <i class="fas fa-brain"></i>Planning Intelligence
+                </button>
+                <button onclick="switchTab('summary')" id="tab-summary" class="px-6 py-4 text-sm font-medium text-slate-600 hover:text-slate-900 transition flex items-center gap-2">
+                    <i class="fas fa-chart-pie"></i>Performance Summary
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Global Filters -->
+    <div class="bg-white border-b border-slate-200 px-6 py-3 shadow-sm">
+        <div class="flex items-center gap-4 flex-wrap">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Filters:</span>
+            
+            <select class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option>All Regions</option>
+                <option>North India</option>
+                <option>South India</option>
+                <option>West India</option>
+                <option>East India</option>
+            </select>
+            
+            <select class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option>All Destinations</option>
+                <option>Turkey</option>
+                <option>Maldives</option>
+                <option>Thailand</option>
+                <option>Europe</option>
+                <option>USA/Canada</option>
+                <option>Asia</option>
+            </select>
+            
+            <select class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option>All Customer Types</option>
+                <option>Families</option>
+                <option>Couples/Honeymoon</option>
+                <option>MICE/Corporate</option>
+                <option>Student Groups</option>
+                <option>Sports Tours</option>
+                <option>Vegetarian/Special Diet</option>
+            </select>
+            
+            <select class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option>This Month</option>
+                <option>Last 30 Days</option>
+                <option>Q1 2024</option>
+                <option>2024 YTD</option>
+            </select>
+            
+            <button class="ml-auto text-sm text-blue-600 hover:text-blue-700 font-medium">
+                <i class="fas fa-rotate-right mr-1"></i>Reset
+            </button>
+        </div>
+    </div>
+
+    <main class="p-6 space-y-6 max-w-[1600px] mx-auto">
+
+        <!-- TAB 1: LIVE ROADSHOW -->
+        <div id="content-live" class="space-y-6">
+            <!-- Proactive Alerts Banner -->
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-xl p-4 text-white shadow-lg proactive-alert">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-magic text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg">Proactive Actions Generated</h3>
+                            <p class="text-indigo-100 text-sm">System detected 8 new intents requiring immediate action • 3 high-value opportunities flagged</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <button class="px-4 py-2 bg-white text-indigo-700 rounded-lg font-semibold hover:bg-indigo-50 transition">
+                            Review Actions
+                        </button>
+                        <button class="px-4 py-2 bg-indigo-800 text-white rounded-lg font-semibold hover:bg-indigo-900 transition border border-indigo-400">
+                            Auto-Deploy All
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="metric-card bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-20 h-20 bg-blue-50 rounded-full -mr-10 -mt-10"></div>
+                    <div class="relative">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Agents Registered</span>
+                            <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">+12 today</span>
+                        </div>
+                        <div class="text-3xl font-bold text-slate-900">247</div>
+                        <div class="text-sm text-slate-500 mt-1">Target: 300</div>
+                        <div class="w-full bg-slate-100 rounded-full h-2 mt-3">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: 82%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-20 h-20 bg-green-50 rounded-full -mr-10 -mt-10"></div>
+                    <div class="relative">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Checked In Now</span>
+                            <div class="flex items-center gap-1">
+                                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <span class="text-xs font-bold text-green-600">Live</span>
+                            </div>
+                        </div>
+                        <div class="text-3xl font-bold text-slate-900">89</div>
+                        <div class="text-sm text-slate-500 mt-1">Current Session</div>
+                        <div class="flex -space-x-2 mt-3">
+                            <div class="w-8 h-8 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-white text-xs">VS</div>
+                            <div class="w-8 h-8 rounded-full bg-purple-500 border-2 border-white flex items-center justify-center text-white text-xs">RK</div>
+                            <div class="w-8 h-8 rounded-full bg-orange-500 border-2 border-white flex items-center justify-center text-white text-xs">AP</div>
+                            <div class="w-8 h-8 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-slate-600 text-xs">+86</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-20 h-20 bg-amber-50 rounded-full -mr-10 -mt-10"></div>
+                    <div class="relative">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Intent Declared</span>
+                            <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">4.2Cr Potential</span>
+                        </div>
+                        <div class="text-3xl font-bold text-slate-900">156</div>
+                        <div class="text-sm text-slate-500 mt-1">Passengers: 2,340</div>
+                        <div class="grid grid-cols-3 gap-2 mt-3 text-center text-xs">
+                            <div class="bg-green-50 text-green-700 py-1 rounded">Groups: 45</div>
+                            <div class="bg-blue-50 text-blue-700 py-1 rounded">FIT: 89</div>
+                            <div class="bg-purple-50 text-purple-700 py-1 rounded">MICE: 22</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-20 h-20 bg-red-50 rounded-full -mr-10 -mt-10"></div>
+                    <div class="relative">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Action Points</span>
+                            <span class="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded">12 Urgent</span>
+                        </div>
+                        <div class="text-3xl font-bold text-slate-900">34</div>
+                        <div class="text-sm text-slate-500 mt-1">Pending Deployment</div>
+                        <div class="flex gap-2 mt-3">
+                            <button class="flex-1 bg-blue-600 text-white text-xs py-2 rounded-lg hover:bg-blue-700 transition">Deploy Now</button>
+                            <button class="px-3 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition"><i class="fas fa-list"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card bg-gradient-to-br from-indigo-600 to-purple-700 rounded-xl shadow-lg p-5 text-white relative overflow-hidden">
+                    <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"20\" height=\"20\" viewBox=\"0 0 20 20\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.05\" fill-rule=\"evenodd\"%3E%3Ccircle cx=\"3\" cy=\"3\" r=\"3\"/%3E%3Ccircle cx=\"13\" cy=\"13\" r=\"3\"/%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+                    <div class="relative">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs font-bold text-indigo-200 uppercase">Match Score</span>
+                            <i class="fas fa-brain text-indigo-200"></i>
+                        </div>
+                        <div class="text-3xl font-bold">94%</div>
+                        <div class="text-sm text-indigo-100 mt-1">Agent-Destination Fit</div>
+                        <div class="mt-3 text-xs text-indigo-200">
+                            <i class="fas fa-check-circle mr-1"></i>Optimal alignment
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column: Agent Demographics -->
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <!-- Agent Origin Map -->
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fas fa-map-marker-alt text-blue-600"></i>
+                                Agent Geographic Distribution
+                            </h3>
+                            <span class="text-xs text-slate-500">Real-time check-ins</span>
+                        </div>
+                        
+                        <div class="relative h-64 bg-slate-50 rounded-lg overflow-hidden">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="grid grid-cols-4 gap-8 w-full max-w-2xl px-8">
+                                    <!-- North -->
+                                    <div class="text-center">
+                                        <div class="text-xs font-semibold text-slate-500 mb-2">NORTH</div>
+                                        <div class="space-y-2">
+                                            <div class="bg-blue-100 border-l-4 border-blue-600 p-2 rounded text-left">
+                                                <div class="text-xs font-bold text-slate-900">Delhi</div>
+                                                <div class="text-lg font-bold text-blue-600">34 <span class="text-xs font-normal text-slate-500">agents</span></div>
+                                            </div>
+                                            <div class="bg-blue-50 border-l-4 border-blue-400 p-2 rounded text-left">
+                                                <div class="text-xs font-bold text-slate-900">Chandigarh</div>
+                                                <div class="text-lg font-bold text-blue-500">12</div>
+                                            </div>
+                                            <div class="bg-slate-100 border-l-4 border-slate-400 p-2 rounded text-left opacity-60">
+                                                <div class="text-xs font-bold text-slate-900">Jaipur</div>
+                                                <div class="text-lg font-bold text-slate-600">8</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- West -->
+                                    <div class="text-center">
+                                        <div class="text-xs font-semibold text-slate-500 mb-2">WEST</div>
+                                        <div class="space-y-2">
+                                            <div class="bg-purple-100 border-l-4 border-purple-600 p-2 rounded text-left">
+                                                <div class="text-xs font-bold text-slate-900">Mumbai</div>
+                                                <div class="text-lg font-bold text-purple-600">28</div>
+                                            </div>
+                                            <div class="bg-purple-50 border-l-4 border-purple-400 p-2 rounded text-left">
+                                                <div class="text-xs font-bold text-slate-900">Pune</div>
+                                                <div class="text-lg font-bold text-purple-500">15</div>
+                                            </div>
+                                            <div class="bg-purple-50 border-l-4 border-purple-300 p-2 rounded text-left">
+                                                <div class="text-xs font-bold text-slate-900">Ahmedabad</div>
+                                                <div class="text-lg font-bold text-purple-400">9</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- South -->
+                                    <div class="text-center">
+                                        <div class="text-xs font-semibold text-slate-500 mb-2">SOUTH</div>
+                                        <div class="space-y-2">
+                                            <div class="bg-orange-100 border-l-4 border-orange-600 p-2 rounded text-left">
+                                                <div class="text-xs font-bold text-slate-900">Bangalore</div>
+                                                <div class="text-lg font-bold text-orange-600">22</div>
+                                            </div>
+                                            <div class="bg-orange-50 border-l-4 border-orange-400 p-2 rounded text-left">
+                                                <div class="text-xs font-bold text-slate-900">Chennai</div>
+                                                <div class="text-lg font-bold text-orange-500">14</div>
+                                            </div>
+                                            <div class="bg-orange-50 border-l-4 border-orange-300 p-2 rounded text-left">
+                                                <div class="text-xs font-bold text-slate-900">Hyderabad</div>
+                                                <div class="text-lg font-bold text-orange-400">11</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- East -->
+                                    <div class="text-center">
+                                        <div class="text-xs font-semibold text-slate-500 mb-2">EAST</div>
+                                        <div class="space-y-2">
+                                            <div class="bg-green-100 border-l-4 border-green-600 p-2 rounded text-left">
+                                                <div class="text-xs font-bold text-slate-900">Kolkata</div>
+                                                <div class="text-lg font-bold text-green-600">18</div>
+                                            </div>
+                                            <div class="bg-green-50 border-l-4 border-green-400 p-2 rounded text-left">
+                                                <div class="text-xs font-bold text-slate-900">Bhubaneswar</div>
+                                                <div class="text-lg font-bold text-green-500">6</div>
+                                            </div>
+                                            <div class="bg-green-50 border-l-4 border-green-300 p-2 rounded text-left">
+                                                <div class="text-xs font-bold text-slate-900">Guwahati</div>
+                                                <div class="text-lg font-bold text-green-400">4</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Inquiries & Action Points -->
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="p-5 border-b border-slate-200 bg-gradient-to-r from-amber-50 to-orange-50">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                                    <i class="fas fa-bolt text-amber-600"></i>
+                                    Live Inquiries & Action Points
+                                </h3>
+                                <div class="flex gap-2">
+                                    <button class="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700">
+                                        <i class="fas fa-paper-plane mr-1"></i>Deploy All
+                                    </button>
+                                    <button class="px-3 py-1 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg hover:bg-slate-50">
+                                        <i class="fas fa-filter mr-1"></i>Filter
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-slate-50 text-slate-600 font-semibold">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left">Agent</th>
+                                        <th class="px-4 py-3 text-left">Location</th>
+                                        <th class="px-4 py-3 text-left">Interest</th>
+                                        <th class="px-4 py-3 text-right">Potential</th>
+                                        <th class="px-4 py-3 text-center">Status</th>
+                                        <th class="px-4 py-3 text-left">Action Required</th>
+                                        <th class="px-4 py-3 text-center">Deploy</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr class="agent-row bg-red-50">
+                                        <td class="px-4 py-3">
+                                            <div class="font-semibold text-slate-900">Vikram Singh</div>
+                                            <div class="text-xs text-slate-500">Delhi • Elite Travels</div>
+                                        </td>
+                                        <td class="px-4 py-3 text-slate-600">North Delhi</td>
+                                        <td class="px-4 py-3">
+                                            <span class="font-medium text-slate-900">Turkey Groups</span>
+                                            <div class="text-xs text-slate-500">200 pax confirmed interest</div>
+                                        </td>
+                                        <td class="px-4 py-3 text-right font-bold text-slate-900">₹80L</td>
+                                        <td class="px-4 py-3 text-center">
+                                            <span class="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">URGENT</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-xs text-slate-600">Connect with Turkey Ops Team</td>
+                                        <td class="px-4 py-3 text-center">
+                                            <button class="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">Deploy</button>
+                                        </td>
+                                    </tr>
+                                    <tr class="agent-row">
+                                        <td class="px-4 py-3">
+                                            <div class="font-semibold text-slate-900">Priya Sharma</div>
+                                            <div class="text-xs text-slate-500">Mumbai • Oceanic Tours</div>
+                                        </td>
+                                        <td class="px-4 py-3 text-slate-600">Andheri West</td>
+                                        <td class="px-4 py-3">
+                                            <span class="font-medium text-slate-900">Maldives Honeymoon</span>
+                                            <div class="text-xs text-slate-500">50 couples, June departures</div>
+                                        </td>
+                                        <td class="px-4 py-3 text-right font-bold text-slate-900">₹45L</td>
+                                        <td class="px-4 py-3 text-center">
+                                            <span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">HOT</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-xs text-slate-600">Send rate sheet & contracts</td>
+                                        <td class="px-4 py-3 text-center">
+                                            <button class="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">Deploy</button>
+                                        </td>
+                                    </tr>
+                                    <tr class="agent-row">
+                                        <td class="px-4 py-3">
+                                            <div class="font-semibold text-slate-900">Amit Kumar</div>
+                                            <div class="text-xs text-slate-500">Bangalore • Skyline Travels</div>
+                                        </td>
+                                        <td class="px-4 py-3 text-slate-600">Koramangala</td>
+                                        <td class="px-4 py-3">
+                                            <span class="font-medium text-slate-900">Europe MICE</span>
+                                            <div class="text-xs text-slate-500">Corporate group, 80 pax</div>
+                                        </td>
+                                        <td class="px-4 py-3 text-right font-bold text-slate-900">₹1.2Cr</td>
+                                        <td class="px-4 py-3 text-center">
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">NEW</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-xs text-slate-600">Schedule B2B call tomorrow</td>
+                                        <td class="px-4 py-3 text-center">
+                                            <button class="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">Deploy</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="space-y-6">
+                    <!-- Intent Radar -->
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <h3 class="font-bold text-slate-900 mb-4">Today's Intent Radar</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="font-medium text-slate-700">Turkey Groups</span>
+                                    <span class="font-bold text-green-600">8 intents</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-3">
+                                    <div class="bg-green-500 h-3 rounded-full demographic-bar" style="width: 80%"></div>
+                                </div>
+                                <div class="text-xs text-slate-500 mt-1">₹6.4Cr potential value</div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="font-medium text-slate-700">Maldives Honeymoon</span>
+                                    <span class="font-bold text-blue-600">5 intents</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-3">
+                                    <div class="bg-blue-500 h-3 rounded-full demographic-bar" style="width: 50%"></div>
+                                </div>
+                                <div class="text-xs text-slate-500 mt-1">₹3.2Cr potential value</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Deploy -->
+                    <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl shadow-lg p-5 text-white">
+                        <h3 class="font-bold mb-2 flex items-center gap-2">
+                            <i class="fas fa-rocket"></i>
+                            Quick Deploy
+                        </h3>
+                        <p class="text-sm text-blue-100 mb-4">12 urgent action points need immediate deployment.</p>
+                        <button class="w-full py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition">
+                            Deploy All Actions
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: POTENTIAL BUSINESS -->
+        <div id="content-potential" class="space-y-6 hidden">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">Potential Business Pipeline</h2>
+                        <p class="text-slate-500 mt-1">All declared intents converted to actionable opportunities</p>
+                    </div>
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+                        <i class="fas fa-download mr-2"></i>Export Pipeline
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                    <div class="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                        <div class="text-3xl font-bold text-green-700">₹24.8Cr</div>
+                        <div class="text-sm text-green-600 font-medium">Total Pipeline</div>
+                    </div>
+                    <div class="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <div class="text-3xl font-bold text-blue-700">₹12.4Cr</div>
+                        <div class="text-sm text-blue-600 font-medium">Hot Prospects</div>
+                    </div>
+                    <div class="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                        <div class="text-3xl font-bold text-amber-700">₹8.2Cr</div>
+                        <div class="text-sm text-amber-600 font-medium">Warm Leads</div>
+                    </div>
+                    <div class="p-4 bg-purple-50 rounded-xl border border-purple-200">
+                        <div class="text-3xl font-bold text-purple-700">₹4.2Cr</div>
+                        <div class="text-sm text-purple-600 font-medium">Long Term</div>
+                    </div>
+                    <div class="p-4 bg-slate-100 rounded-xl border border-slate-200">
+                        <div class="text-3xl font-bold text-slate-700">42%</div>
+                        <div class="text-sm text-slate-600 font-medium">Conversion Rate</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <h3 class="font-bold text-slate-900 mb-4">Business by Destination</h3>
+                        <div class="space-y-4">
+                            <div class="p-4 border border-slate-200 rounded-lg">
+                                <div class="flex justify-between items-center mb-2">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-2xl">🇹🇷</span>
+                                        <div>
+                                            <div class="font-bold text-slate-900">Turkey</div>
+                                            <div class="text-xs text-slate-500">6 events • North India focus</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-bold text-slate-900">₹8.4Cr</div>
+                                        <div class="text-xs text-green-600">142% of target</div>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2 mt-3 text-center text-xs">
+                                    <div class="bg-blue-50 p-2 rounded">
+                                        <div class="font-bold text-blue-900">312</div>
+                                        <div class="text-blue-600">Agents</div>
+                                    </div>
+                                    <div class="bg-green-50 p-2 rounded">
+                                        <div class="font-bold text-green-900">89</div>
+                                        <div class="text-green-600">Intents</div>
+                                    </div>
+                                    <div class="bg-purple-50 p-2 rounded">
+                                        <div class="font-bold text-purple-900">34</div>
+                                        <div class="text-purple-600">Actions</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-6">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <h3 class="font-bold text-slate-900 mb-4">Conversion Funnel</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="font-medium">Intent Declared</span>
+                                    <span class="font-bold">156</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-8">
+                                    <div class="bg-slate-400 h-8 rounded-full flex items-center justify-end pr-3 text-white text-xs font-bold" style="width: 100%">100%</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="font-medium">Closed Won</span>
+                                    <span class="font-bold">42</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-8">
+                                    <div class="bg-green-500 h-8 rounded-full flex items-center justify-end pr-3 text-white text-xs font-bold" style="width: 27%">27%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: DEMOGRAPHICS & AGENTS - ENHANCED VERSION -->
+        <div id="content-demographics" class="space-y-6 hidden">
+            
+            <!-- Enhanced Filter Panel -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">Agent Finder & Demographics</h2>
+                        <p class="text-slate-500 mt-1">Find the right agents for the right destinations based on customer profile and spend</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="resetAllFilters()" class="px-4 py-2 border border-slate-300 rounded-lg text-sm hover:bg-slate-50 flex items-center gap-2">
+                            <i class="fas fa-undo"></i>Reset All
+                        </button>
+                        <button onclick="applyFilters()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 flex items-center gap-2">
+                            <i class="fas fa-search"></i>Find Matching Agents
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Destinations Dropdown -->
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 block">
+                                <i class="fas fa-globe-americas mr-2 text-blue-600"></i>Destinations
+                            </label>
+                            <div class="space-y-2">
+                                <select id="dest-europe" onchange="updateAgentFilter()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Europe (Select)</option>
+                                    <option value="all">All Europe</option>
+                                    <option value="western">Western Europe (UK, France, Germany)</option>
+                                    <option value="eastern">Eastern Europe (Poland, Czech, Hungary)</option>
+                                    <option value="scandinavia">Scandinavia (Norway, Sweden, Finland)</option>
+                                    <option value="mediterranean">Mediterranean (Spain, Italy, Greece)</option>
+                                    <option value="balkans">Balkans (Croatia, Montenegro)</option>
+                                </select>
+
+                                <select id="dest-asia" onchange="updateAgentFilter()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Asia (Select)</option>
+                                    <option value="all">All Asia</option>
+                                    <option value="east">East Asia (Japan, Korea, China)</option>
+                                    <option value="southeast">Southeast Asia (Thailand, Vietnam, Singapore)</option>
+                                    <option value="south">South Asia (Sri Lanka, Nepal, Bhutan)</option>
+                                    <option value="central">Central Asia (Uzbekistan, Kazakhstan)</option>
+                                </select>
+
+                                <select id="dest-usa" onchange="updateAgentFilter()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">USA & Canada (Select)</option>
+                                    <option value="all">All USA/Canada</option>
+                                    <option value="east">US East Coast (NYC, Washington, Boston)</option>
+                                    <option value="west">US West Coast (LA, San Francisco, Vegas)</option>
+                                    <option value="central">US Central (Chicago, Texas)</option>
+                                    <option value="canada">Canada (Toronto, Vancouver, Rockies)</option>
+                                    <option value="alaska">Alaska & Hawaii</option>
+                                </select>
+
+                                <select id="dest-me" onchange="updateAgentFilter()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Middle East (Select)</option>
+                                    <option value="all">All Middle East</option>
+                                    <option value="uae">UAE (Dubai, Abu Dhabi)</option>
+                                    <option value="saudi">Saudi Arabia</option>
+                                    <option value="egypt">Egypt & Jordan</option>
+                                    <option value="gcc">Other GCC (Oman, Qatar, Bahrain)</option>
+                                </select>
+
+                                <select id="dest-aus" onchange="updateAgentFilter()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Australia & NZ (Select)</option>
+                                    <option value="all">All Australia/NZ</option>
+                                    <option value="east">East Coast (Sydney, Melbourne, Brisbane)</option>
+                                    <option value="west">West Coast (Perth, Adelaide)</option>
+                                    <option value="nz">New Zealand</option>
+                                    <option value="islands">Pacific Islands (Fiji, Bora Bora)</option>
+                                </select>
+
+                                <select id="dest-sa" onchange="updateAgentFilter()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">South America (Select)</option>
+                                    <option value="all">All South America</option>
+                                    <option value="brazil">Brazil</option>
+                                    <option value="andean">Andean Region (Peru, Chile, Argentina)</option>
+                                    <option value="amazon">Amazon & Galapagos</option>
+                                </select>
+
+                                <select id="dest-africa" onchange="updateAgentFilter()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Africa (Select)</option>
+                                    <option value="all">All Africa</option>
+                                    <option value="east">East Africa (Kenya, Tanzania, Rwanda)</option>
+                                    <option value="south">South Africa</option>
+                                    <option value="north">North Africa (Morocco, Tunisia)</option>
+                                    <option value="islands">Indian Ocean (Mauritius, Seychelles)</option>
+                                </select>
+
+                                <select id="dest-turkey" onchange="updateAgentFilter()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Turkey (Select)</option>
+                                    <option value="all">All Turkey</option>
+                                    <option value="istanbul">Istanbul & Cappadocia</option>
+                                    <option value="coastal">Coastal (Antalya, Bodrum)</option>
+                                    <option value="cultural">Cultural & Religious Tours</option>
+                                </select>
+
+                                <select id="dest-maldives" onchange="updateAgentFilter()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Maldives (Select)</option>
+                                    <option value="all">All Maldives</option>
+                                    <option value="resort">Resort Islands</option>
+                                    <option value="local">Local Island Experiences</option>
+                                    <option value="liveaboard">Liveaboard Diving</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customer Demographics Checkboxes -->
+                    <div class="space-y-4">
+                        <label class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 block">
+                            <i class="fas fa-users mr-2 text-green-600"></i>Customer Demographics
+                        </label>
+                        <div class="checkbox-grid">
+                            <label class="custom-checkbox" onclick="toggleCheckbox(this)">
+                                <input type="checkbox" name="demographic" value="families" onchange="updateAgentFilter()">
+                                <i class="fas fa-users text-blue-600"></i>
+                                <span class="text-sm font-medium">Families</span>
+                            </label>
+                            <label class="custom-checkbox" onclick="toggleCheckbox(this)">
+                                <input type="checkbox" name="demographic" value="couples" onchange="updateAgentFilter()">
+                                <i class="fas fa-heart text-pink-600"></i>
+                                <span class="text-sm font-medium">Couples / Honeymoon</span>
+                            </label>
+                            <label class="custom-checkbox" onclick="toggleCheckbox(this)">
+                                <input type="checkbox" name="demographic" value="solo" onchange="updateAgentFilter()">
+                                <i class="fas fa-user text-slate-600"></i>
+                                <span class="text-sm font-medium">Solo Travelers</span>
+                            </label>
+                            <label class="custom-checkbox" onclick="toggleCheckbox(this)">
+                                <input type="checkbox" name="demographic" value="mice" onchange="updateAgentFilter()">
+                                <i class="fas fa-briefcase text-indigo-600"></i>
+                                <span class="text-sm font-medium">MICE / Corporate</span>
+                            </label>
+                            <label class="custom-checkbox" onclick="toggleCheckbox(this)">
+                                <input type="checkbox" name="demographic" value="students" onchange="updateAgentFilter()">
+                                <i class="fas fa-graduation-cap text-cyan-600"></i>
+                                <span class="text-sm font-medium">Student Groups</span>
+                            </label>
+                            <label class="custom-checkbox" onclick="toggleCheckbox(this)">
+                                <input type="checkbox" name="demographic" value="sports" onchange="updateAgentFilter()">
+                                <i class="fas fa-futbol text-orange-600"></i>
+                                <span class="text-sm font-medium">Sports Tours</span>
+                            </label>
+                            <label class="custom-checkbox" onclick="toggleCheckbox(this)">
+                                <input type="checkbox" name="demographic" value="veg" onchange="updateAgentFilter()">
+                                <i class="fas fa-leaf text-green-600"></i>
+                                <span class="text-sm font-medium">Vegetarian / Jain</span>
+                            </label>
+                            <label class="custom-checkbox" onclick="toggleCheckbox(this)">
+                                <input type="checkbox" name="demographic" value="halal" onchange="updateAgentFilter()">
+                                <i class="fas fa-moon text-emerald-600"></i>
+                                <span class="text-sm font-medium">Halal / Muslim Friendly</span>
+                            </label>
+                            <label class="custom-checkbox" onclick="toggleCheckbox(this)">
+                                <input type="checkbox" name="demographic" value="luxury" onchange="updateAgentFilter()">
+                                <i class="fas fa-gem text-purple-600"></i>
+                                <span class="text-sm font-medium">Luxury / HNI</span>
+                            </label>
+                            <label class="custom-checkbox" onclick="toggleCheckbox(this)">
+                                <input type="checkbox" name="demographic" value="adventure" onchange="updateAgentFilter()">
+                                <i class="fas fa-hiking text-amber-700"></i>
+                                <span class="text-sm font-medium">Adventure / Trekking</span>
+                            </label>
+                            <label class="custom-checkbox" onclick="toggleCheckbox(this)">
+                                <input type="checkbox" name="demographic" value="seniors" onchange="updateAgentFilter()">
+                                <i class="fas fa-wheelchair text-teal-600"></i>
+                                <span class="text-sm font-medium">Senior Citizens</span>
+                            </label>
+                            <label class="custom-checkbox" onclick="toggleCheckbox(this)">
+                                <input type="checkbox" name="demographic" value="medical" onchange="updateAgentFilter()">
+                                <i class="fas fa-heartbeat text-red-500"></i>
+                                <span class="text-sm font-medium">Medical / Wellness</span>
+                            </label>
+                            <label class="custom-checkbox" onclick="toggleCheckbox(this)">
+                                <input type="checkbox" name="demographic" value="cultural" onchange="updateAgentFilter()">
+                                <i class="fas fa-landmark text-amber-600"></i>
+                                <span class="text-sm font-medium">Cultural / Heritage</span>
+                            </label>
+                            <label class="custom-checkbox" onclick="toggleCheckbox(this)">
+                                <input type="checkbox" name="demographic" value="cruise" onchange="updateAgentFilter()">
+                                <i class="fas fa-ship text-blue-500"></i>
+                                <span class="text-sm font-medium">Cruise Travelers</span>
+                            </label>
+                            <label class="custom-checkbox" onclick="toggleCheckbox(this)">
+                                <input type="checkbox" name="demographic" value="photo" onchange="updateAgentFilter()">
+                                <i class="fas fa-camera text-pink-500"></i>
+                                <span class="text-sm font-medium">Photography Tours</span>
+                            </label>
+                            <label class="custom-checkbox" onclick="toggleCheckbox(this)">
+                                <input type="checkbox" name="demographic" value="food" onchange="updateAgentFilter()">
+                                <i class="fas fa-utensils text-orange-500"></i>
+                                <span class="text-sm font-medium">Food / Culinary</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Average Booking Spend Slider -->
+                    <div class="space-y-4">
+                        <label class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 block">
+                            <i class="fas fa-rupee-sign mr-2 text-amber-600"></i>Average Booking Spend (Per Person)
+                        </label>
+                        
+                        <div class="bg-slate-50 rounded-xl p-5 border border-slate-200">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-sm font-medium text-slate-600">Budget Range</span>
+                                <span class="text-lg font-bold text-blue-600" id="spend-display">₹50K - ₹5L+</span>
+                            </div>
+                            
+                            <div class="relative mb-6">
+                                <input type="range" id="min-spend" min="50" max="500" value="50" step="10" 
+                                       class="range-slider absolute w-full z-20" oninput="updateSpendRange()">
+                                <input type="range" id="max-spend" min="50" max="500" value="500" step="10" 
+                                       class="range-slider absolute w-full z-10" oninput="updateSpendRange()">
+                            </div>
+                            
+                            <div class="flex justify-between text-xs text-slate-500 mb-4">
+                                <span>₹50K</span>
+                                <span>₹1L</span>
+                                <span>₹2L</span>
+                                <span>₹3L</span>
+                                <span>₹4L</span>
+                                <span>₹5L+</span>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-2 text-center">
+                                <div class="p-2 bg-green-100 rounded-lg border border-green-200 cursor-pointer hover:bg-green-200 transition" onclick="setSpendRange(50, 100)">
+                                    <div class="text-xs font-bold text-green-800">Budget</div>
+                                    <div class="text-xs text-green-600">₹50K - ₹1L</div>
+                                </div>
+                                <div class="p-2 bg-blue-100 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-200 transition" onclick="setSpendRange(100, 250)">
+                                    <div class="text-xs font-bold text-blue-800">Mid-Range</div>
+                                    <div class="text-xs text-blue-600">₹1L - ₹2.5L</div>
+                                </div>
+                                <div class="p-2 bg-purple-100 rounded-lg border border-purple-200 cursor-pointer hover:bg-purple-200 transition" onclick="setSpendRange(250, 500)">
+                                    <div class="text-xs font-bold text-purple-800">Luxury</div>
+                                    <div class="text-xs text-purple-600">₹2.5L - ₹5L+</div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                                <div class="flex items-center gap-2 text-sm text-amber-800">
+                                    <i class="fas fa-lightbulb"></i>
+                                    <span class="font-medium">Insight:</span>
+                                    <span class="text-amber-700" id="spend-insight">Agents with ₹1L-₹2L avg spend show 34% higher conversion for Europe</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Filters -->
+                        <div class="space-y-3">
+                            <label class="text-sm font-bold text-slate-700 uppercase tracking-wider block">
+                                <i class="fas fa-sliders-h mr-2 text-slate-600"></i>Additional Criteria
+                            </label>
+                            
+                            <div class="grid grid-cols-2 gap-3">
+                                <select id="group-size" onchange="updateAgentFilter()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm">
+                                    <option value="">Group Size</option>
+                                    <option value="individual">Individual (1-2 pax)</option>
+                                    <option value="small">Small Group (3-10 pax)</option>
+                                    <option value="medium">Medium Group (11-30 pax)</option>
+                                    <option value="large">Large Group (30+ pax)</option>
+                                </select>
+
+                                <select id="travel-season" onchange="updateAgentFilter()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm">
+                                    <option value="">Preferred Season</option>
+                                    <option value="summer">Summer (Apr-Jun)</option>
+                                    <option value="monsoon">Monsoon (Jul-Sep)</option>
+                                    <option value="winter">Winter (Oct-Mar)</option>
+                                    <option value="year">Year Round</option>
+                                </select>
+                            </div>
+
+                            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                                <input type="checkbox" id="repeat-bookers" onchange="updateAgentFilter()" class="w-5 h-5 text-blue-600 rounded">
+                                <label for="repeat-bookers" class="text-sm font-medium text-slate-700 cursor-pointer">
+                                    Show only agents with repeat bookings (2+ per year)
+                                </label>
+                            </div>
+
+                            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                                <input type="checkbox" id="high-converters" onchange="updateAgentFilter()" class="w-5 h-5 text-blue-600 rounded">
+                                <label for="high-converters" class="text-sm font-medium text-slate-700 cursor-pointer">
+                                    High conversion agents only (>40%)
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Results Preview -->
+                        <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl p-4 text-white">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div class="text-sm text-blue-200">Matching Agents Found</div>
+                                    <div class="text-3xl font-bold" id="matching-count">156</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm text-blue-200">Est. Pipeline Value</div>
+                                    <div class="text-xl font-bold" id="pipeline-value">₹12.4Cr</div>
+                                </div>
+                            </div>
+                            <button onclick="viewMatchingAgents()" class="w-full mt-3 py-2 bg-white text-blue-700 rounded-lg font-semibold hover:bg-blue-50 transition">
+                                View Matching Agents
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Map -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-lg text-slate-900">Geographic Distribution of Matching Agents</h3>
+                    <div class="flex gap-2 text-sm">
+                        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-blue-500"></span>High Match (90%+)</span>
+                        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-green-500"></span>Good Match (70-89%)</span>
+                        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-amber-500"></span>Moderate (50-69%)</span>
+                    </div>
+                </div>
+
+                <div class="india-map-container" id="demographics-map">
+                    <svg class="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 800 800">
+                        <path d="M 250 150 Q 300 100 400 120 Q 500 100 550 150 L 600 200 L 650 250 L 680 300 L 700 400 L 650 500 L 600 600 L 550 700 L 450 750 L 350 700 L 250 600 L 200 500 L 180 400 L 200 300 L 220 200 Z" 
+                              fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+                    </svg>
+
+                    <!-- Cities with data attributes for filtering -->
+                    <div class="city-node" style="left: 35%; top: 25%;" data-city="delhi" data-destinations="europe usa me turkey" data-demographics="families mice luxury seniors cultural" data-spend="150-300" data-match="95">
+                        <div class="city-dot bg-blue-600"></div>
+                        <div class="city-label">
+                            <div class="font-bold">Delhi NCR</div>
+                            <div class="text-xs text-green-600 font-bold">89 agents</div>
+                            <div class="text-xs text-blue-600">Match: 95%</div>
+                        </div>
+                    </div>
+
+                    <div class="city-node" style="left: 30%; top: 20%;" data-city="chandigarh" data-destinations="europe usa turkey" data-demographics="families luxury adventure" data-spend="100-250" data-match="88">
+                        <div class="city-dot bg-blue-500"></div>
+                        <div class="city-label">
+                            <div class="font-bold">Chandigarh</div>
+                            <div class="text-xs text-green-600 font-bold">34 agents</div>
+                            <div class="text-xs text-blue-600">Match: 88%</div>
+                        </div>
+                    </div>
+
+                    <div class="city-node" style="left: 25%; top: 35%;" data-city="jaipur" data-destinations="asia turkey maldives" data-demographics="families couples cultural" data-spend="80-200" data-match="72">
+                        <div class="city-dot bg-green-500"></div>
+                        <div class="city-label">
+                            <div class="font-bold">Jaipur</div>
+                            <div class="text-xs text-green-600 font-bold">28 agents</div>
+                            <div class="text-xs text-amber-600">Match: 72%</div>
+                        </div>
+                    </div>
+
+                    <div class="city-node" style="left: 20%; top: 50%;" data-city="mumbai" data-destinations="europe usa aus sa maldives turkey" data-demographics="families couples mice luxury adventure veg" data-spend="200-500" data-match="96">
+                        <div class="city-dot bg-blue-600"></div>
+                        <div class="city-label">
+                            <div class="font-bold">Mumbai</div>
+                            <div class="text-xs text-green-600 font-bold">156 agents</div>
+                            <div class="text-xs text-blue-600">Match: 96%</div>
+                        </div>
+                    </div>
+
+                    <div class="city-node" style="left: 22%; top: 55%;" data-city="pune" data-destinations="europe asia families students adventure" data-spend="100-250" data-match="82">
+                        <div class="city-dot bg-green-500"></div>
+                        <div class="city-label">
+                            <div class="font-bold">Pune</div>
+                            <div class="text-xs text-green-600 font-bold">67 agents</div>
+                            <div class="text-xs text-blue-600">Match: 82%</div>
+                        </div>
+                    </div>
+
+                    <div class="city-node" style="left: 15%; top: 45%;" data-city="ahmedabad" data-destinations="usa me maldives turkey" data-demographics="families mice veg" data-spend="80-200" data-match="78">
+                        <div class="city-dot bg-green-500"></div>
+                        <div class="city-label">
+                            <div class="font-bold">Ahmedabad</div>
+                            <div class="text-xs text-green-600 font-bold">45 agents</div>
+                            <div class="text-xs text-amber-600">Match: 78%</div>
+                        </div>
+                    </div>
+
+                    <div class="city-node" style="left: 45%; top: 75%;" data-city="bangalore" data-destinations="usa aus asia mice solo adventure" data-spend="150-400" data-match="91">
+                        <div class="city-dot bg-blue-500"></div>
+                        <div class="city-label">
+                            <div class="font-bold">Bangalore</div>
+                            <div class="text-xs text-green-600 font-bold">134 agents</div>
+                            <div class="text-xs text-blue-600">Match: 91%</div>
+                        </div>
+                    </div>
+
+                    <div class="city-node" style="left: 48%; top: 80%;" data-city="chennai" data-destinations="asia me maldives families veg seniors" data-spend="80-200" data-match="76">
+                        <div class="city-dot bg-green-500"></div>
+                        <div class="city-label">
+                            <div class="font-bold">Chennai</div>
+                            <div class="text-xs text-green-600 font-bold">78 agents</div>
+                            <div class="text-xs text-amber-600">Match: 76%</div>
+                        </div>
+                    </div>
+
+                    <div class="city-node" style="left: 42%; top: 70%;" data-city="hyderabad" data-destinations="usa me maldives families mice luxury" data-spend="120-300" data-match="84">
+                        <div class="city-dot bg-green-500"></div>
+                        <div class="city-label">
+                            <div class="font-bold">Hyderabad</div>
+                            <div class="text-xs text-green-600 font-bold">56 agents</div>
+                            <div class="text-xs text-blue-600">Match: 84%</div>
+                        </div>
+                    </div>
+
+                    <div class="city-node" style="left: 35%; top: 85%;" data-city="kochi" data-destinations="asia maldives families couples veg" data-spend="60-150" data-match="68">
+                        <div class="city-dot bg-amber-500"></div>
+                        <div class="city-label">
+                            <div class="font-bold">Kochi</div>
+                            <div class="text-xs text-green-600 font-bold">34 agents</div>
+                            <div class="text-xs text-amber-600">Match: 68%</div>
+                        </div>
+                    </div>
+
+                    <div class="city-node" style="left: 70%; top: 45%;" data-city="kolkata" data-destinations="asia sa families students adventure" data-spend="70-180" data-match="74">
+                        <div class="city-dot bg-green-500"></div>
+                        <div class="city-label">
+                            <div class="font-bold">Kolkata</div>
+                            <div class="text-xs text-green-600 font-bold">67 agents</div>
+                            <div class="text-xs text-amber-600">Match: 74%</div>
+                        </div>
+                    </div>
+
+                    <div class="city-node" style="left: 75%; top: 50%;" data-city="guwahati" data-destinations="asia adventure solo" data-spend="50-120" data-match="62">
+                        <div class="city-dot bg-amber-500"></div>
+                        <div class="city-label">
+                            <div class="font-bold">Guwahati</div>
+                            <div class="text-xs text-green-600 font-bold">23 agents</div>
+                            <div class="text-xs text-amber-600">Match: 62%</div>
+                        </div>
+                    </div>
+
+                    <div class="city-node" style="left: 45%; top: 45%;" data-city="indore" data-destinations="families couples" data-spend="60-150" data-match="65">
+                        <div class="city-dot bg-amber-500"></div>
+                        <div class="city-label">
+                            <div class="font-bold">Indore</div>
+                            <div class="text-xs text-green-600 font-bold">29 agents</div>
+                            <div class="text-xs text-amber-600">Match: 65%</div>
+                        </div>
+                    </div>
+
+                    <div class="city-node" style="left: 55%; top: 40%;" data-city="nagpur" data-destinations="families mice" data-spend="80-180" data-match="70">
+                        <div class="city-dot bg-green-500"></div>
+                        <div class="city-label">
+                            <div class="font-bold">Nagpur</div>
+                            <div class="text-xs text-green-600 font-bold">22 agents</div>
+                            <div class="text-xs text-amber-600">Match: 70%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Agent List -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-200 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-900">Matching Agents Directory</h3>
+                    <div class="flex gap-2">
+                        <span class="text-sm text-slate-500" id="showing-count">Showing 156 of 1,247 agents</span>
+                        <button class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                            <i class="fas fa-download mr-1"></i>Export List
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50 text-slate-600 font-semibold">
+                            <tr>
+                                <th class="px-4 py-3 text-left">Agent</th>
+                                <th class="px-4 py-3 text-left">City</th>
+                                <th class="px-4 py-3 text-left">Destinations</th>
+                                <th class="px-4 py-3 text-left">Customer Types</th>
+                                <th class="px-4 py-3 text-right">Avg. Spend</th>
+                                <th class="px-4 py-3 text-right">Monthly Pax</th>
+                                <th class="px-4 py-3 text-center">Match Score</th>
+                                <th class="px-4 py-3 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100" id="agent-directory-tbody">
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="px-4 py-3">
+                                    <div class="font-semibold text-slate-900">Vikram Singh</div>
+                                    <div class="text-xs text-slate-500">Elite Travels</div>
+                                </td>
+                                <td class="px-4 py-3 text-slate-600">Delhi</td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 rounded text-xs mr-1">Turkey</span>
+                                    <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">Europe</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs mr-1">Families</span>
+                                    <span class="px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs">MICE</span>
+                                </td>
+                                <td class="px-4 py-3 text-right font-bold text-slate-900">₹1.8L</td>
+                                <td class="px-4 py-3 text-right font-bold">450</td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">98%</span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <button class="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">Invite</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="px-4 py-3">
+                                    <div class="font-semibold text-slate-900">Priya Sharma</div>
+                                    <div class="text-xs text-slate-500">Oceanic Tours</div>
+                                </td>
+                                <td class="px-4 py-3 text-slate-600">Mumbai</td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 bg-cyan-100 text-cyan-700 rounded text-xs mr-1">Maldives</span>
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">Mauritius</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 bg-pink-100 text-pink-700 rounded text-xs mr-1">Couples</span>
+                                    <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">Luxury</span>
+                                </td>
+                                <td class="px-4 py-3 text-right font-bold text-slate-900">₹2.5L</td>
+                                <td class="px-4 py-3 text-right font-bold">180</td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">95%</span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <button class="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">Invite</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="px-4 py-3">
+                                    <div class="font-semibold text-slate-900">Amit Kumar</div>
+                                    <div class="text-xs text-slate-500">Skyline Travels</div>
+                                </td>
+                                <td class="px-4 py-3 text-slate-600">Bangalore</td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs mr-1">Europe</span>
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">USA</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs mr-1">MICE</span>
+                                    <span class="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs">Sports</span>
+                                </td>
+                                <td class="px-4 py-3 text-right font-bold text-slate-900">₹3.2L</td>
+                                <td class="px-4 py-3 text-right font-bold">320</td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">92%</span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <button class="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">Invite</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="px-4 py-3">
+                                    <div class="font-semibold text-slate-900">Sneha Reddy</div>
+                                    <div class="text-xs text-slate-500">Southern Comfort</div>
+                                </td>
+                                <td class="px-4 py-3 text-slate-600">Hyderabad</td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 rounded text-xs mr-1">Turkey</span>
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">Middle East</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs mr-1">Families</span>
+                                    <span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs">Halal</span>
+                                </td>
+                                <td class="px-4 py-3 text-right font-bold text-slate-900">₹1.5L</td>
+                                <td class="px-4 py-3 text-right font-bold">280</td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">89%</span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <button class="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">Invite</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="px-4 py-3">
+                                    <div class="font-semibold text-slate-900">Rajesh Mehta</div>
+                                    <div class="text-xs text-slate-500">Gujarat Tours</div>
+                                </td>
+                                <td class="px-4 py-3 text-slate-600">Ahmedabad</td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 bg-cyan-100 text-cyan-700 rounded text-xs mr-1">Maldives</span>
+                                    <span class="px-2 py-1 bg-amber-100 text-amber-700 rounded text-xs">Mauritius</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs mr-1">Vegetarian</span>
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">Families</span>
+                                </td>
+                                <td class="px-4 py-3 text-right font-bold text-slate-900">₹1.2L</td>
+                                <td class="px-4 py-3 text-right font-bold">195</td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold">76%</span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <button class="px-3 py-1 bg-slate-300 text-slate-600 text-xs rounded cursor-not-allowed">Invite</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="px-5 py-3 border-t border-slate-200 flex justify-between items-center">
+                    <button class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                        <i class="fas fa-chevron-left mr-1"></i>Previous
+                    </button>
+                    <span class="text-sm text-slate-500">Page 1 of 16</span>
+                    <button class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                        Next<i class="fas fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: CALENDAR & MAP -->
+        <div id="content-calendar" class="space-y-6 hidden">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                <div class="flex flex-col lg:flex-row justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <h2 class="text-xl font-bold text-slate-900">Roadshow Schedule</h2>
+                        <div class="flex bg-slate-100 rounded-lg p-1">
+                            <button onclick="switchCalendarView('calendar')" id="view-calendar" class="view-toggle active px-4 py-2 rounded-md text-sm font-medium transition flex items-center gap-2">
+                                <i class="fas fa-calendar"></i>Calendar
+                            </button>
+                            <button onclick="switchCalendarView('map')" id="view-map" class="view-toggle px-4 py-2 rounded-md text-sm font-medium transition flex items-center gap-2 text-slate-600">
+                                <i class="fas fa-map-marked-alt"></i>Map View
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-3 items-center">
+                        <select id="month-filter" onchange="updateCalendar()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium">
+                            <option value="all">All Months</option>
+                            <option value="1">February 2024</option>
+                            <option value="2">March 2024</option>
+                            <option value="3">April 2024</option>
+                        </select>
+                        
+                        <select id="destination-filter" onchange="filterEvents()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium">
+                            <option value="all">All Destinations</option>
+                            <option value="turkey">Turkey</option>
+                            <option value="maldives">Maldives</option>
+                            <option value="europe">Europe</option>
+                        </select>
+                        
+                        <select id="region-filter" onchange="filterEvents()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium">
+                            <option value="all">All Regions</option>
+                            <option value="north">North India</option>
+                            <option value="south">South India</option>
+                            <option value="west">West India</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4 pt-4 border-t border-slate-200">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-slate-900" id="stat-total">24</div>
+                        <div class="text-xs text-slate-500">Total Roadshows</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-600" id="stat-confirmed">18</div>
+                        <div class="text-xs text-slate-500">Confirmed</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-amber-600" id="stat-planning">4</div>
+                        <div class="text-xs text-slate-500">Planning</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600" id="stat-completed">12</div>
+                        <div class="text-xs text-slate-500">Completed</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-purple-600" id="stat-upcoming">6</div>
+                        <div class="text-xs text-slate-500">This Month</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="calendar-view" class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-lg text-slate-900" id="calendar-month">February 2024</h3>
+                    <div class="flex gap-2">
+                        <button onclick="changeMonth(-1)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button onclick="changeMonth(1)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="calendar-grid" id="calendar-grid">
+                    <div class="bg-slate-50 p-2 text-center text-xs font-bold text-slate-600">Sun</div>
+                    <div class="bg-slate-50 p-2 text-center text-xs font-bold text-slate-600">Mon</div>
+                    <div class="bg-slate-50 p-2 text-center text-xs font-bold text-slate-600">Tue</div>
+                    <div class="bg-slate-50 p-2 text-center text-xs font-bold text-slate-600">Wed</div>
+                    <div class="bg-slate-50 p-2 text-center text-xs font-bold text-slate-600">Thu</div>
+                    <div class="bg-slate-50 p-2 text-center text-xs font-bold text-slate-600">Fri</div>
+                    <div class="bg-slate-50 p-2 text-center text-xs font-bold text-slate-600">Sat</div>
+                </div>
+            </div>
+
+            <div id="map-view" class="hidden">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                    <div class="india-map-container" id="schedule-map"></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-200 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-900">Upcoming Roadshows</h3>
+                    <button class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                        <i class="fas fa-plus mr-1"></i>Add New
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50 text-slate-600 font-semibold">
+                            <tr>
+                                <th class="px-4 py-3 text-left">Date</th>
+                                <th class="px-4 py-3 text-left">City</th>
+                                <th class="px-4 py-3 text-left">Destination</th>
+                                <th class="px-4 py-3 text-center">Agents</th>
+                                <th class="px-4 py-3 text-center">Status</th>
+                                <th class="px-4 py-3 text-right">Expected Pipeline</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100" id="roadshow-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: PLANNING INTELLIGENCE -->
+        <div id="content-intelligence" class="space-y-6 hidden">
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-xl p-6 text-white shadow-lg">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2">AI Planning Intelligence</h2>
+                        <p class="text-indigo-100">Data-driven recommendations for optimal roadshow planning</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-4xl font-bold">94%</div>
+                        <div class="text-sm text-indigo-200">Forecast Accuracy</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <h3 class="font-bold text-slate-900 text-lg mb-4">Recommended Roadshow Opportunities</h3>
+                        
+                        <div class="insight-card p-5 border-2 border-green-200 bg-gradient-to-r from-green-50 to-white rounded-xl mb-4">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center text-2xl">🇹🇷</div>
+                                    <div>
+                                        <h4 class="font-bold text-lg text-slate-900">Turkey Roadshow - Lucknow</h4>
+                                        <span class="px-2 py-1 bg-green-600 text-white text-xs font-bold rounded">Score: 94/100</span>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-green-700">₹5.2Cr</div>
+                                    <div class="text-xs text-slate-500">Est. Pipeline</div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-4 gap-3 mb-4">
+                                <div class="bg-white p-3 rounded-lg border border-slate-200 text-center">
+                                    <div class="text-xl font-bold text-slate-900">34</div>
+                                    <div class="text-xs text-slate-500">Matching Agents</div>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg border border-slate-200 text-center">
+                                    <div class="text-xl font-bold text-slate-900">78%</div>
+                                    <div class="text-xs text-slate-500">Family Segment</div>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg border border-slate-200 text-center">
+                                    <div class="text-xl font-bold text-slate-900">Low</div>
+                                    <div class="text-xs text-slate-500">Competition</div>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg border border-slate-200 text-center">
+                                    <div class="text-xl font-bold text-slate-900">Q2</div>
+                                    <div class="text-xs text-slate-500">Optimal Timing</div>
+                                </div>
+                            </div>
+                            <div class="bg-blue-50 rounded-lg p-3 mb-4">
+                                <div class="text-xs font-semibold text-blue-900 mb-1">AI Insight</div>
+                                <div class="text-sm text-blue-800">Lucknow shows 89% agent match for Turkey with high family travel demand. Zero competitor roadshows in past 6 months.</div>
+                            </div>
+                            <div class="flex gap-3">
+                                <button class="flex-1 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700">
+                                    <i class="fas fa-check-circle mr-2"></i>Approve & Schedule
+                                </button>
+                                <button class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50">
+                                    <i class="fas fa-users mr-2"></i>View Agents
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="insight-card p-5 border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-white rounded-xl">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center text-2xl">🇲🇻</div>
+                                    <div>
+                                        <h4 class="font-bold text-lg text-slate-900">Maldives Roadshow - Ahmedabad</h4>
+                                        <span class="px-2 py-1 bg-blue-600 text-white text-xs font-bold rounded">Score: 91/100</span>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-blue-700">₹4.8Cr</div>
+                                    <div class="text-xs text-slate-500">Est. Pipeline</div>
+                                </div>
+                            </div>
+                            <div class="bg-amber-50 rounded-lg p-3 mb-4 border border-amber-200">
+                                <div class="text-xs font-semibold text-amber-900 mb-1">⚠️ Special Requirement</div>
+                                <div class="text-sm text-amber-800">High demand for Jain/Vegetarian meal options. Ensure hotel contracts include specialized catering.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <h3 class="font-bold text-slate-900 text-lg mb-4">Market Gap Analysis</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-slate-900">Underserved Markets</h4>
+                                    </div>
+                                </div>
+                                <ul class="space-y-2 text-sm">
+                                    <li class="flex items-center gap-2">
+                                        <i class="fas fa-map-pin text-red-500"></i>
+                                        <span class="flex-1">Bhopal - No roadshows in 12 months</span>
+                                        <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">High Priority</span>
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <i class="fas fa-map-pin text-red-500"></i>
+                                        <span class="flex-1">Ranchi - Emerging MICE demand</span>
+                                        <span class="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded">Monitor</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="p-4 bg-green-50 border border-green-200 rounded-xl">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-slate-900">Overperforming Markets</h4>
+                                    </div>
+                                </div>
+                                <ul class="space-y-2 text-sm">
+                                    <li class="flex items-center gap-2">
+                                        <i class="fas fa-arrow-up text-green-500"></i>
+                                        <span class="flex-1">Delhi - 142% of target</span>
+                                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Expand</span>
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <i class="fas fa-arrow-up text-green-500"></i>
+                                        <span class="flex-1">Mumbai - 128% of target</span>
+                                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Expand</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <h3 class="font-bold text-slate-900 mb-4">Predictive Analytics</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="font-medium text-slate-700">Q2 2024 Forecast</span>
+                                    <span class="font-bold text-green-600">+24%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-3">
+                                    <div class="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full performance-bar" style="width: 76%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="font-medium text-slate-700">Conversion Rate</span>
+                                    <span class="font-bold text-purple-600">42%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-3">
+                                    <div class="bg-purple-500 h-3 rounded-full performance-bar" style="width: 42%"></div>
+                                </div>
+                                <div class="text-xs text-slate-500 mt-1">Industry avg: 28%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <h3 class="font-bold text-slate-900 mb-4">Optimal Timing</h3>
+                        <div class="grid grid-cols-4 gap-2 text-center text-xs">
+                            <div class="p-2 bg-green-200 text-green-900 rounded font-bold border-2 border-green-500">Feb<br><span class="text-lg">★★★</span></div>
+                            <div class="p-2 bg-green-100 text-green-800 rounded font-medium">Mar<br><span class="text-lg">★★★</span></div>
+                            <div class="p-2 bg-blue-100 text-blue-800 rounded font-medium">Apr<br><span class="text-lg">★★☆</span></div>
+                            <div class="p-2 bg-amber-100 text-amber-800 rounded font-medium">May<br><span class="text-lg">★★☆</span></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-xl shadow-lg p-5 text-white">
+                        <h3 class="font-bold mb-3">Quick Actions</h3>
+                        <div class="space-y-2">
+                            <button class="w-full py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition text-left px-3">
+                                <i class="fas fa-magic mr-2"></i>Generate Q2 Roadshow Plan
+                            </button>
+                            <button class="w-full py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition text-left px-3">
+                                <i class="fas fa-envelope mr-2"></i>Email Top 50 Agents
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 6: PERFORMANCE SUMMARY -->
+        <div id="content-summary" class="space-y-6 hidden">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">PCP Performance Dashboard</h2>
+                        <p class="text-slate-500 mt-1">Overall program performance and ROI analysis</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <select class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium">
+                            <option>Last 30 Days</option>
+                            <option>This Quarter</option>
+                            <option>YTD 2024</option>
+                        </select>
+                        <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+                            <i class="fas fa-download mr-2"></i>Export Report
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="p-5 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-sm font-medium text-blue-800 mb-1">Total Revenue</div>
+                                <div class="text-3xl font-bold text-blue-900">₹24.8Cr</div>
+                                <div class="text-xs text-blue-700 mt-1"><i class="fas fa-arrow-up mr-1"></i>32% vs last period</div>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white text-xl">
+                                <i class="fas fa-rupee-sign"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-5 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-sm font-medium text-green-800 mb-1">Agents Engaged</div>
+                                <div class="text-3xl font-bold text-green-900">1,247</div>
+                                <div class="text-xs text-green-700 mt-1"><i class="fas fa-arrow-up mr-1"></i>18% vs last period</div>
+                            </div>
+                            <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center text-white text-xl">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-5 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-sm font-medium text-purple-800 mb-1">Roadshows</div>
+                                <div class="text-3xl font-bold text-purple-900">24</div>
+                                <div class="text-xs text-purple-700 mt-1"><i class="fas fa-check-circle mr-1"></i>18 completed</div>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center text-white text-xl">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-5 bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl border border-amber-200">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-sm font-medium text-amber-800 mb-1">Conversion Rate</div>
+                                <div class="text-3xl font-bold text-amber-900">42%</div>
+                                <div class="text-xs text-amber-700 mt-1"><i class="fas fa-arrow-up mr-1"></i>5% vs industry avg</div>
+                            </div>
+                            <div class="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center text-white text-xl">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <h3 class="font-bold text-slate-900 text-lg mb-4">Performance by Destination</h3>
+                        <div class="space-y-4">
+                            <div class="p-4 border border-slate-200 rounded-xl">
+                                <div class="flex justify-between items-center mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-3xl">🇹🇷</span>
+                                        <div>
+                                            <h4 class="font-bold text-lg">Turkey</h4>
+                                            <div class="text-xs text-slate-500">6 roadshows • 312 agents</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-2xl font-bold text-slate-900">₹8.4Cr</div>
+                                        <div class="text-xs text-green-600 font-medium">142% of target</div>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-2">
+                                    <div class="bg-red-500 h-2 rounded-full performance-bar" style="width: 100%"></div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 border border-slate-200 rounded-xl">
+                                <div class="flex justify-between items-center mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-3xl">🇲🇻</span>
+                                        <div>
+                                            <h4 class="font-bold text-lg">Maldives</h4>
+                                            <div class="text-xs text-slate-500">8 roadshows • 498 agents</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-2xl font-bold text-slate-900">₹12.1Cr</div>
+                                        <div class="text-xs text-green-600 font-medium">128% of target</div>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-2">
+                                    <div class="bg-cyan-500 h-2 rounded-full performance-bar" style="width: 90%"></div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 border border-slate-200 rounded-xl">
+                                <div class="flex justify-between items-center mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-3xl">🇪🇺</span>
+                                        <div>
+                                            <h4 class="font-bold text-lg">Europe</h4>
+                                            <div class="text-xs text-slate-500">5 roadshows • 234 agents</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-2xl font-bold text-slate-900">₹3.2Cr</div>
+                                        <div class="text-xs text-amber-600 font-medium">78% of target</div>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-2">
+                                    <div class="bg-purple-500 h-2 rounded-full performance-bar" style="width: 55%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <h3 class="font-bold text-slate-900 text-lg mb-4">Regional Performance</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="p-4 bg-blue-50 rounded-xl border border-blue-200 text-center">
+                                <div class="text-2xl mb-2">🏔️</div>
+                                <div class="font-bold text-slate-900">North India</div>
+                                <div class="text-2xl font-bold text-blue-700 mt-2">₹10.2Cr</div>
+                                <div class="text-xs text-blue-600 mt-1">8 roadshows</div>
+                                <div class="mt-2 text-xs font-medium text-green-600"><i class="fas fa-arrow-up"></i> 24% growth</div>
+                            </div>
+                            <div class="p-4 bg-purple-50 rounded-xl border border-purple-200 text-center">
+                                <div class="text-2xl mb-2">🌊</div>
+                                <div class="font-bold text-slate-900">West India</div>
+                                <div class="text-2xl font-bold text-purple-700 mt-2">₹9.8Cr</div>
+                                <div class="text-xs text-purple-600 mt-1">7 roadshows</div>
+                                <div class="mt-2 text-xs font-medium text-green-600"><i class="fas fa-arrow-up"></i> 18% growth</div>
+                            </div>
+                            <div class="p-4 bg-orange-50 rounded-xl border border-orange-200 text-center">
+                                <div class="text-2xl mb-2">🌴</div>
+                                <div class="font-bold text-slate-900">South India</div>
+                                <div class="text-2xl font-bold text-orange-700 mt-2">₹3.8Cr</div>
+                                <div class="text-xs text-orange-600 mt-1">6 roadshows</div>
+                                <div class="mt-2 text-xs font-medium text-amber-600"><i class="fas fa-minus"></i> Stable</div>
+                            </div>
+                            <div class="p-4 bg-green-50 rounded-xl border border-green-200 text-center">
+                                <div class="text-2xl mb-2">🐅</div>
+                                <div class="font-bold text-slate-900">East India</div>
+                                <div class="text-2xl font-bold text-green-700 mt-2">₹1.0Cr</div>
+                                <div class="text-xs text-green-600 mt-1">3 roadshows</div>
+                                <div class="mt-2 text-xs font-medium text-green-600"><i class="fas fa-arrow-up"></i> 45% growth</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <h3 class="font-bold text-slate-900 mb-4">Overall Health Score</h3>
+                        <div class="flex items-center justify-center mb-4">
+                            <div class="relative w-32 h-32">
+                                <svg class="w-full h-full" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="50" r="45" fill="none" stroke="#e2e8f0" stroke-width="8"/>
+                                    <circle cx="50" cy="50" r="45" fill="none" stroke="#10b981" stroke-width="8" 
+                                            stroke-dasharray="283" stroke-dashoffset="42" stroke-linecap="round" class="score-ring"/>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center flex-col">
+                                    <span class="text-3xl font-bold text-slate-900">85</span>
+                                    <span class="text-xs text-slate-500">Excellent</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-xl shadow-lg p-5 text-white">
+                        <h3 class="font-bold mb-3">Program ROI</h3>
+                        <div class="text-4xl font-bold mb-2">4.2x</div>
+                        <div class="text-sm text-indigo-200 mb-4">Return on investment</div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-indigo-200">Total Investment</span>
+                                <span class="font-bold">₹5.9Cr</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-indigo-200">Revenue Generated</span>
+                                <span class="font-bold">₹24.8Cr</span>
+                            </div>
+                            <div class="flex justify-between border-t border-white/20 pt-2">
+                                <span class="text-indigo-200">Net Profit</span>
+                                <span class="font-bold text-green-300">₹18.9Cr</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <h3 class="font-bold text-slate-900 mb-4">Key Insights</h3>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
+                                <div class="font-semibold text-green-900 text-sm">Top Performer</div>
+                                <div class="text-xs text-green-700 mt-1">Turkey roadshows exceeding targets by 42% in North India</div>
+                            </div>
+                            <div class="p-3 bg-amber-50 rounded-lg border-l-4 border-amber-500">
+                                <div class="font-semibold text-amber-900 text-sm">Attention Needed</div>
+                                <div class="text-xs text-amber-700 mt-1">Europe conversion 12% below target in South India</div>
+                            </div>
+                            <div class="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                                <div class="font-semibold text-blue-900 text-sm">Opportunity</div>
+                                <div class="text-xs text-blue-700 mt-1">East India showing 45% growth potential</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('live-clock').textContent = now.toLocaleTimeString('en-US', { hour12: true });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Tab Switching
+        function switchTab(tabName) {
+            const tabs = ['live', 'potential', 'demographics', 'calendar', 'intelligence', 'summary'];
+            tabs.forEach(t => {
+                document.getElementById('content-' + t).classList.add('hidden');
+                document.getElementById('tab-' + t).classList.remove('tab-active');
+            });
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            document.getElementById('tab-' + tabName).classList.add('tab-active');
+        }
+
+        // Demographics & Agents Tab Functions
+        function toggleCheckbox(element) {
+            element.classList.toggle('checked');
+            const checkbox = element.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+            updateAgentFilter();
+        }
+
+        function updateSpendRange() {
+            const min = document.getElementById('min-spend').value;
+            const max = document.getElementById('max-spend').value;
+            
+            if (parseInt(min) > parseInt(max)) {
+                document.getElementById('min-spend').value = max;
+                return updateSpendRange();
+            }
+            
+            const minLakhs = min >= 100 ? (min/100).toFixed(1) + 'L' : min + 'K';
+            const maxDisplay = max >= 500 ? '5L+' : (max/100).toFixed(1) + 'L';
+            
+            document.getElementById('spend-display').textContent = `₹${minLakhs} - ₹${maxDisplay}`;
+            updateAgentFilter();
+        }
+
+        function setSpendRange(min, max) {
+            document.getElementById('min-spend').value = min;
+            document.getElementById('max-spend').value = max;
+            updateSpendRange();
+        }
+
+        function updateAgentFilter() {
+            // Get all selected values
+            const destinations = [];
+            ['dest-europe', 'dest-asia', 'dest-usa', 'dest-me', 'dest-aus', 'dest-sa', 'dest-africa', 'dest-turkey', 'dest-maldives'].forEach(id => {
+                const val = document.getElementById(id).value;
+                if (val) destinations.push(val);
+            });
+
+            const demographics = Array.from(document.querySelectorAll('input[name="demographic"]:checked')).map(cb => cb.value);
+            
+            const minSpend = document.getElementById('min-spend').value;
+            const maxSpend = document.getElementById('max-spend').value;
+
+            // Filter cities on map
+            const cities = document.querySelectorAll('#demographics-map .city-node');
+            let matchCount = 0;
+            let totalPipeline = 0;
+
+            cities.forEach(city => {
+                const cityDestinations = city.getAttribute('data-destinations').split(' ');
+                const cityDemographics = city.getAttribute('data-demographics').split(' ');
+                const citySpend = city.getAttribute('data-spend').split('-').map(s => parseInt(s));
+                const cityMatch = parseInt(city.getAttribute('data-match'));
+
+                // Check destination match
+                const destMatch = destinations.length === 0 || destinations.some(d => cityDestinations.includes(d));
+                
+                // Check demographic match
+                const demoMatch = demographics.length === 0 || demographics.some(d => cityDemographics.includes(d));
+                
+                // Check spend match
+                const spendMatch = (citySpend[0] <= maxSpend && citySpend[1] >= minSpend);
+
+                if (destMatch && demoMatch && spendMatch) {
+                    city.style.opacity = '1';
+                    city.classList.add('active');
+                    matchCount += parseInt(city.querySelector('.city-label .text-green-600').textContent);
+                    totalPipeline += (parseInt(city.querySelector('.city-label .text-green-600').textContent) * 150000); // Rough estimate
+                } else {
+                    city.style.opacity = '0.2';
+                    city.classList.remove('active');
+                }
+            });
+
+            // Update counts
+            document.getElementById('matching-count').textContent = matchCount;
+            document.getElementById('pipeline-value').textContent = '₹' + (totalPipeline / 10000000).toFixed(1) + 'Cr';
+            document.getElementById('showing-count').textContent = `Showing ${Math.min(matchCount, 5)} of ${matchCount} agents`;
+
+            // Update insight text
+            updateInsight(destinations, demographics, minSpend, maxSpend);
+        }
+
+        function updateInsight(destinations, demographics, minSpend, maxSpend) {
+            let insight = "";
+            if (destinations.includes('europe') && parseInt(minSpend) >= 150) {
+                insight = "High spend agents show 45% higher conversion for Europe luxury packages";
+            } else if (demographics.includes('families') && destinations.includes('turkey')) {
+                insight = "Family segment agents for Turkey have 38% repeat booking rate";
+            } else if (demographics.includes('veg')) {
+                insight = "Vegetarian-specialist agents typically serve 25% higher value bookings";
+            } else if (parseInt(minSpend) >= 250) {
+                insight = "Luxury segment (₹2.5L+) agents show strongest performance in Maldives and Europe";
+            } else {
+                insight = "Agents with ₹1L-₹2L avg spend show 34% higher conversion for Europe";
+            }
+            document.getElementById('spend-insight').textContent = insight;
+        }
+
+        function resetAllFilters() {
+            // Reset all dropdowns
+            ['dest-europe', 'dest-asia', 'dest-usa', 'dest-me', 'dest-aus', 'dest-sa', 'dest-africa', 'dest-turkey', 'dest-maldives'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+
+            // Reset checkboxes
+            document.querySelectorAll('input[name="demographic"]').forEach(cb => {
+                cb.checked = false;
+                cb.closest('.custom-checkbox').classList.remove('checked');
+            });
+
+            // Reset spend slider
+            document.getElementById('min-spend').value = 50;
+            document.getElementById('max-spend').value = 500;
+            
+            // Reset additional filters
+            document.getElementById('group-size').value = '';
+            document.getElementById('travel-season').value = '';
+            document.getElementById('repeat-bookers').checked = false;
+            document.getElementById('high-converters').checked = false;
+
+            updateSpendRange();
+            updateAgentFilter();
+        }
+
+        function applyFilters() {
+            updateAgentFilter();
+            // Scroll to results
+            document.getElementById('demographics-map').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function viewMatchingAgents() {
+            document.getElementById('agent-directory-tbody').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Calendar Functions
+        const roadshows = [
+            { date: '2024-02-15', city: 'Delhi', region: 'north', destination: 'turkey', status: 'completed', agents: 89, pipeline: '₹2.8Cr' },
+            { date: '2024-02-18', city: 'Chandigarh', region: 'north', destination: 'turkey', status: 'confirmed', agents: 45, pipeline: '₹1.2Cr' },
+            { date: '2024-02-22', city: 'Mumbai', region: 'west', destination: 'maldives', status: 'completed', agents: 120, pipeline: '₹3.4Cr' },
+            { date: '2024-02-25', city: 'Pune', region: 'west', destination: 'europe', status: 'confirmed', agents: 67, pipeline: '₹1.8Cr' },
+            { date: '2024-03-02', city: 'Bangalore', region: 'south', destination: 'usa', status: 'planning', agents: 85, pipeline: '₹2.1Cr' },
+            { date: '2024-03-08', city: 'Chennai', region: 'south', destination: 'asia', status: 'confirmed', agents: 72, pipeline: '₹1.6Cr' },
+            { date: '2024-03-15', city: 'Ahmedabad', region: 'west', destination: 'maldives', status: 'planning', agents: 56, pipeline: '₹1.4Cr' },
+        ];
+
+        let currentMonth = 1;
+        let currentYear = 2024;
+
+        function generateCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June'];
+            document.getElementById('calendar-month').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+            const headers = Array.from(grid.querySelectorAll(':scope > div:nth-child(-n+7)'));
+            grid.innerHTML = '';
+            headers.forEach(h => grid.appendChild(h));
+
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const day = daysInPrevMonth - i;
+                const div = document.createElement('div');
+                div.className = 'calendar-day other-month';
+                div.innerHTML = `<div class="text-sm font-medium text-slate-400">${day}</div>`;
+                grid.appendChild(div);
+            }
+
+            const today = new Date();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const div = document.createElement('div');
+                const isToday = today.getDate() === day && today.getMonth() === currentMonth;
+                div.className = `calendar-day ${isToday ? 'today' : ''}`;
+                
+                let eventsHtml = '';
+                const dayEvents = roadshows.filter(r => {
+                    const rDate = new Date(r.date);
+                    return rDate.getDate() === day && rDate.getMonth() === currentMonth;
+                });
+
+                dayEvents.forEach(event => {
+                    const destClass = `event-${event.destination}`;
+                    const statusIcon = event.status === 'completed' ? '✓' : event.status === 'confirmed' ? '●' : '○';
+                    eventsHtml += `
+                        <div class="roadshow-event ${destClass}" onclick="showEventDetails('${event.city}', '${event.date}')">
+                            <div class="font-bold">${statusIcon} ${event.city}</div>
+                            <div class="opacity-75">${event.agents} agents</div>
+                        </div>
+                    `;
+                });
+
+                div.innerHTML = `<div class="text-sm font-medium text-slate-700 mb-1">${day}</div>${eventsHtml}`;
+                grid.appendChild(div);
+            }
+
+            const remainingCells = 42 - (firstDay + daysInMonth);
+            for (let day = 1; day <= remainingCells; day++) {
+                const div = document.createElement('div');
+                div.className = 'calendar-day other-month';
+                div.innerHTML = `<div class="text-sm font-medium text-slate-400">${day}</div>`;
+                grid.appendChild(div);
+            }
+        }
+
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            generateCalendar();
+        }
+
+        function switchCalendarView(view) {
+            document.getElementById('calendar-view').classList.toggle('hidden', view !== 'calendar');
+            document.getElementById('map-view').classList.toggle('hidden', view !== 'map');
+            document.getElementById('view-calendar').classList.toggle('active', view === 'calendar');
+            document.getElementById('view-map').classList.toggle('active', view === 'map');
+            
+            if (view === 'map') {
+                generateScheduleMap();
+            }
+        }
+
+        function generateScheduleMap() {
+            const mapContainer = document.getElementById('schedule-map');
+            if (mapContainer.children.length > 0) return;
+
+            const cities = [
+                { name: 'Delhi', left: 35, top: 25, region: 'north' },
+                { name: 'Chandigarh', left: 30, top: 20, region: 'north' },
+                { name: 'Mumbai', left: 20, top: 50, region: 'west' },
+                { name: 'Pune', left: 22, top: 55, region: 'west' },
+                { name: 'Bangalore', left: 45, top: 75, region: 'south' },
+                { name: 'Chennai', left: 48, top: 80, region: 'south' },
+                { name: 'Ahmedabad', left: 15, top: 45, region: 'west' },
+            ];
+
+            cities.forEach(city => {
+                const cityEvents = roadshows.filter(r => r.city === city.name);
+                const hasEvent = cityEvents.length > 0;
+                
+                const node = document.createElement('div');
+                node.className = `city-node ${hasEvent ? 'has-event' : ''}`;
+                node.style.left = city.left + '%';
+                node.style.top = city.top + '%';
+                
+                let dotColor = '#94a3b8';
+                if (hasEvent) {
+                    const dest = cityEvents[0].destination;
+                    const colors = { turkey: '#ef4444', maldives: '#06b6d4', europe: '#a855f7', usa: '#3b82f6', asia: '#dc2626' };
+                    dotColor = colors[dest] || '#3b82f6';
+                }
+                
+                node.innerHTML = `
+                    <div class="city-dot" style="background-color: ${dotColor}; color: ${dotColor}"></div>
+                    <div class="city-label">
+                        <div class="font-bold">${city.name}</div>
+                        ${hasEvent ? `<div class="text-xs mt-1">${cityEvents.map(e => `<div>${e.destination} - ${e.status}</div>`).join('')}</div>` : '<div class="text-xs text-slate-500 mt-1">No events</div>'}
+                    </div>
+                `;
+                
+                mapContainer.appendChild(node);
+            });
+        }
+
+        function filterEvents() {
+            const dest = document.getElementById('destination-filter').value;
+            const region = document.getElementById('region-filter').value;
+            const filtered = roadshows.filter(r => {
+                return (dest === 'all' || r.destination === dest) && (region === 'all' || r.region === region);
+            });
+            updateStats(filtered);
+            updateTable(filtered);
+        }
+
+        function updateStats(events) {
+            document.getElementById('stat-total').textContent = events.length;
+            document.getElementById('stat-confirmed').textContent = events.filter(e => e.status === 'confirmed').length;
+            document.getElementById('stat-planning').textContent = events.filter(e => e.status === 'planning').length;
+            document.getElementById('stat-completed').textContent = events.filter(e => e.status === 'completed').length;
+        }
+
+        function updateTable(events) {
+            const tbody = document.getElementById('roadshow-tbody');
+            tbody.innerHTML = events.map(event => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="px-4 py-3 font-medium">${new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</td>
+                    <td class="px-4 py-3 font-semibold text-slate-900">${event.city}</td>
+                    <td class="px-4 py-3">
+                        <span class="px-2 py-1 rounded text-xs font-medium capitalize bg-slate-100 text-slate-700">${event.destination}</span>
+                    </td>
+                    <td class="px-4 py-3 text-center font-bold">${event.agents}</td>
+                    <td class="px-4 py-3 text-center">
+                        <span class="px-2 py-1 rounded-full text-xs font-bold ${event.status === 'completed' ? 'bg-green-100 text-green-700' : event.status === 'confirmed' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}">${event.status}</span>
+                    </td>
+                    <td class="px-4 py-3 text-right font-bold text-slate-900">${event.pipeline}</td>
+                </tr>
+            `).join('');
+        }
+
+        function showEventDetails(city, date) {
+            const event = roadshows.find(r => r.city === city && r.date === date);
+            if (event) {
+                alert(`Roadshow: ${event.city}\nDate: ${event.date}\nDestination: ${event.destination}\nStatus: ${event.status}\nAgents: ${event.agents}\nPipeline: ${event.pipeline}`);
+            }
+        }
+
+        // Initialize
+        generateCalendar();
+        updateTable(roadshows);
+    </script>
+</body>
+</html>

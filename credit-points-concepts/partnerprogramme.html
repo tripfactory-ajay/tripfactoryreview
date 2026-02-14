@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory - Partner Member Programme</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+        }
+        
+        /* Ticker Animation */
+        .ticker-wrap {
+            width: 100%;
+            overflow: hidden;
+            background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 8px 0;
+            position: relative;
+            border-bottom: 3px solid #f59e0b;
+        }
+        
+        .ticker {
+            display: inline-block;
+            white-space: nowrap;
+            animation: ticker 40s linear infinite;
+        }
+        
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        .ticker-item {
+            display: inline-block;
+            padding: 0 3rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        /* Custom Range Slider */
+        .slider-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .slider-value {
+            color: #3b82f6;
+            font-weight: 700;
+        }
+        
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(to right, #dbeafe, #3b82f6);
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+            border: 3px solid white;
+            transition: all 0.2s;
+        }
+        
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
+        }
+        
+        input[type=range]::-moz-range-thumb {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        }
+        
+        /* Glass Panel */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Projection Cards */
+        .projection-card {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .projection-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .big-number {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        /* Partner Cards */
+        .partner-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        
+        .partner-card:hover {
+            transform: translateX(8px);
+            border-left-color: #f59e0b;
+        }
+        
+        .partner-card.active {
+            border-left-color: #3b82f6;
+            background: #eff6ff;
+        }
+        
+        /* Progress Bars */
+        .progress-fill {
+            transition: width 0.6s ease;
+        }
+        
+        /* Metric Cards */
+        .metric-card {
+            transition: all 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.15);
+        }
+        
+        /* Status Badges */
+        .status-badge {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Tab Buttons */
+        .tab-btn {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+        }
+        
+        /* Chart Bars */
+        .chart-bar {
+            transition: height 0.6s ease;
+        }
+        
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+        }
+        
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 12px;
+            background: #1e293b;
+            color: white;
+            font-size: 12px;
+            border-radius: 6px;
+            white-space: nowrap;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Offers Ticker -->
+    <div class="ticker-wrap">
+        <div class="ticker">
+            <span class="ticker-item"><i class="fas fa-handshake text-amber-400"></i>Rotary Club Partnership: $1,000 credits issued to 500 members - 68% utilization rate!</span>
+            <span class="ticker-item"><i class="fas fa-chart-line text-amber-400"></i>Lions Club Programme: Q1 revenue $2.4M from partner credits - 45% above projection</span>
+            <span class="ticker-item"><i class="fas fa-users text-amber-400"></i>New Partnership: TiE Global members now eligible for $1,500 travel credits</span>
+            <span class="ticker-item"><i class="fas fa-gift text-amber-400"></i>CII Partnership Launch: 2,000 credits issued, projected $4.2M revenue</span>
+            <span class="ticker-item"><i class="fas fa-star text-amber-400"></i>Top Performing Partner: Rotary Club Delhi - 82% redemption rate</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-lg sticky top-0 z-50 border-b-4 border-blue-900">
+        <div class="px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="bg-blue-900 text-white px-4 py-2 rounded-xl font-bold text-2xl tracking-tight">
+                        <i class="fas fa-plane-departure mr-2 text-amber-400"></i>TripFactory
+                    </div>
+                    <div class="hidden md:block">
+                        <h1 class="text-2xl font-bold text-blue-900">Partner Member Programme</h1>
+                        <p class="text-sm text-slate-500">Association Credit Management & Forecasting</p>
+                    </div>
+                </div>
+                
+                <!-- Quick Stats Header -->
+                <div class="flex items-center gap-6">
+                    <div class="text-right">
+                        <div class="text-xs font-bold text-slate-500 uppercase">Total Credits Issued</div>
+                        <div class="text-2xl font-bold text-blue-900">$4.2M</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs font-bold text-slate-500 uppercase">Utilization Rate</div>
+                        <div class="text-2xl font-bold text-green-600">68%</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs font-bold text-slate-500 uppercase">Partner Revenue</div>
+                        <div class="text-2xl font-bold text-amber-600">$12.8M</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="p-6 max-w-[1920px] mx-auto space-y-6">
+
+        <!-- Top Navigation Tabs -->
+        <div class="glass-panel rounded-xl p-2 flex gap-2">
+            <button onclick="switchTab('forecast')" id="tab-forecast" class="tab-btn active px-6 py-3 rounded-lg text-sm font-semibold transition flex items-center gap-2">
+                <i class="fas fa-calculator"></i>Forecast Calculator
+            </button>
+            <button onclick="switchTab('partners')" id="tab-partners" class="tab-btn px-6 py-3 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100 transition flex items-center gap-2">
+                <i class="fas fa-handshake"></i>Partner Management
+            </button>
+            <button onclick="switchTab('tracking')" id="tab-tracking" class="tab-btn px-6 py-3 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100 transition flex items-center gap-2">
+                <i class="fas fa-chart-bar"></i>Live Tracking
+            </button>
+            <button onclick="switchTab('reports')" id="tab-reports" class="tab-btn px-6 py-3 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100 transition flex items-center gap-2">
+                <i class="fas fa-file-alt"></i>Reports & Analytics
+            </button>
+        </div>
+
+        <!-- TAB 1: FORECAST CALCULATOR -->
+        <div id="content-forecast" class="space-y-6">
+            
+            <!-- Main Forecast Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Sliders Panel -->
+                <div class="lg:col-span-2 glass-panel rounded-2xl p-8 shadow-xl">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fas fa-sliders-h text-blue-600"></i>
+                                Campaign Forecast Calculator
+                            </h2>
+                            <p class="text-sm text-slate-500 mt-1">Adjust parameters to project revenue and utilization</p>
+                        </div>
+                        <button onclick="resetSliders()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm font-semibold text-slate-700 transition">
+                            <i class="fas fa-redo mr-1"></i>Reset
+                        </button>
+                    </div>
+
+                    <!-- Slider 1: Credit Value -->
+                    <div class="slider-container bg-white rounded-xl p-6 shadow-md mb-4">
+                        <div class="slider-label">
+                            <span class="flex items-center gap-2">
+                                <i class="fas fa-gift text-amber-500"></i>
+                                Credit Value per Member
+                            </span>
+                            <span class="slider-value text-2xl" id="value-display">$1,000</span>
+                        </div>
+                        <input type="range" id="credit-value" min="500" max="5000" step="100" value="1000" 
+                               oninput="updateForecast()">
+                        <div class="flex justify-between text-xs text-slate-400 mt-2">
+                            <span>$500</span>
+                            <span>$2,500</span>
+                            <span>$5,000</span>
+                        </div>
+                    </div>
+
+                    <!-- Slider 2: Quantity -->
+                    <div class="slider-container bg-white rounded-xl p-6 shadow-md mb-4">
+                        <div class="slider-label">
+                            <span class="flex items-center gap-2">
+                                <i class="fas fa-users text-blue-500"></i>
+                                Number of Members (Credits Issued)
+                            </span>
+                            <span class="slider-value text-2xl" id="quantity-display">500</span>
+                        </div>
+                        <input type="range" id="member-quantity" min="50" max="10000" step="50" value="500" 
+                               oninput="updateForecast()">
+                        <div class="flex justify-between text-xs text-slate-400 mt-2">
+                            <span>50</span>
+                            <span>5,000</span>
+                            <span>10,000</span>
+                        </div>
+                    </div>
+
+                    <!-- Slider 3: Average Holiday Cost -->
+                    <div class="slider-container bg-white rounded-xl p-6 shadow-md">
+                        <div class="slider-label">
+                            <span class="flex items-center gap-2">
+                                <i class="fas fa-plane text-green-500"></i>
+                                Average Holiday Cost per Booking
+                            </span>
+                            <span class="slider-value text-2xl" id="cost-display">$3,500</span>
+                        </div>
+                        <input type="range" id="avg-cost" min="1500" max="10000" step="100" value="3500" 
+                               oninput="updateForecast()">
+                        <div class="flex justify-between text-xs text-slate-400 mt-2">
+                            <span>$1,500</span>
+                            <span>$5,750</span>
+                            <span>$10,000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projections Panel -->
+                <div class="space-y-4">
+                    <!-- Main Revenue Projection -->
+                    <div class="projection-card shadow-2xl">
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-2 mb-2 text-blue-100">
+                                <i class="fas fa-chart-line"></i>
+                                <span class="text-sm font-semibold uppercase tracking-wide">Projected Revenue</span>
+                            </div>
+                            <div class="big-number" id="projected-revenue">$1.75M</div>
+                            <p class="text-blue-100 text-sm mt-2">Based on current parameters</p>
+                        </div>
+                    </div>
+
+                    <!-- Secondary Metrics -->
+                    <div class="glass-panel rounded-2xl p-6 shadow-xl space-y-4">
+                        <h3 class="font-bold text-slate-900 mb-4">Key Projections</h3>
+                        
+                        <div class="flex justify-between items-center p-4 bg-blue-50 rounded-xl">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-slate-500">Total Credit Value</div>
+                                    <div class="font-bold text-slate-900" id="total-credit-value">$500,000</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center p-4 bg-green-50 rounded-xl">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center text-white">
+                                    <i class="fas fa-percentage"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-slate-500">Est. Utilization Rate</div>
+                                    <div class="font-bold text-slate-900" id="utilization-rate">65%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center p-4 bg-amber-50 rounded-xl">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-amber-600 rounded-lg flex items-center justify-center text-white">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-slate-500">Expected Bookings</div>
+                                    <div class="font-bold text-slate-900" id="expected-bookings">325</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center p-4 bg-purple-50 rounded-xl">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center text-white">
+                                    <i class="fas fa-coins"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-slate-500">Avg Revenue per Member</div>
+                                    <div class="font-bold text-slate-900" id="revenue-per-member">$3,500</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center p-4 bg-red-50 rounded-xl">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center text-white">
+                                    <i class="fas fa-fire"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-slate-500">Credit Cost to Business</div>
+                                    <div class="font-bold text-slate-900" id="credit-cost">$500,000</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center p-4 bg-emerald-50 rounded-xl border-2 border-emerald-200">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-white">
+                                    <i class="fas fa-trophy"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-slate-500 font-bold">NET PROFIT PROJECTION</div>
+                                    <div class="font-bold text-emerald-700 text-lg" id="net-profit">$1.25M</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ROI Indicator -->
+                    <div class="bg-gradient-to-r from-emerald-500 to-green-600 rounded-2xl p-6 text-white shadow-xl">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="text-sm font-semibold opacity-90">Return on Investment</div>
+                                <div class="text-4xl font-bold mt-1" id="roi-percentage">350%</div>
+                            </div>
+                            <i class="fas fa-chart-pie text-6xl opacity-30"></i>
+                        </div>
+                        <p class="text-sm mt-2 opacity-90">For every $1 in credits, generate $4.50 in revenue</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scenario Comparison -->
+            <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-balance-scale text-blue-600"></i>
+                    Scenario Comparison
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white rounded-xl p-4 border-2 border-slate-200 hover:border-blue-400 transition cursor-pointer" onclick="loadScenario('conservative')">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-bold text-slate-700">Conservative</span>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">45% Utilization</span>
+                        </div>
+                        <div class="text-2xl font-bold text-slate-900">$788K</div>
+                        <p class="text-xs text-slate-500">Revenue projection</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 border-2 border-amber-400 shadow-lg cursor-pointer" onclick="loadScenario('moderate')">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-bold text-slate-700">Moderate</span>
+                            <span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full">65% Utilization</span>
+                        </div>
+                        <div class="text-2xl font-bold text-slate-900">$1.14M</div>
+                        <p class="text-xs text-slate-500">Revenue projection</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 border-2 border-slate-200 hover:border-green-400 transition cursor-pointer" onclick="loadScenario('aggressive')">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-bold text-slate-700">Aggressive</span>
+                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">85% Utilization</span>
+                        </div>
+                        <div class="text-2xl font-bold text-slate-900">$1.49M</div>
+                        <p class="text-xs text-slate-500">Revenue projection</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: PARTNER MANAGEMENT -->
+        <div id="content-partners" class="space-y-6 hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Partner List -->
+                <div class="lg:col-span-2 glass-panel rounded-2xl p-6 shadow-xl">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-900">Active Partners</h2>
+                            <p class="text-sm text-slate-500">Manage association partnerships and credit programmes</p>
+                        </div>
+                        <button class="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition flex items-center gap-2">
+                            <i class="fas fa-plus"></i>Add New Partner
+                        </button>
+                    </div>
+
+                    <div class="space-y-3" id="partner-list">
+                        <!-- Rotary Club -->
+                        <div class="partner-card bg-white rounded-xl p-5 shadow-md cursor-pointer active" onclick="selectPartner('rotary')">
+                            <div class="flex justify-between items-start">
+                                <div class="flex gap-4">
+                                    <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 text-2xl">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-lg text-slate-900">Rotary Club of India</h3>
+                                        <p class="text-sm text-slate-500">National Chapter • 12,000 members</p>
+                                        <div class="flex gap-2 mt-2">
+                                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-semibold">Active</span>
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">$1,000 credit</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-slate-900">68%</div>
+                                    <div class="text-xs text-slate-500">Utilization</div>
+                                    <div class="text-sm font-semibold text-green-600 mt-1">$2.4M revenue</div>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-slate-100">
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-slate-500">Credits Issued: 500</span>
+                                    <span class="text-slate-500">Redeemed: 340</span>
+                                </div>
+                                <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-blue-600 rounded-full progress-fill" style="width: 68%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lions Club -->
+                        <div class="partner-card bg-white rounded-xl p-5 shadow-md cursor-pointer" onclick="selectPartner('lions')">
+                            <div class="flex justify-between items-start">
+                                <div class="flex gap-4">
+                                    <div class="w-14 h-14 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600 text-2xl">
+                                        <i class="fas fa-paw"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-lg text-slate-900">Lions Club International</h3>
+                                        <p class="text-sm text-slate-500">India District • 8,500 members</p>
+                                        <div class="flex gap-2 mt-2">
+                                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-semibold">Active</span>
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">$1,000 credit</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-slate-900">52%</div>
+                                    <div class="text-xs text-slate-500">Utilization</div>
+                                    <div class="text-sm font-semibold text-green-600 mt-1">$1.8M revenue</div>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-slate-100">
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-slate-500">Credits Issued: 400</span>
+                                    <span class="text-slate-500">Redeemed: 208</span>
+                                </div>
+                                <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-amber-500 rounded-full progress-fill" style="width: 52%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TiE -->
+                        <div class="partner-card bg-white rounded-xl p-5 shadow-md cursor-pointer" onclick="selectPartner('tie')">
+                            <div class="flex justify-between items-start">
+                                <div class="flex gap-4">
+                                    <div class="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 text-2xl">
+                                        <i class="fas fa-lightbulb"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-lg text-slate-900">TiE Global</h3>
+                                        <p class="text-sm text-slate-500">Entrepreneurs Network • 3,200 members</p>
+                                        <div class="flex gap-2 mt-2">
+                                            <span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full font-semibold">Launching</span>
+                                            <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">$1,500 credit</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-slate-400">0%</div>
+                                    <div class="text-xs text-slate-500">Utilization</div>
+                                    <div class="text-sm font-semibold text-slate-400 mt-1">$0 revenue</div>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-slate-100">
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-slate-500">Credits Issued: 200</span>
+                                    <span class="text-slate-500">Redeemed: 0</span>
+                                </div>
+                                <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-slate-300 rounded-full progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CII -->
+                        <div class="partner-card bg-white rounded-xl p-5 shadow-md cursor-pointer" onclick="selectPartner('cii')">
+                            <div class="flex justify-between items-start">
+                                <div class="flex gap-4">
+                                    <div class="w-14 h-14 bg-red-100 rounded-xl flex items-center justify-center text-red-600 text-2xl">
+                                        <i class="fas fa-industry"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-lg text-slate-900">CII - Confederation of Indian Industry</h3>
+                                        <p class="text-sm text-slate-500">Corporate Members • 9,000 members</p>
+                                        <div class="flex gap-2 mt-2">
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-semibold">Negotiating</span>
+                                            <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">$1,000 credit</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-slate-400">--</div>
+                                    <div class="text-xs text-slate-500">Projected</div>
+                                    <div class="text-sm font-semibold text-blue-600 mt-1">$4.2M potential</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Partner Details Side Panel -->
+                <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                    <h3 class="font-bold text-slate-900 mb-4">Partner Details</h3>
+                    
+                    <div id="partner-details-rotary" class="space-y-4">
+                        <div class="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white">
+                                    <i class="fas fa-sync-alt"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-slate-900">Rotary Club of India</div>
+                                    <div class="text-xs text-blue-600 font-semibold">Top Performer</div>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-600">Programme Start</span>
+                                    <span class="font-semibold">Jan 2024</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-600">Credit Value</span>
+                                    <span class="font-semibold">$1,000</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-600">Total Members</span>
+                                    <span class="font-semibold">12,000</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-600">Credits Issued</span>
+                                    <span class="font-semibold">500 (Pilot)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-4 shadow-md">
+                            <h4 class="font-bold text-slate-900 mb-3 text-sm">Performance Metrics</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="text-slate-500">Utilization Rate</span>
+                                        <span class="font-bold text-blue-600">68%</span>
+                                    </div>
+                                    <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="h-full bg-blue-600 rounded-full" style="width: 68%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="text-slate-500">Avg Booking Value</span>
+                                        <span class="font-bold text-green-600">$4,200</span>
+                                    </div>
+                                    <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="h-full bg-green-500 rounded-full" style="width: 84%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="text-slate-500">Member Satisfaction</span>
+                                        <span class="font-bold text-amber-600">4.8/5</span>
+                                    </div>
+                                    <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="h-full bg-amber-500 rounded-full" style="width: 96%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-green-50 rounded-xl p-4 border border-green-200">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-semibold text-green-800">Revenue Generated</span>
+                                <i class="fas fa-arrow-trend-up text-green-600"></i>
+                            </div>
+                            <div class="text-3xl font-bold text-green-700">$2.4M</div>
+                            <p class="text-xs text-green-600 mt-1">145% of initial projection</p>
+                        </div>
+
+                        <button class="w-full py-3 bg-blue-900 text-white rounded-xl font-semibold hover:bg-blue-800 transition">
+                            <i class="fas fa-download mr-2"></i>Download Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: LIVE TRACKING -->
+        <div id="content-tracking" class="space-y-6 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="metric-card glass-panel rounded-xl p-5 border-l-4 border-blue-600">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase">Credits Issued Today</p>
+                            <h3 class="text-3xl font-bold text-slate-900 mt-1">47</h3>
+                            <p class="text-xs text-green-600 font-semibold mt-1 flex items-center gap-1">
+                                <i class="fas fa-arrow-up"></i> +12 vs yesterday
+                            </p>
+                        </div>
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card glass-panel rounded-xl p-5 border-l-4 border-green-600">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase">Redemptions Today</p>
+                            <h3 class="text-3xl font-bold text-slate-900 mt-1">23</h3>
+                            <p class="text-xs text-green-600 font-semibold mt-1 flex items-center gap-1">
+                                <i class="fas fa-arrow-up"></i> +5 vs yesterday
+                            </p>
+                        </div>
+                        <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card glass-panel rounded-xl p-5 border-l-4 border-amber-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase">Revenue Today</p>
+                            <h3 class="text-3xl font-bold text-slate-900 mt-1">$89K</h3>
+                            <p class="text-xs text-amber-600 font-semibold mt-1 flex items-center gap-1">
+                                <i class="fas fa-arrow-up"></i> +18% vs avg
+                            </p>
+                        </div>
+                        <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card glass-panel rounded-xl p-5 border-l-4 border-purple-600">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase">Active Bookings</p>
+                            <h3 class="text-3xl font-bold text-slate-900 mt-1">156</h3>
+                            <p class="text-xs text-purple-600 font-semibold mt-1">
+                                In progress
+                            </p>
+                        </div>
+                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600">
+                            <i class="fas fa-suitcase"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-time Activity Feed -->
+            <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-bolt text-amber-500"></i>
+                    Live Activity Feed
+                    <span class="status-badge w-2 h-2 bg-green-500 rounded-full ml-2"></span>
+                </h3>
+                
+                <div class="space-y-3 max-h-96 overflow-y-auto" id="activity-feed">
+                    <div class="flex items-center gap-4 p-3 bg-green-50 rounded-xl border border-green-200">
+                        <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center">
+                                <span class="font-semibold text-slate-900">Credit Redeemed</span>
+                                <span class="text-xs text-slate-500">2 mins ago</span>
+                            </div>
+                            <p class="text-sm text-slate-600">Rotary Club member redeemed $1,000 credit for Turkey package ($4,500 total)</p>
+                        </div>
+                        <span class="font-bold text-green-700">$4,500</span>
+                    </div>
+
+                    <div class="flex items-center gap-4 p-3 bg-blue-50 rounded-xl border border-blue-200">
+                        <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center">
+                                <span class="font-semibold text-slate-900">Credit Issued</span>
+                                <span class="text-xs text-slate-500">5 mins ago</span>
+                            </div>
+                            <p class="text-sm text-slate-600">New member registered - Lions Club Mumbai Chapter</p>
+                        </div>
+                        <span class="font-bold text-blue-700">$1,000</span>
+                    </div>
+
+                    <div class="flex items-center gap-4 p-3 bg-purple-50 rounded-xl border border-purple-200">
+                        <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white">
+                            <i class="fas fa-plane"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center">
+                                <span class="font-semibold text-slate-900">Booking Confirmed</span>
+                                <span class="text-xs text-slate-500">12 mins ago</span>
+                            </div>
+                            <p class="text-sm text-slate-600">Rotary Club member booked Maldives package with credit</p>
+                        </div>
+                        <span class="font-bold text-purple-700">$3,200</span>
+                    </div>
+
+                    <div class="flex items-center gap-4 p-3 bg-amber-50 rounded-xl border border-amber-200">
+                        <div class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center text-white">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center">
+                                <span class="font-semibold text-slate-900">New Member</span>
+                                <span class="text-xs text-slate-500">18 mins ago</span>
+                            </div>
+                            <p class="text-sm text-slate-600">TiE Global member registered - credit pending activation</p>
+                        </div>
+                        <span class="font-bold text-amber-700">$1,500</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: REPORTS & ANALYTICS -->
+        <div id="content-reports" class="space-y-6 hidden">
+            <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                <h2 class="text-2xl font-bold text-slate-900 mb-6">Programme Performance Reports</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl p-6 shadow-md">
+                        <h3 class="font-bold text-slate-900 mb-4">Monthly Revenue Trend</h3>
+                        <div class="flex items-end gap-2 h-48">
+                            <div class="flex-1 flex flex-col items-center gap-2">
+                                <div class="w-full bg-blue-200 rounded-t-lg chart-bar" style="height: 40%"></div>
+                                <span class="text-xs text-slate-500">Jan</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-2">
+                                <div class="w-full bg-blue-300 rounded-t-lg chart-bar" style="height: 55%"></div>
+                                <span class="text-xs text-slate-500">Feb</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-2">
+                                <div class="w-full bg-blue-400 rounded-t-lg chart-bar" style="height: 70%"></div>
+                                <span class="text-xs text-slate-500">Mar</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-2">
+                                <div class="w-full bg-blue-500 rounded-t-lg chart-bar" style="height: 85%"></div>
+                                <span class="text-xs text-slate-500">Apr</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-2">
+                                <div class="w-full bg-blue-600 rounded-t-lg chart-bar" style="height: 100%"></div>
+                                <span class="text-xs text-slate-500">May</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
+                            <span class="text-sm text-slate-500">Total Revenue (YTD)</span>
+                            <span class="text-xl font-bold text-blue-900">$12.8M</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 shadow-md">
+                        <h3 class="font-bold text-slate-900 mb-4">Utilization by Partner</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-700">Rotary Club</span>
+                                    <span class="font-bold text-blue-600">68%</span>
+                                </div>
+                                <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-blue-600 rounded-full" style="width: 68%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-700">Lions Club</span>
+                                    <span class="font-bold text-amber-600">52%</span>
+                                </div>
+                                <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-amber-500 rounded-full" style="width: 52%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-700">TiE Global</span>
+                                    <span class="font-bold text-slate-400">0%</span>
+                                </div>
+                                <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-slate-300 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-slate-100">
+                            <button class="w-full py-2 bg-blue-100 text-blue-700 rounded-lg font-semibold hover:bg-blue-200 transition">
+                                <i class="fas fa-download mr-2"></i>Export Full Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Initialize forecast on load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateForecast();
+        });
+
+        // Tab Switching
+        function switchTab(tabName) {
+            const tabs = ['forecast', 'partners', 'tracking', 'reports'];
+            tabs.forEach(t => {
+                document.getElementById('content-' + t).classList.add('hidden');
+                document.getElementById('tab-' + t).classList.remove('active');
+                document.getElementById('tab-' + t).classList.add('text-slate-700');
+            });
+            
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            document.getElementById('tab-' + tabName).classList.add('active');
+            document.getElementById('tab-' + tabName).classList.remove('text-slate-700');
+        }
+
+        // Forecast Calculator Logic
+        function updateForecast() {
+            const creditValue = parseInt(document.getElementById('credit-value').value);
+            const memberQuantity = parseInt(document.getElementById('member-quantity').value);
+            const avgCost = parseInt(document.getElementById('avg-cost').value);
+
+            // Update displays
+            document.getElementById('value-display').textContent = '$' + creditValue.toLocaleString();
+            document.getElementById('quantity-display').textContent = memberQuantity.toLocaleString();
+            document.getElementById('cost-display').textContent = '$' + avgCost.toLocaleString();
+
+            // Calculate projections
+            const totalCreditValue = creditValue * memberQuantity;
+            const utilizationRate = calculateUtilizationRate(creditValue, avgCost);
+            const expectedBookings = Math.round(memberQuantity * (utilizationRate / 100));
+            const projectedRevenue = expectedBookings * avgCost;
+            const creditCost = totalCreditValue * (utilizationRate / 100);
+            const netProfit = projectedRevenue - creditCost;
+            const roi = ((netProfit / creditCost) * 100).toFixed(0);
+            const revenuePerMember = expectedBookings > 0 ? (projectedRevenue / memberQuantity).toFixed(0) : 0;
+
+            // Update projection cards
+            document.getElementById('projected-revenue').textContent = '$' + (projectedRevenue / 1000000).toFixed(2) + 'M';
+            document.getElementById('total-credit-value').textContent = '$' + totalCreditValue.toLocaleString();
+            document.getElementById('utilization-rate').textContent = utilizationRate + '%';
+            document.getElementById('expected-bookings').textContent = expectedBookings.toLocaleString();
+            document.getElementById('revenue-per-member').textContent = '$' + parseInt(revenuePerMember).toLocaleString();
+            document.getElementById('credit-cost').textContent = '$' + creditCost.toLocaleString();
+            document.getElementById('net-profit').textContent = '$' + (netProfit / 1000000).toFixed(2) + 'M';
+            document.getElementById('roi-percentage').textContent = roi + '%';
+        }
+
+        function calculateUtilizationRate(creditValue, avgCost) {
+            // Higher credit value relative to avg cost = higher utilization
+            const ratio = creditValue / avgCost;
+            if (ratio >= 0.5) return 85;
+            if (ratio >= 0.3) return 65;
+            if (ratio >= 0.2) return 45;
+            return 35;
+        }
+
+        function resetSliders() {
+            document.getElementById('credit-value').value = 1000;
+            document.getElementById('member-quantity').value = 500;
+            document.getElementById('avg-cost').value = 3500;
+            updateForecast();
+        }
+
+        function loadScenario(type) {
+            const scenarios = {
+                conservative: { utilization: 45, bookings: 225, revenue: 788000 },
+                moderate: { utilization: 65, bookings: 325, revenue: 1137500 },
+                aggressive: { utilization: 85, bookings: 425, revenue: 1487500 }
+            };
+            
+            const s = scenarios[type];
+            document.getElementById('utilization-rate').textContent = s.utilization + '%';
+            document.getElementById('expected-bookings').textContent = s.bookings;
+            document.getElementById('projected-revenue').textContent = '$' + (s.revenue / 1000000).toFixed(2) + 'M';
+        }
+
+        function selectPartner(partner) {
+            document.querySelectorAll('.partner-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>

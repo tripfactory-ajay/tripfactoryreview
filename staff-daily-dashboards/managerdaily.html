@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Factory - Department Manager Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .card-shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
+        .metric-card { transition: transform 0.2s ease; }
+        .metric-card:hover { transform: translateY(-2px); }
+        .priority-high { border-left: 4px solid #ef4444; }
+        .priority-medium { border-left: 4px solid #f59e0b; }
+        .priority-low { border-left: 4px solid #3b82f6; }
+        .tab-active { background-color: #3b82f6; color: white; }
+        .tab-inactive { background-color: white; color: #64748b; }
+        .tab-inactive:hover { background-color: #f1f5f9; }
+        .pulse-red { animation: pulse-red 2s infinite; }
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+        .welcome-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .management-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%); }
+        .tech-gradient { background: linear-gradient(135deg, #0f766e 0%, #059669 100%); }
+        .finance-gradient { background: linear-gradient(135deg, #047857 0%, #0891b2 100%); }
+        .sales-gradient { background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%); }
+        .commercial-gradient { background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); }
+        .operations-gradient { background: linear-gradient(135deg, #0369a1 0%, #4f46e5 100%); }
+        .marketing-gradient { background: linear-gradient(135deg, #db2777 0%, #ea580c 100%); }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">TF</div>
+                    <div>
+                        <h1 class="text-xl font-bold text-slate-900">Department Manager Dashboard</h1>
+                        <p class="text-sm text-slate-500">Daily Actions, Alerts & Department Summary</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-lg text-sm text-slate-600">
+                        <i class="fas fa-calendar"></i>
+                        <span id="currentDate">Wednesday, 12 February 2026</span>
+                    </div>
+                    <button class="relative p-2 text-slate-600 hover:text-slate-900">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">AK</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Department Tabs -->
+    <div class="bg-white border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-1 py-3 overflow-x-auto">
+                <button onclick="switchTab('management')" id="tab-management" class="tab-active px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap">
+                    <i class="fas fa-crown mr-2"></i>Management
+                </button>
+                <button onclick="switchTab('technology')" id="tab-technology" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap">
+                    <i class="fas fa-laptop-code mr-2"></i>Technology
+                </button>
+                <button onclick="switchTab('finance')" id="tab-finance" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap">
+                    <i class="fas fa-chart-line mr-2"></i>Finance
+                </button>
+                <button onclick="switchTab('sales')" id="tab-sales" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap">
+                    <i class="fas fa-handshake mr-2"></i>Sales
+                </button>
+                <button onclick="switchTab('commercial')" id="tab-commercial" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap">
+                    <i class="fas fa-briefcase mr-2"></i>Commercial
+                </button>
+                <button onclick="switchTab('operations')" id="tab-operations" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap">
+                    <i class="fas fa-cogs mr-2"></i>Operations
+                </button>
+                <button onclick="switchTab('marketing')" id="tab-marketing" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap">
+                    <i class="fas fa-bullhorn mr-2"></i>Marketing
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
+        <!-- MANAGEMENT DASHBOARD -->
+        <div id="dashboard-management" class="dashboard-section">
+            <!-- Welcome Banner -->
+            <div class="management-gradient rounded-2xl p-6 text-white mb-6 card-shadow">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2">Welcome back, Ajay Kawa</h2>
+                        <p class="text-blue-100">CEO & Founder - Here's your executive summary for today</p>
+                        <div class="flex gap-6 mt-4">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-building text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">7</div>
+                                    <div class="text-xs text-blue-200">Offices</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-users text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">1,247</div>
+                                    <div class="text-xs text-blue-200">Employees</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-globe text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">42</div>
+                                    <div class="text-xs text-blue-200">Countries</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-3xl font-bold">₹847Cr</div>
+                        <div class="text-sm text-blue-200">YTD Revenue</div>
+                        <div class="text-emerald-300 text-sm mt-1"><i class="fas fa-arrow-up"></i> 24% YoY</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Critical Alerts -->
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-slate-900"><i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>Critical Items Requiring Attention</h3>
+                        <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">4 Urgent</span>
+                    </div>
+
+                    <div class="priority-high bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded font-bold">BOARD LEVEL</span>
+                                <h4 class="font-bold text-slate-900 mt-2">Q4 Board Meeting Preparation</h4>
+                            </div>
+                            <span class="text-sm text-red-600 font-medium">Due: Tomorrow</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Board presentation deck needs final review. Finance and Commercial teams awaiting your approval on revenue projections.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700">Review Deck</button>
+                            <button class="px-3 py-1.5 bg-white text-slate-600 border text-sm rounded hover:bg-slate-50">Delegate</button>
+                        </div>
+                    </div>
+
+                    <div class="priority-high bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded font-bold">STRATEGIC</span>
+                                <h4 class="font-bold text-slate-900 mt-2">Series C Funding Discussions</h4>
+                            </div>
+                            <span class="text-sm text-amber-600 font-medium">Meeting: 2:00 PM</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Term sheet discussion with Sequoia Capital. Legal and Finance teams briefed. Valuation discussion points prepared.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">View Brief</button>
+                            <button class="px-3 py-1.5 bg-white text-slate-600 border text-sm rounded hover:bg-slate-50">Reschedule</button>
+                        </div>
+                    </div>
+
+                    <div class="priority-medium bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded font-bold">OPERATIONS</span>
+                                <h4 class="font-bold text-slate-900 mt-2">Dubai Office Expansion Approval</h4>
+                            </div>
+                            <span class="text-sm text-slate-500">Pending: 3 days</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Proposal to expand Dubai team by 45 heads. HR and Finance have signed off. Awaiting final budget approval.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-emerald-600 text-white text-sm rounded hover:bg-emerald-700">Approve</button>
+                            <button class="px-3 py-1.5 bg-white text-slate-600 border text-sm rounded hover:bg-slate-50">Review</button>
+                        </div>
+                    </div>
+
+                    <!-- Department Summaries -->
+                    <div class="bg-white rounded-xl card-shadow p-6 mt-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">Department Health Overview</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <i class="fas fa-laptop-code text-emerald-600"></i>
+                                    <span class="font-medium text-slate-900 text-sm">Technology</span>
+                                </div>
+                                <div class="text-2xl font-bold text-emerald-700">98%</div>
+                                <div class="text-xs text-emerald-600">On Track</div>
+                            </div>
+                            <div class="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <i class="fas fa-chart-line text-amber-600"></i>
+                                    <span class="font-medium text-slate-900 text-sm">Finance</span>
+                                </div>
+                                <div class="text-2xl font-bold text-amber-700">2 Issues</div>
+                                <div class="text-xs text-amber-600">Review Needed</div>
+                            </div>
+                            <div class="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <i class="fas fa-handshake text-emerald-600"></i>
+                                    <span class="font-medium text-slate-900 text-sm">Sales</span>
+                                </div>
+                                <div class="text-2xl font-bold text-emerald-700">112%</div>
+                                <div class="text-xs text-emerald-600">Target Exceeded</div>
+                            </div>
+                            <div class="p-3 bg-rose-50 rounded-lg border border-rose-200">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <i class="fas fa-cogs text-rose-600"></i>
+                                    <span class="font-medium text-slate-900 text-sm">Operations</span>
+                                </div>
+                                <div class="text-2xl font-bold text-rose-700">4 Alerts</div>
+                                <div class="text-xs text-rose-600">Action Required</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="space-y-6">
+                    <!-- Today's Schedule -->
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-900">Today's Schedule</h3>
+                            <button class="text-blue-600 text-sm hover:underline">Full Calendar</button>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex gap-3 p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-red-700">10:00</div>
+                                    <div class="text-xs text-red-600">AM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Board Prep Review</div>
+                                    <div class="text-xs text-slate-500">With: CFO, COO</div>
+                                    <div class="text-xs text-red-600 mt-1">Conference Room A</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-blue-700">12:30</div>
+                                    <div class="text-xs text-blue-600">PM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Leadership Lunch</div>
+                                    <div class="text-xs text-slate-500">All HODs</div>
+                                    <div class="text-xs text-blue-600 mt-1">Executive Dining</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 p-3 bg-purple-50 rounded-lg border-l-4 border-purple-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-purple-700">14:00</div>
+                                    <div class="text-xs text-purple-600">PM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Investor Meeting</div>
+                                    <div class="text-xs text-slate-500">Sequoia Capital</div>
+                                    <div class="text-xs text-purple-600 mt-1">Zoom - External</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 p-3 bg-slate-50 rounded-lg border-l-4 border-slate-400">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-slate-700">16:00</div>
+                                    <div class="text-xs text-slate-600">PM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Town Hall Prep</div>
+                                    <div class="text-xs text-slate-500">HR Team</div>
+                                    <div class="text-xs text-slate-500 mt-1">Your Office</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Quick Actions</h3>
+                        <div class="space-y-2">
+                            <button class="w-full flex items-center gap-3 p-3 text-left hover:bg-slate-50 rounded-lg transition-colors border border-slate-200">
+                                <i class="fas fa-envelope text-blue-600"></i>
+                                <div>
+                                    <div class="font-medium text-slate-900 text-sm">Send Company Update</div>
+                                    <div class="text-xs text-slate-500">Draft all-hands message</div>
+                                </div>
+                            </button>
+                            <button class="w-full flex items-center gap-3 p-3 text-left hover:bg-slate-50 rounded-lg transition-colors border border-slate-200">
+                                <i class="fas fa-file-signature text-emerald-600"></i>
+                                <div>
+                                    <div class="font-medium text-slate-900 text-sm">Pending Approvals</div>
+                                    <div class="text-xs text-slate-500">12 items awaiting sign-off</div>
+                                </div>
+                            </button>
+                            <button class="w-full flex items-center gap-3 p-3 text-left hover:bg-slate-50 rounded-lg transition-colors border border-slate-200">
+                                <i class="fas fa-chart-pie text-purple-600"></i>
+                                <div>
+                                    <div class="font-medium text-slate-900 text-sm">View MIS Reports</div>
+                                    <div class="text-xs text-slate-500">Daily business summary</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-900">Meeting Notes</h3>
+                            <button class="text-blue-600 text-sm"><i class="fas fa-plus"></i> Add</button>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                                <div class="text-xs text-yellow-700 font-medium mb-1">Yesterday, 6:30 PM</div>
+                                <div class="text-sm text-slate-700">Discussed APAC expansion timeline with Rajesh. Need to finalize Vietnam entity setup by March.</div>
+                            </div>
+                            <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                <div class="text-xs text-blue-700 font-medium mb-1">Yesterday, 4:00 PM</div>
+                                <div class="text-sm text-slate-700">Product team demo of new AI search. Impressive results - approve for Q2 rollout.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TECHNOLOGY DASHBOARD -->
+        <div id="dashboard-technology" class="dashboard-section hidden">
+            <div class="tech-gradient rounded-2xl p-6 text-white mb-6 card-shadow">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2">Good morning, Priya Sharma</h2>
+                        <p class="text-emerald-100">CTO - Technology & Engineering</p>
+                        <div class="flex gap-6 mt-4">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-server text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">99.97%</div>
+                                    <div class="text-xs text-emerald-200">Uptime</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-code-branch text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">24</div>
+                                    <div class="text-xs text-emerald-200">Deployments</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-bug text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">12</div>
+                                    <div class="text-xs text-emerald-200">Open Incidents</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-3xl font-bold">Sprint 24</div>
+                        <div class="text-sm text-emerald-200">Day 8 of 14</div>
+                        <div class="text-emerald-300 text-sm mt-1">Velocity: 847 pts</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-slate-900"><i class="fas fa-fire text-red-500 mr-2"></i>Critical System Issues</h3>
+                        <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium pulse-red">2 Critical</span>
+                    </div>
+
+                    <div class="priority-high bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded font-bold">P0 - PRODUCTION</span>
+                                <h4 class="font-bold text-slate-900 mt-2">Amadeus GDS API Latency Spike</h4>
+                            </div>
+                            <span class="text-sm text-red-600 font-medium">Active: 45 min</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Response times >800ms affecting flight search. Fallback to Galileo activated. 234 customer searches impacted.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700">War Room</button>
+                            <button class="px-3 py-1.5 bg-white text-slate-600 border text-sm rounded hover:bg-slate-50">Status Page</button>
+                        </div>
+                    </div>
+
+                    <div class="priority-high bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded font-bold">P1 - SECURITY</span>
+                                <h4 class="font-bold text-slate-900 mt-2">Dependency Vulnerability Alert</h4>
+                            </div>
+                            <span class="text-sm text-amber-600 font-medium">Due: EOD</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Critical CVE in log4j dependency identified in payment service. Patch ready, needs deployment approval.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-emerald-600 text-white text-sm rounded hover:bg-emerald-700">Deploy Patch</button>
+                            <button class="px-3 py-1.5 bg-white text-slate-600 border text-sm rounded hover:bg-slate-50">View Details</button>
+                        </div>
+                    </div>
+
+                    <div class="priority-medium bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded font-bold">INFRA</span>
+                                <h4 class="font-bold text-slate-900 mt-2">AWS Cost Optimization Review</h4>
+                            </div>
+                            <span class="text-sm text-slate-500">Scheduled: 3:00 PM</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Monthly cloud spend review. Current trajectory 12% over budget. EC2 and RDS optimization proposals ready.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">Review Proposal</button>
+                        </div>
+                    </div>
+
+                    <!-- Sprint Progress -->
+                    <div class="bg-white rounded-xl card-shadow p-6 mt-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">Sprint 24 Progress</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-slate-600">AI Search Enhancement</span>
+                                    <span class="font-medium text-emerald-600">85%</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2">
+                                    <div class="bg-emerald-500 h-2 rounded-full" style="width: 85%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-slate-600">Payment Gateway Upgrade</span>
+                                    <span class="font-medium text-amber-600">60%</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2">
+                                    <div class="bg-amber-500 h-2 rounded-full" style="width: 60%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-slate-600">Mobile App v3.2</span>
+                                    <span class="font-medium text-blue-600">40%</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2">
+                                    <div class="bg-blue-500 h-2 rounded-full" style="width: 40%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-900">Today's Schedule</h3>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex gap-3 p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-red-700">09:00</div>
+                                    <div class="text-xs text-red-600">AM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Incident Review</div>
+                                    <div class="text-xs text-slate-500">SRE Team</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-blue-700">11:00</div>
+                                    <div class="text-xs text-blue-600">AM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Architecture Review</div>
+                                    <div class="text-xs text-slate-500">Platform Team</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 p-3 bg-purple-50 rounded-lg border-l-4 border-purple-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-purple-700">14:00</div>
+                                    <div class="text-xs text-purple-600">PM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Vendor Negotiation</div>
+                                    <div class="text-xs text-slate-500">AWS + Datadog</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Team Alerts</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-3 p-3 bg-rose-50 rounded-lg">
+                                <i class="fas fa-user-clock text-rose-600"></i>
+                                <div>
+                                    <div class="text-sm font-medium text-slate-900">2 Developers OOO</div>
+                                    <div class="text-xs text-rose-600">Sprint capacity impacted</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 bg-amber-50 rounded-lg">
+                                <i class="fas fa-code text-amber-600"></i>
+                                <div>
+                                    <div class="text-sm font-medium text-slate-900">Code Freeze Tonight</div>
+                                    <div class="text-xs text-amber-600">10:00 PM for release</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Meeting Notes</h3>
+                        <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <div class="text-xs text-yellow-700 font-medium mb-1">Yesterday</div>
+                            <div class="text-sm text-slate-700">Microservices migration plan approved. Start with payment service in March.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FINANCE DASHBOARD -->
+        <div id="dashboard-finance" class="dashboard-section hidden">
+            <div class="finance-gradient rounded-2xl p-6 text-white mb-6 card-shadow">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2">Good morning, Rajesh Gupta</h2>
+                        <p class="text-emerald-100">CFO - Finance & Accounts</p>
+                        <div class="flex gap-6 mt-4">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-rupee-sign text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">₹12.4Cr</div>
+                                    <div class="text-xs text-emerald-200">Cash Position</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-chart-line text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">24%</div>
+                                    <div class="text-xs text-emerald-200">Revenue Growth</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-exclamation-circle text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">₹2.4Cr</div>
+                                    <div class="text-xs text-emerald-200">Overdue</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-3xl font-bold">Feb Close</div>
+                        <div class="text-sm text-emerald-200">16 days remaining</div>
+                        <div class="text-emerald-300 text-sm mt-1">87% complete</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-slate-900"><i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>Urgent Financial Matters</h3>
+                        <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">5 Critical</span>
+                    </div>
+
+                    <div class="priority-high bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded font-bold">TAX</span>
+                                <h4 class="font-bold text-slate-900 mt-2">GST Filing Deadline Tomorrow</h4>
+                            </div>
+                            <span class="text-sm text-red-600 font-medium">Due: 13 Feb</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">GSTR-1 for January 2026 pending final reconciliation. 234 invoices need verification before filing.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700">Review Now</button>
+                            <button class="px-3 py-1.5 bg-white text-slate-600 border text-sm rounded hover:bg-slate-50">Delegate</button>
+                        </div>
+                    </div>
+
+                    <div class="priority-high bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded font-bold">COLLECTION</span>
+                                <h4 class="font-bold text-slate-900 mt-2">ABC Corporate - ₹1.2Cr Overdue</h4>
+                            </div>
+                            <span class="text-sm text-amber-600 font-medium">52 days</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Payment promised by 10 Feb not received. Legal notice prepared. CEO approval needed for escalation.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-amber-600 text-white text-sm rounded hover:bg-amber-700">Call Client</button>
+                            <button class="px-3 py-1.5 bg-white text-slate-600 border text-sm rounded hover:bg-slate-50">Legal Notice</button>
+                        </div>
+                    </div>
+
+                    <div class="priority-medium bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded font-bold">AUDIT</span>
+                                <h4 class="font-bold text-slate-900 mt-2">Statutory Audit Preparation</h4>
+                            </div>
+                            <span class="text-sm text-slate-500">Starts: 20 Feb</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Deloitte team arriving next week. FY25 documentation 78% ready. Pending: Fixed asset register, intercompany reconciliations.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">Checklist</button>
+                        </div>
+                    </div>
+
+                    <!-- Cash Flow Summary -->
+                    <div class="bg-white rounded-xl card-shadow p-6 mt-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">This Week's Cash Flow</h3>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                                <div class="text-sm text-emerald-600 mb-1">Expected In</div>
+                                <div class="text-2xl font-bold text-emerald-700">₹8.4Cr</div>
+                                <div class="text-xs text-emerald-600">12 invoices</div>
+                            </div>
+                            <div class="p-4 bg-rose-50 rounded-lg border border-rose-200">
+                                <div class="text-sm text-rose-600 mb-1">Expected Out</div>
+                                <div class="text-2xl font-bold text-rose-700">₹6.2Cr</div>
+                                <div class="text-xs text-rose-600">45 payments</div>
+                            </div>
+                            <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                <div class="text-sm text-blue-600 mb-1">Net Position</div>
+                                <div class="text-2xl font-bold text-blue-700">+₹2.2Cr</div>
+                                <div class="text-xs text-blue-600">Positive</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-900">Today's Schedule</h3>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex gap-3 p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-red-700">10:00</div>
+                                    <div class="text-xs text-red-600">AM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Board Prep with CEO</div>
+                                    <div class="text-xs text-slate-500">Q4 Numbers Review</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 p-3 bg-amber-50 rounded-lg border-l-4 border-amber-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-amber-700">14:00</div>
+                                    <div class="text-xs text-amber-600">PM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Investor Meeting</div>
+                                    <div class="text-xs text-slate-500">Sequoia - Financials</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-blue-700">16:00</div>
+                                    <div class="text-xs text-blue-600">PM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Tax Team Review</div>
+                                    <div class="text-xs text-slate-500">GST Filing Status</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Pending Approvals</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                                <div>
+                                    <div class="text-sm font-medium text-slate-900">Vendor Payment</div>
+                                    <div class="text-xs text-slate-500">Emirates Airlines</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-bold text-slate-900">₹2.4Cr</div>
+                                    <button class="text-xs text-emerald-600 font-medium">Approve</button>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                                <div>
+                                    <div class="text-sm font-medium text-slate-900">Expense Claim</div>
+                                    <div class="text-xs text-slate-500">Sales Team - Dubai</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-bold text-slate-900">₹4.2L</div>
+                                    <button class="text-xs text-emerald-600 font-medium">Approve</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Meeting Notes</h3>
+                        <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <div class="text-xs text-yellow-700 font-medium mb-1">Yesterday</div>
+                            <div class="text-sm text-slate-700">Discussed FX hedging strategy with treasury. Recommend increasing EUR coverage to 75%.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SALES DASHBOARD -->
+        <div id="dashboard-sales" class="dashboard-section hidden">
+            <div class="sales-gradient rounded-2xl p-6 text-white mb-6 card-shadow">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2">Good morning, Vikram Malhotra</h2>
+                        <p class="text-red-100">Chief Sales Officer - B2B & B2C</p>
+                        <div class="flex gap-6 mt-4">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-trophy text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">112%</div>
+                                    <div class="text-xs text-red-200">Target Achievement</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-handshake text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">847</div>
+                                    <div class="text-xs text-red-200">New Leads</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-chart-line text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">₹24Cr</div>
+                                    <div class="text-xs text-red-200">MTD Revenue</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-3xl font-bold">Feb Target</div>
+                        <div class="text-sm text-red-200">₹45Cr</div>
+                        <div class="text-emerald-300 text-sm mt-1">53% achieved</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-slate-900"><i class="fas fa-fire text-red-500 mr-2"></i>Sales Actions Required</h3>
+                        <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">6 Urgent</span>
+                    </div>
+
+                    <div class="priority-high bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded font-bold">ENTERPRISE</span>
+                                <h4 class="font-bold text-slate-900 mt-2">TCS Annual Contract - ₹12Cr at Risk</h4>
+                            </div>
+                            <span class="text-sm text-red-600 font-medium">Decision: Today</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Competitor undercutting by 15%. Client requesting emergency meeting. Need pricing approval to match.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700">Call CEO</button>
+                            <button class="px-3 py-1.5 bg-white text-slate-600 border text-sm rounded hover:bg-slate-50">View Deal</button>
+                        </div>
+                    </div>
+
+                    <div class="priority-high bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded font-bold">B2B</span>
+                                <h4 class="font-bold text-slate-900 mt-2">3 Large Proposals Pending Sign-off</h4>
+                            </div>
+                            <span class="text-sm text-amber-600 font-medium">Due: EOD</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Infosys, Wipro, and Accenture proposals need final review. Total value ₹8.4Cr. Legal has cleared terms.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-emerald-600 text-white text-sm rounded hover:bg-emerald-700">Review Proposals</button>
+                        </div>
+                    </div>
+
+                    <div class="priority-medium bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded font-bold">TEAM</span>
+                                <h4 class="font-bold text-slate-900 mt-2">2 Key Account Managers Resigned</h4>
+                            </div>
+                            <span class="text-sm text-slate-500">Exit: 28 Feb</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Enterprise accounts need immediate reassignment. 5 enterprise clients at risk of service disruption.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">Reassign Accounts</button>
+                            <button class="px-3 py-1.5 bg-white text-slate-600 border text-sm rounded hover:bg-slate-50">Counter Offer</button>
+                        </div>
+                    </div>
+
+                    <!-- Pipeline Summary -->
+                    <div class="bg-white rounded-xl card-shadow p-6 mt-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">Sales Pipeline - February</h3>
+                        <div class="grid grid-cols-4 gap-4">
+                            <div class="p-3 bg-slate-50 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-slate-700">₹124Cr</div>
+                                <div class="text-xs text-slate-500">Total Pipeline</div>
+                            </div>
+                            <div class="p-3 bg-blue-50 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-blue-700">₹45Cr</div>
+                                <div class="text-xs text-blue-600">Negotiation</div>
+                            </div>
+                            <div class="p-3 bg-amber-50 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-amber-700">₹38Cr</div>
+                                <div class="text-xs text-amber-600">Proposal</div>
+                            </div>
+                            <div class="p-3 bg-emerald-50 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-emerald-700">₹24Cr</div>
+                                <div class="text-xs text-emerald-600">Closed Won</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-900">Today's Schedule</h3>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex gap-3 p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-red-700">11:00</div>
+                                    <div class="text-xs text-red-600">AM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">TCS Emergency Call</div>
+                                    <div class="text-xs text-slate-500">CFO + Procurement</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-blue-700">14:00</div>
+                                    <div class="text-xs text-blue-600">PM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Sales Team Huddle</div>
+                                    <div class="text-xs text-slate-500">Monthly Review</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 p-3 bg-purple-50 rounded-lg border-l-4 border-purple-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-purple-700">16:00</div>
+                                    <div class="text-xs text-purple-600">PM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Infosys Pitch</div>
+                                    <div class="text-xs text-slate-500">Final Presentation</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Top Performers</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-3 p-3 bg-emerald-50 rounded-lg">
+                                <div class="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white text-sm font-bold">AS</div>
+                                <div class="flex-1">
+                                    <div class="text-sm font-medium text-slate-900">Anita Sharma</div>
+                                    <div class="text-xs text-emerald-600">₹4.2Cr MTD</div>
+                                </div>
+                                <i class="fas fa-trophy text-amber-500"></i>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">RK</div>
+                                <div class="flex-1">
+                                    <div class="text-sm font-medium text-slate-900">Rahul Kumar</div>
+                                    <div class="text-xs text-blue-600">₹3.8Cr MTD</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Meeting Notes</h3>
+                        <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <div class="text-xs text-yellow-700 font-medium mb-1">Yesterday</div>
+                            <div class="text-sm text-slate-700">Competitor analysis shows 12% price gap in enterprise segment. Recommend volume discounts.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMMERCIAL DASHBOARD -->
+        <div id="dashboard-commercial" class="dashboard-section hidden">
+            <div class="commercial-gradient rounded-2xl p-6 text-white mb-6 card-shadow">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2">Good morning, Neha Patel</h2>
+                        <p class="text-pink-100">Chief Commercial Officer - Product & Contracting</p>
+                        <div class="flex gap-6 mt-4">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-hotel text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">12,847</div>
+                                    <div class="text-xs text-pink-200">Hotels</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-plane text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">156</div>
+                                    <div class="text-xs text-pink-200">Airlines</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-percentage text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">24%</div>
+                                    <div class="text-xs text-pink-200">Avg Margin</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-3xl font-bold">Q1 Contracts</div>
+                        <div class="text-sm text-pink-200">67 pending</div>
+                        <div class="text-emerald-300 text-sm mt-1">12 renewals due</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-slate-900"><i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>Contracting & Product Actions</h3>
+                        <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">4 Urgent</span>
+                    </div>
+
+                    <div class="priority-high bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded font-bold">EXPIRED</span>
+                                <h4 class="font-bold text-slate-900 mt-2">Marriott Contract Lapsed - ₹4Cr Revenue at Risk</h4>
+                            </div>
+                            <span class="text-sm text-red-600 font-medium">Expired: Yesterday</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Annual contract expired without renewal. 234 active bookings affected. Legal drafting emergency extension.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700">Call Marriott</button>
+                            <button class="px-3 py-1.5 bg-white text-slate-600 border text-sm rounded hover:bg-slate-50">View Impact</button>
+                        </div>
+                    </div>
+
+                    <div class="priority-high bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded font-bold">RATE UPDATE</span>
+                                <h4 class="font-bold text-slate-900 mt-2">Dubai Hotels - Eid Pricing Not Loaded</h4>
+                            </div>
+                            <span class="text-sm text-amber-600 font-medium">Live: Tomorrow</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">45 Dubai properties missing Eid holiday rates. Competitors already selling. Revenue loss estimated ₹2Cr.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-amber-600 text-white text-sm rounded hover:bg-amber-700">Urgent Upload</button>
+                        </div>
+                    </div>
+
+                    <div class="priority-medium bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded font-bold">NEW</span>
+                                <h4 class="font-bold text-slate-900 mt-2">Turkey Destination Launch - Supplier Onboarding</h4>
+                            </div>
+                            <span class="text-sm text-slate-500">Launch: 1 Mar</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Istanbul and Cappadocia contracts 60% complete. Need 40 more hotels and 3 DMCs to meet launch target.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">View Progress</button>
+                        </div>
+                    </div>
+
+                    <!-- Supplier Performance -->
+                    <div class="bg-white rounded-xl card-shadow p-6 mt-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">Supplier Performance Alerts</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center p-3 bg-rose-50 rounded-lg">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-hotel text-rose-600"></i>
+                                    <div>
+                                        <div class="text-sm font-medium text-slate-900">3 Hotels Below 3.5★</div>
+                                        <div class="text-xs text-rose-600">Contract review required</div>
+                                    </div>
+                                </div>
+                                <button class="text-xs text-rose-600 font-medium">Review</button>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-amber-50 rounded-lg">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-shuttle-van text-amber-600"></i>
+                                    <div>
+                                        <div class="text-sm font-medium text-slate-900">2 Transfer Operators</div>
+                                        <div class="text-xs text-amber-600">Reliability issues</div>
+                                    </div>
+                                </div>
+                                <button class="text-xs text-amber-600 font-medium">Action</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-900">Today's Schedule</h3>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex gap-3 p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-red-700">10:00</div>
+                                    <div class="text-xs text-red-600">AM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Marriott Emergency Call</div>
+                                    <div class="text-xs text-slate-500">APAC Director</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-blue-700">13:00</div>
+                                    <div class="text-xs text-blue-600">PM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Turkey Supplier Meet</div>
+                                    <div class="text-xs text-slate-500">3 DMCs - Video</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 p-3 bg-purple-50 rounded-lg border-l-4 border-purple-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-purple-700">15:30</div>
+                                    <div class="text-xs text-purple-600">PM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Rate Loading Team</div>
+                                    <div class="text-xs text-slate-500">Dubai Eid Pricing</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Contract Renewals Due</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center p-3 bg-rose-50 rounded-lg">
+                                <div>
+                                    <div class="text-sm font-medium text-slate-900">Marriott International</div>
+                                    <div class="text-xs text-rose-600">Expired yesterday</div>
+                                </div>
+                                <span class="text-xs font-bold text-rose-600">URGENT</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-amber-50 rounded-lg">
+                                <div>
+                                    <div class="text-sm font-medium text-slate-900">Emirates Airlines</div>
+                                    <div class="text-xs text-amber-600">Due: 15 Feb</div>
+                                </div>
+                                <span class="text-xs font-bold text-amber-600">3 days</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                                <div>
+                                    <div class="text-sm font-medium text-slate-900">Singapore Airlines</div>
+                                    <div class="text-xs text-blue-600">Due: 28 Feb</div>
+                                </div>
+                                <span class="text-xs font-bold text-blue-600">16 days</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Meeting Notes</h3>
+                        <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <div class="text-xs text-yellow-700 font-medium mb-1">Yesterday</div>
+                            <div class="text-sm text-slate-700">Marriott pushing for 18% commission vs our 15%. Negotiate on volume commitment.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- OPERATIONS DASHBOARD -->
+        <div id="dashboard-operations" class="dashboard-section hidden">
+            <div class="operations-gradient rounded-2xl p-6 text-white mb-6 card-shadow">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2">Good morning, Sanjay Reddy</h2>
+                        <p class="text-blue-100">COO - Operations & Customer Experience</p>
+                        <div class="flex gap-6 mt-4">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-headset text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">2,847</div>
+                                    <div class="text-xs text-blue-200">Open Tickets</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-clock text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">2.4 hrs</div>
+                                    <div class="text-xs text-blue-200">Avg Response</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-smile text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">4.2/5</div>
+                                    <div class="text-xs text-blue-200">CSAT Score</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-3xl font-bold">47 Critical</div>
+                        <div class="text-sm text-blue-200">Queue alerts</div>
+                        <div class="text-amber-300 text-sm mt-1">12 agents idle</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-slate-900"><i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>Critical Operations Issues</h3>
+                        <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium pulse-red">5 Critical</span>
+                    </div>
+
+                    <div class="priority-high bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded font-bold">QUEUE CRISIS</span>
+                                <h4 class="font-bold text-slate-900 mt-2">Flight Quote Queue - 47 Clients Waiting >4 Hours</h4>
+                            </div>
+                            <span class="text-sm text-red-600 font-medium">Active Now</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">B2C flight quotes severely backlogged. 12 enquiries untouched >24 hours. 3 agents idle with pending assignments.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700">Auto-Assign</button>
+                            <button class="px-3 py-1.5 bg-white text-slate-600 border text-sm rounded hover:bg-slate-50">View Queue</button>
+                        </div>
+                    </div>
+
+                    <div class="priority-high bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded font-bold">SUPPLIER ISSUE</span>
+                                <h4 class="font-bold text-slate-900 mt-2">Bali Transfer Operator - 45 Bookings Affected</h4>
+                            </div>
+                            <span class="text-sm text-amber-600 font-medium">Since: 6 AM</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Bali Budget Transfers vehicle breakdown. 45 customers stranded at airport. Alternative operator being arranged.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-amber-600 text-white text-sm rounded hover:bg-amber-700">Escalate</button>
+                            <button class="px-3 py-1.5 bg-white text-slate-600 border text-sm rounded hover:bg-slate-50">View Bookings</button>
+                        </div>
+                    </div>
+
+                    <div class="priority-medium bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded font-bold">STAFFING</span>
+                                <h4 class="font-bold text-slate-900 mt-2">Night Shift Coverage - 8 Agents Short</h4>
+                            </div>
+                            <span class="text-sm text-slate-500">Tonight: 10 PM</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Multiple sick leaves for night shift. Overtime budget exhausted. Consider WFH option or agency staff.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">Arrange Cover</button>
+                        </div>
+                    </div>
+
+                    <!-- SLA Performance -->
+                    <div class="bg-white rounded-xl card-shadow p-6 mt-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">SLA Performance Today</h3>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="p-4 bg-rose-50 rounded-lg border border-rose-200 text-center">
+                                <div class="text-3xl font-bold text-rose-600">47</div>
+                                <div class="text-sm text-rose-700">SLA Breaches</div>
+                                <div class="text-xs text-rose-600">+5 today</div>
+                            </div>
+                            <div class="p-4 bg-amber-50 rounded-lg border border-amber-200 text-center">
+                                <div class="text-3xl font-bold text-amber-600">2.4</div>
+                                <div class="text-sm text-amber-700">Avg Response (hrs)</div>
+                                <div class="text-xs text-amber-600">Target: <2</div>
+                            </div>
+                            <div class="p-4 bg-emerald-50 rounded-lg border border-emerald-200 text-center">
+                                <div class="text-3xl font-bold text-emerald-600">18.4%</div>
+                                <div class="text-sm text-emerald-700">Quote to Booking</div>
+                                <div class="text-xs text-emerald-600">-2.1% vs target</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-900">Today's Schedule</h3>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex gap-3 p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-red-700">09:00</div>
+                                    <div class="text-xs text-red-600">AM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Crisis Response - Bali</div>
+                                    <div class="text-xs text-slate-500">Ops + Commercial</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-blue-700">11:00</div>
+                                    <div class="text-xs text-blue-600">AM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Queue Management Review</div>
+                                    <div class="text-xs text-slate-500">Team Leads</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 p-3 bg-purple-50 rounded-lg border-l-4 border-purple-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-purple-700">14:00</div>
+                                    <div class="text-xs text-purple-600">PM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">CSAT Deep Dive</div>
+                                    <div class="text-xs text-slate-500">Quality Team</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Agent Status</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center p-3 bg-emerald-50 rounded-lg">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                                    <span class="text-sm text-slate-700">Active</span>
+                                </div>
+                                <span class="font-bold text-emerald-700">89</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-amber-50 rounded-lg">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 bg-amber-500 rounded-full"></div>
+                                    <span class="text-sm text-slate-700">On Break</span>
+                                </div>
+                                <span class="font-bold text-amber-700">12</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 bg-slate-400 rounded-full"></div>
+                                    <span class="text-sm text-slate-700">Offline</span>
+                                </div>
+                                <span class="font-bold text-slate-700">23</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Meeting Notes</h3>
+                        <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <div class="text-xs text-yellow-700 font-medium mb-1">Yesterday</div>
+                            <div class="text-sm text-slate-700">Queue automation project delayed. Need 2 more weeks for testing. Manual assignment continues.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MARKETING DASHBOARD -->
+        <div id="dashboard-marketing" class="dashboard-section hidden">
+            <div class="marketing-gradient rounded-2xl p-6 text-white mb-6 card-shadow">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2">Good morning, Priya Menon</h2>
+                        <p class="text-pink-100">CMO - Marketing & Growth</p>
+                        <div class="flex gap-6 mt-4">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-users text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">2.4M</div>
+                                    <div class="text-xs text-pink-200">Monthly Visitors</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-percentage text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">4.8%</div>
+                                    <div class="text-xs text-pink-200">Conversion Rate</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-rupee-sign text-xl"></i>
+                                <div>
+                                    <div class="text-2xl font-bold">₹847</div>
+                                    <div class="text-xs text-pink-200">CAC</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-3xl font-bold">Valentine's</div>
+                        <div class="text-sm text-pink-200">Campaign Live</div>
+                        <div class="text-emerald-300 text-sm mt-1">+34% engagement</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-slate-900"><i class="fas fa-fire text-red-500 mr-2"></i>Marketing Actions Required</h3>
+                        <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">3 Urgent</span>
+                    </div>
+
+                    <div class="priority-high bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded font-bold">CAMPAIGN</span>
+                                <h4 class="font-bold text-slate-900 mt-2">Summer Campaign Launch - Assets Delayed</h4>
+                            </div>
+                            <span class="text-sm text-red-600 font-medium">Launch: 20 Feb</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Creative agency missed deadline. 12 video assets pending. Media buy starts in 8 days. Need to expedite or delay launch.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700">Escalate Agency</button>
+                            <button class="px-3 py-1.5 bg-white text-slate-600 border text-sm rounded hover:bg-slate-50">Contingency Plan</button>
+                        </div>
+                    </div>
+
+                    <div class="priority-high bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded font-bold">BUDGET</span>
+                                <h4 class="font-bold text-slate-900 mt-2">Google Ads - Daily Budget Exhausted by 2 PM</h4>
+                            </div>
+                            <span class="text-sm text-amber-600 font-medium">Yesterday</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">CPC inflation 40% in travel category. Current budget insufficient for full day coverage. Requesting 25% increase.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-amber-600 text-white text-sm rounded hover:bg-amber-700">Request Budget</button>
+                            <button class="px-3 py-1.5 bg-white text-slate-600 border text-sm rounded hover:bg-slate-50">Optimize Bidding</button>
+                        </div>
+                    </div>
+
+                    <div class="priority-medium bg-white p-4 rounded-lg card-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded font-bold">CONTENT</span>
+                                <h4 class="font-bold text-slate-900 mt-2">Influencer Campaign - 3 Creators Pending Contracts</h4>
+                            </div>
+                            <span class="text-sm text-slate-500">Launch: 1 Mar</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">Dubai and Maldives influencer trip planned. 3 of 8 creators yet to sign agreements. Legal reviewing terms.</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">Follow Up</button>
+                        </div>
+                    </div>
+
+                    <!-- Campaign Performance -->
+                    <div class="bg-white rounded-xl card-shadow p-6 mt-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">Active Campaign Performance</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="p-3 bg-pink-50 rounded-lg border border-pink-200">
+                                <div class="text-xs text-pink-600 mb-1">Valentine's</div>
+                                <div class="text-xl font-bold text-pink-700">₹12.4L</div>
+                                <div class="text-xs text-emerald-600">+34% vs target</div>
+                            </div>
+                            <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                <div class="text-xs text-blue-600 mb-1">Dubai Expo</div>
+                                <div class="text-xl font-bold text-blue-700">₹8.2L</div>
+                                <div class="text-xs text-amber-600">-12% vs target</div>
+                            </div>
+                            <div class="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                                <div class="text-xs text-emerald-600 mb-1">Maldives</div>
+                                <div class="text-xl font-bold text-emerald-700">₹15.6L</div>
+                                <div class="text-xs text-emerald-600">+45% vs target</div>
+                            </div>
+                            <div class="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                                <div class="text-xs text-purple-600 mb-1">Europe</div>
+                                <div class="text-xl font-bold text-purple-700">₹6.8L</div>
+                                <div class="text-xs text-amber-600">-8% vs target</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-900">Today's Schedule</h3>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex gap-3 p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-red-700">10:00</div>
+                                    <div class="text-xs text-red-600">AM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Agency Crisis Meeting</div>
+                                    <div class="text-xs text-slate-500">Summer Campaign</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-blue-700">13:00</div>
+                                    <div class="text-xs text-blue-600">PM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Creative Review</div>
+                                    <div class="text-xs text-slate-500">Design Team</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 p-3 bg-purple-50 rounded-lg border-l-4 border-purple-500">
+                                <div class="text-center min-w-[60px]">
+                                    <div class="text-sm font-bold text-purple-700">15:00</div>
+                                    <div class="text-xs text-purple-600">PM</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-900 text-sm">Influencer Call</div>
+                                    <div class="text-xs text-slate-500">3 Creators</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Channel Performance</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-600">Organic Search</span>
+                                    <span class="font-medium text-emerald-600">+12%</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2">
+                                    <div class="bg-emerald-500 h-2 rounded-full" style="width: 75%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-600">Paid Social</span>
+                                    <span class="font-medium text-amber-600">+4%</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2">
+                                    <div class="bg-amber-500 h-2 rounded-full" style="width: 60%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-600">Email</span>
+                                    <span class="font-medium text-emerald-600">+28%</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2">
+                                    <div class="bg-emerald-500 h-2 rounded-full" style="width: 85%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl card-shadow p-6">
+                        <h3 class="font-bold text-slate-900 mb-4">Meeting Notes</h3>
+                        <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <div class="text-xs text-yellow-700 font-medium mb-1">Yesterday</div>
+                            <div class="text-sm text-slate-700">TikTok pilot showing 3x ROAS vs Instagram. Recommend increasing budget allocation.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function switchTab(department) {
+            // Hide all dashboards
+            document.querySelectorAll('.dashboard-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show selected dashboard
+            document.getElementById('dashboard-' + department).classList.remove('hidden');
+            
+            // Update tab styles
+            document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+                tab.classList.remove('tab-active');
+                tab.classList.add('tab-inactive');
+            });
+            
+            document.getElementById('tab-' + department).classList.remove('tab-inactive');
+            document.getElementById('tab-' + department).classList.add('tab-active');
+        }
+
+        // Set current date
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-IN', options);
+    </script>
+</body>
+</html>

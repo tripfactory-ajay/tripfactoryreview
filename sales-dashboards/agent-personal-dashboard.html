@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripFactory - My Performance Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .action-card { transition: all 0.3s; cursor: pointer; }
+        .action-card:hover { transform: translateX(8px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .urgent-action { border-left: 4px solid #ef4444; background: linear-gradient(to right, #fef2f2, #ffffff); }
+        .follow-up-action { border-left: 4px solid #f59e0b; background: linear-gradient(to right, #fffbeb, #ffffff); }
+        .new-lead-action { border-left: 4px solid #22c55e; background: linear-gradient(to right, #f0fdf4, #ffffff); }
+        .pipeline-stage { transition: all 0.3s; }
+        .pipeline-stage:hover { transform: scale(1.02); }
+        .commission-progress { background: linear-gradient(90deg, #22c55e 0%, #22c55e var(--progress), #e5e7eb var(--progress), #e5e7eb 100%); }
+        .timeline-item { position: relative; padding-left: 24px; }
+        .timeline-item::before { content: ''; position: absolute; left: 0; top: 8px; width: 12px; height: 12px; border-radius: 50%; background: #0066cc; }
+        .timeline-item::after { content: ''; position: absolute; left: 5px; top: 24px; width: 2px; height: calc(100% - 16px); background: #e5e7eb; }
+        .timeline-item:last-child::after { display: none; }
+        .metric-pulse { animation: metricPulse 2s infinite; }
+        @keyframes metricPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-white border-b-2 border-[#0066cc] px-6 py-4 shadow-lg">
+    <div class="flex justify-between items-center max-w-[1920px] mx-auto">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-gradient-to-br from-[#0066cc] to-[#1e3a5f] rounded-xl flex items-center justify-center text-white text-2xl">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-[#1e3a5f]">My Performance Dashboard</h1>
+                <p class="text-xs text-slate-500">Welcome back, Sarah Chen • Senior Travel Agent</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <!-- Quick Date Filter -->
+            <select id="periodFilter" onchange="updateDashboard()" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0066cc]">
+                <option value="today">Today</option>
+                <option value="week" selected>This Week</option>
+                <option value="month">This Month</option>
+                <option value="quarter">This Quarter</option>
+            </select>
+            
+            <div class="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg border border-green-200">
+                <i class="fas fa-circle text-green-500 text-xs"></i>
+                <span class="text-sm font-bold text-green-700">Online</span>
+            </div>
+            
+            <button onclick="viewProfile()" class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
+                SC
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-[1920px] mx-auto p-6 space-y-6">
+
+    <!-- Commission Tracker Banner -->
+    <div class="bg-gradient-to-r from-[#1e3a5f] to-[#0066cc] rounded-xl p-6 text-white shadow-lg">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-6">
+                <div>
+                    <div class="text-sm text-blue-200 mb-1">Monthly Commission Target</div>
+                    <div class="text-4xl font-bold mono">£4,500</div>
+                </div>
+                <div class="h-12 w-px bg-blue-400"></div>
+                <div>
+                    <div class="text-sm text-blue-200 mb-1">Earned So Far</div>
+                    <div class="text-4xl font-bold mono text-green-400" id="commissionEarned">£3,240</div>
+                </div>
+                <div class="h-12 w-px bg-blue-400"></div>
+                <div>
+                    <div class="text-sm text-blue-200 mb-1">Remaining</div>
+                    <div class="text-4xl font-bold mono text-yellow-400" id="commissionRemaining">£1,260</div>
+                </div>
+            </div>
+            
+            <div class="text-right">
+                <div class="text-5xl font-bold mono mb-1" id="commissionPercent">72%</div>
+                <div class="text-sm text-blue-200">of target achieved</div>
+                <div class="mt-2 text-xs text-blue-200">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Need <span class="font-bold text-white">£8,500</span> more sales to hit target
+                </div>
+            </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="mt-6">
+            <div class="w-full bg-blue-900 rounded-full h-4 overflow-hidden">
+                <div class="commission-progress h-full rounded-full transition-all duration-1000" style="--progress: 72%; width: 72%"></div>
+            </div>
+            <div class="flex justify-between text-xs text-blue-200 mt-2">
+                <span>£0</span>
+                <span>£2,250 (50%)</span>
+                <span>£4,500 (100%)</span>
+            </div>
+        </div>
+        
+        <!-- Quick Actions to Hit Target -->
+        <div class="mt-4 p-4 bg-white bg-opacity-10 rounded-lg backdrop-blur">
+            <div class="flex items-center gap-2 mb-2">
+                <i class="fas fa-rocket text-yellow-400"></i>
+                <span class="font-bold">Focus This Week to Hit Target:</span>
+            </div>
+            <div class="grid grid-cols-3 gap-4 text-sm">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-check-circle text-green-400"></i>
+                    <span>Convert 3 pending quotes (potential: £4,200)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-check-circle text-green-400"></i>
+                    <span>Follow up on 5 enquiries from yesterday</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-check-circle text-green-400"></i>
+                    <span>Push Maldives packages (high commission)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Critical Actions Required -->
+    <div class="grid grid-cols-12 gap-6">
+        
+        <!-- Left: Action Center (8 cols) -->
+        <div class="col-span-8 space-y-6">
+            
+            <!-- Urgent Actions -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-[#1e3a5f] flex items-center gap-2">
+                        <i class="fas fa-exclamation-circle text-red-500"></i>
+                        Urgent Actions Required
+                        <span class="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full" id="urgentCount">3</span>
+                    </h3>
+                    <button onclick="snoozeAll()" class="text-sm text-slate-500 hover:text-[#0066cc]">
+                        <i class="fas fa-clock"></i> Snooze All 1h
+                    </button>
+                </div>
+                
+                <div class="space-y-3" id="urgentActions">
+                    <!-- Quote Expiring -->
+                    <div class="action-card urgent-action p-4 rounded-xl border border-red-200 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center text-red-600">
+                                <i class="fas fa-file-invoice-dollar text-xl"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-[#1e3a5f]">Quote Expiring - Johnson Family</div>
+                                <div class="text-sm text-slate-600">Maldives package • £8,400 value • Quote sent 5 days ago</div>
+                                <div class="text-xs text-red-600 font-bold mt-1">
+                                    <i class="fas fa-clock"></i> Expires in 4 hours
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="quickAction('call', 'johnson')" class="px-4 py-2 bg-[#0066cc] text-white rounded-lg text-sm font-bold hover:bg-[#0052a3]">
+                                <i class="fas fa-phone mr-1"></i> Call Now
+                            </button>
+                            <button onclick="quickAction('email', 'johnson')" class="px-4 py-2 border border-[#0066cc] text-[#0066cc] rounded-lg text-sm font-bold hover:bg-blue-50">
+                                <i class="fas fa-envelope"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Follow Up Overdue -->
+                    <div class="action-card follow-up-action p-4 rounded-xl border border-yellow-200 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center text-yellow-600">
+                                <i class="fas fa-redo text-xl"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-[#1e3a5f]">Follow-up Overdue - Smith Couple</div>
+                                <div class="text-sm text-slate-600">Thailand tour • £3,200 value • Promised callback yesterday</div>
+                                <div class="text-xs text-yellow-600 font-bold mt-1">
+                                    <i class="fas fa-exclamation-triangle"></i> 1 day overdue
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="quickAction('call', 'smith')" class="px-4 py-2 bg-[#0066cc] text-white rounded-lg text-sm font-bold hover:bg-[#0052a3]">
+                                <i class="fas fa-phone mr-1"></i> Call Now
+                            </button>
+                            <button onclick="quickAction('whatsapp', 'smith')" class="px-4 py-2 border border-green-500 text-green-600 rounded-lg text-sm font-bold hover:bg-green-50">
+                                <i class="fab fa-whatsapp"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- New High-Value Lead -->
+                    <div class="action-card new-lead-action p-4 rounded-xl border border-green-200 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600">
+                                <i class="fas fa-star text-xl"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-[#1e3a5f]">New High-Value Lead - Corporate Group</div>
+                                <div class="text-sm text-slate-600">Dubai business trip • 12 people • Est. £15,600 value</div>
+                                <div class="text-xs text-green-600 font-bold mt-1">
+                                    <i class="fas fa-bolt"></i> Respond within 15 mins (hot lead)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="quickAction('call', 'corporate')" class="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-bold hover:bg-green-600">
+                                <i class="fas fa-phone mr-1"></i> Call Now
+                            </button>
+                            <button onclick="viewLeadDetails('corporate')" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg text-sm font-bold hover:bg-slate-50">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Pipeline -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="text-xl font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                    <i class="fas fa-filter text-[#0066cc]"></i>
+                    My Sales Pipeline
+                </h3>
+                
+                <div class="grid grid-cols-5 gap-4">
+                    <!-- New Enquiries -->
+                    <div class="pipeline-stage bg-blue-50 rounded-xl p-4 border border-blue-200 cursor-pointer" onclick="viewPipelineStage('new')">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-blue-600 uppercase">New</span>
+                            <span class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">12</span>
+                        </div>
+                        <div class="text-2xl font-bold text-[#1e3a5f] mono">£24K</div>
+                        <div class="text-xs text-slate-500 mt-1">Potential value</div>
+                        <div class="mt-3 text-xs text-blue-600 font-bold">
+                            <i class="fas fa-arrow-right"></i> 4 need response
+                        </div>
+                    </div>
+
+                    <!-- Quoted -->
+                    <div class="pipeline-stage bg-yellow-50 rounded-xl p-4 border border-yellow-200 cursor-pointer" onclick="viewPipelineStage('quoted')">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-yellow-600 uppercase">Quoted</span>
+                            <span class="w-8 h-8 bg-yellow-500 text-white rounded-full flex items-center justify-center text-sm font-bold">8</span>
+                        </div>
+                        <div class="text-2xl font-bold text-[#1e3a5f] mono">£38K</div>
+                        <div class="text-xs text-slate-500 mt-1">Pending decision</div>
+                        <div class="mt-3 text-xs text-yellow-600 font-bold">
+                            <i class="fas fa-exclamation-circle"></i> 3 expiring soon
+                        </div>
+                    </div>
+
+                    <!-- Negotiating -->
+                    <div class="pipeline-stage bg-orange-50 rounded-xl p-4 border border-orange-200 cursor-pointer" onclick="viewPipelineStage('negotiating')">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-orange-600 uppercase">Negotiating</span>
+                            <span class="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold">4</span>
+                        </div>
+                        <div class="text-2xl font-bold text-[#1e3a5f] mono">£22K</div>
+                        <div class="text-xs text-slate-500 mt-1">Active discussion</div>
+                        <div class="mt-3 text-xs text-orange-600 font-bold">
+                            <i class="fas fa-handshake"></i> 2 close to deal
+                        </div>
+                    </div>
+
+                    <!-- Booked -->
+                    <div class="pipeline-stage bg-green-50 rounded-xl p-4 border border-green-200 cursor-pointer" onclick="viewPipelineStage('booked')">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-green-600 uppercase">Booked</span>
+                            <span class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold">6</span>
+                        </div>
+                        <div class="text-2xl font-bold text-[#1e3a5f] mono">£28K</div>
+                        <div class="text-xs text-slate-500 mt-1">This month</div>
+                        <div class="mt-3 text-xs text-green-600 font-bold">
+                            <i class="fas fa-check-circle"></i> Commission: £1,680
+                        </div>
+                    </div>
+
+                    <!-- Lost -->
+                    <div class="pipeline-stage bg-slate-50 rounded-xl p-4 border border-slate-200 cursor-pointer" onclick="viewPipelineStage('lost')">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-slate-600 uppercase">Lost</span>
+                            <span class="w-8 h-8 bg-slate-400 text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
+                        </div>
+                        <div class="text-2xl font-bold text-[#1e3a5f] mono">£12K</div>
+                        <div class="text-xs text-slate-500 mt-1">To competitors</div>
+                        <div class="mt-3 text-xs text-slate-600 font-bold">
+                            <i class="fas fa-redo"></i> 1 recoverable
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottleneck Alert -->
+                <div class="mt-4 p-4 bg-red-50 rounded-lg border border-red-200">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-exclamation-triangle text-red-500 mt-1"></i>
+                        <div>
+                            <div class="font-bold text-red-700">Bottleneck Detected: Quote to Negotiation</div>
+                            <div class="text-sm text-red-600">You have 8 quotes pending but only 4 in negotiation. <span class="font-bold">Recommendation:</span> Follow up on quotes older than 48 hours. Industry best practice: 90% of quotes should move to negotiation within 2 days.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity Timeline -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="text-xl font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                    <i class="fas fa-history text-[#0066cc]"></i>
+                    My Activity Timeline
+                </h3>
+                
+                <div class="space-y-4" id="activityTimeline">
+                    <div class="timeline-item">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-bold text-[#1e3a5f]">Quote Sent - Johnson Family</div>
+                                <div class="text-sm text-slate-600">Maldives 7-night package • £8,400</div>
+                                <div class="text-xs text-slate-400 mt-1">2 hours ago</div>
+                            </div>
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-bold">AWAITING</span>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-bold text-[#1e3a5f]">Booking Confirmed - Williams Couple</div>
+                                <div class="text-sm text-slate-600">Thailand tour • £3,200 • Commission: £192</div>
+                                <div class="text-xs text-slate-400 mt-1">4 hours ago</div>
+                            </div>
+                            <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-bold">BOOKED</span>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-bold text-[#1e3a5f]">Follow-up Call - Smith Couple</div>
+                                <div class="text-sm text-slate-600">Discussed Thailand options • Sent revised quote</div>
+                                <div class="text-xs text-slate-400 mt-1">Yesterday, 4:30 PM</div>
+                            </div>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold">FOLLOW-UP</span>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-bold text-[#1e3a5f]">New Enquiry - Corporate Group</div>
+                                <div class="text-sm text-slate-600">Dubai business trip • 12 pax • Est. £15,600</div>
+                                <div class="text-xs text-slate-400 mt-1">Yesterday, 11:00 AM</div>
+                            </div>
+                            <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-bold">NEW LEAD</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right: Stats & Insights (4 cols) -->
+        <div class="col-span-4 space-y-6">
+
+            <!-- My Stats -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="text-lg font-bold text-[#1e3a5f] mb-4">My Performance</h3>
+                
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-percentage text-[#0066cc]"></i>
+                            <span class="text-sm text-slate-600">Conversion Rate</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-bold text-[#1e3a5f] mono">27.1%</div>
+                            <div class="text-xs text-green-600">↑ 3.2% vs avg</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-clock text-[#0066cc]"></i>
+                            <span class="text-sm text-slate-600">Avg Response Time</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-bold text-[#1e3a5f] mono">8m</div>
+                            <div class="text-xs text-green-600">↑ Fast</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-pound-sign text-[#0066cc]"></i>
+                            <span class="text-sm text-slate-600">Revenue (MTD)</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-bold text-[#1e3a5f] mono">£42.8K</div>
+                            <div class="text-xs text-green-600">↑ 12% vs target</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-smile text-[#0066cc]"></i>
+                            <span class="text-sm text-slate-600">CSAT Score</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-bold text-[#1e3a5f] mono">4.8/5</div>
+                            <div class="text-xs text-green-600">Excellent</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-slate-200">
+                    <div class="text-center">
+                        <div class="text-sm text-slate-500 mb-1">Team Ranking</div>
+                        <div class="text-3xl font-bold text-[#1e3a5f]">#1</div>
+                        <div class="text-xs text-slate-500">of 24 agents</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Today's Targets -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="text-lg font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                    <i class="fas fa-bullseye text-red-500"></i>
+                    Today's Targets
+                </h3>
+                
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-slate-600">New Enquiries</span>
+                            <span class="font-bold">3/5</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2">
+                            <div class="bg-blue-500 h-2 rounded-full" style="width: 60%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-slate-600">Quotes Sent</span>
+                            <span class="font-bold">2/4</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2">
+                            <div class="bg-yellow-500 h-2 rounded-full" style="width: 50%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-slate-600">Follow-ups</span>
+                            <span class="font-bold">5/6</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2">
+                            <div class="bg-green-500 h-2 rounded-full" style="width: 83%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-slate-600">Bookings</span>
+                            <span class="font-bold">1/2</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2">
+                            <div class="bg-purple-500 h-2 rounded-full" style="width: 50%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Smart Suggestions -->
+            <div class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl shadow-lg border border-purple-200 p-6">
+                <h3 class="text-lg font-bold text-[#1e3a5f] mb-4 flex items-center gap-2">
+                    <i class="fas fa-robot text-purple-600"></i>
+                    AI Suggestions
+                </h3>
+                
+                <div class="space-y-3">
+                    <div class="p-3 bg-white rounded-lg border border-purple-100">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-lightbulb text-yellow-500 mt-1"></i>
+                            <div class="text-sm">
+                                <span class="font-bold">Upsell Opportunity:</span> Offer travel insurance to 3 pending bookings. Potential extra commission: £180.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-3 bg-white rounded-lg border border-purple-100">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-clock text-blue-500 mt-1"></i>
+                            <div class="text-sm">
+                                <span class="font-bold">Best Time to Call:</span> Johnson Family typically responds between 6-8 PM. Schedule follow-up then.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-3 bg-white rounded-lg border border-purple-100">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-chart-line text-green-500 mt-1"></i>
+                            <div class="text-sm">
+                                <span class="font-bold">Trending:</span> Maldives enquiries up 40%. Push water villa upgrades for higher commission.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <h3 class="text-lg font-bold text-[#1e3a5f] mb-4">Quick Actions</h3>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="createNewQuote()" class="p-3 bg-[#0066cc] text-white rounded-lg text-sm font-bold hover:bg-[#0052a3] transition-colors">
+                        <i class="fas fa-plus mr-2"></i>New Quote
+                    </button>
+                    <button onclick="searchAvailability()" class="p-3 bg-green-500 text-white rounded-lg text-sm font-bold hover:bg-green-600 transition-colors">
+                        <i class="fas fa-search mr-2"></i>Check Availability
+                    </button>
+                    <button onclick="sendBulkFollowUp()" class="p-3 bg-yellow-500 text-white rounded-lg text-sm font-bold hover:bg-yellow-600 transition-colors">
+                        <i class="fas fa-paper-plane mr-2"></i>Bulk Follow-up
+                    </button>
+                    <button onclick="viewCalendar()" class="p-3 bg-purple-500 text-white rounded-lg text-sm font-bold hover:bg-purple-600 transition-colors">
+                        <i class="fas fa-calendar mr-2"></i>My Calendar
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</main>
+
+<!-- Action Modal -->
+<div id="actionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
+        <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-gradient-to-r from-[#0066cc] to-[#1e3a5f] text-white rounded-t-2xl">
+            <h2 class="text-xl font-bold" id="modalTitle">Quick Action</h2>
+            <button onclick="closeModal()" class="text-white hover:text-slate-200 text-2xl">&times;</button>
+        </div>
+        <div class="p-6" id="modalContent">
+            <!-- Dynamic content -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // Data scenarios for different time periods
+    const periodData = {
+        today: {
+            commissionEarned: '£180', commissionRemaining: '£4,320', commissionPercent: '4%',
+            urgentCount: 5, newLeads: 3, quoted: 2, negotiating: 1, booked: 0,
+            revenue: '£0', conversion: '0%'
+        },
+        week: {
+            commissionEarned: '£1,080', commissionRemaining: '£3,420', commissionPercent: '24%',
+            urgentCount: 3, newLeads: 12, quoted: 8, negotiating: 4, booked: 3,
+            revenue: '£12.4K', conversion: '25%'
+        },
+        month: {
+            commissionEarned: '£3,240', commissionRemaining: '£1,260', commissionPercent: '72%',
+            urgentCount: 3, newLeads: 48, quoted: 24, negotiating: 12, booked: 13,
+            revenue: '£42.8K', conversion: '27.1%'
+        },
+        quarter: {
+            commissionEarned: '£12,420', commissionRemaining: '£1,080', commissionPercent: '92%',
+            urgentCount: 2, newLeads: 142, quoted: 89, negotiating: 34, booked: 38,
+            revenue: '£128.4K', conversion: '26.8%'
+        }
+    };
+
+    function updateDashboard() {
+        const period = document.getElementById('periodFilter').value;
+        const data = periodData[period];
+        
+        // Animate commission updates
+        animateValue('commissionEarned', data.commissionEarned);
+        animateValue('commissionRemaining', data.commissionRemaining);
+        animateValue('commissionPercent', data.commissionPercent);
+        
+        // Update progress bar
+        document.querySelector('.commission-progress').style.setProperty('--progress', data.commissionPercent);
+        document.querySelector('.commission-progress').style.width = data.commissionPercent;
+        
+        // Update urgent count
+        document.getElementById('urgentCount').textContent = data.urgentCount;
+        
+        // Update pipeline numbers
+        updatePipelineNumbers(data);
+    }
+
+    function animateValue(id, newValue) {
+        const element = document.getElementById(id);
+        element.style.transform = 'scale(1.2)';
+        element.style.color = '#0066cc';
+        setTimeout(() => {
+            element.textContent = newValue;
+            element.style.transform = 'scale(1)';
+            element.style.color = '';
+        }, 200);
+    }
+
+    function updatePipelineNumbers(data) {
+        // This would update the pipeline stage numbers in a real implementation
+        console.log('Updating pipeline with:', data);
+    }
+
+    function quickAction(type, client) {
+        const modal = document.getElementById('actionModal');
+        const titles = {
+            call: 'Calling Client',
+            email: 'Send Email',
+            whatsapp: 'Send WhatsApp'
+        };
+        
+        document.getElementById('modalTitle').textContent = titles[type] || 'Action';
+        document.getElementById('modalContent').innerHTML = `
+            <div class="text-center py-8">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-${type === 'call' ? 'phone' : type === 'email' ? 'envelope' : 'comment'} text-3xl text-[#0066cc]"></i>
+                </div>
+                <h3 class="text-lg font-bold text-[#1e3a5f] mb-2">${client === 'johnson' ? 'Johnson Family' : client === 'smith' ? 'Smith Couple' : 'Corporate Group'}</h3>
+                <p class="text-slate-600 mb-4">${type === 'call' ? 'Dialing...' : 'Opening composer...'}</p>
+                <div class="flex gap-3">
+                    <button onclick="closeModal()" class="flex-1 py-2 bg-[#0066cc] text-white rounded-lg font-bold">Proceed</button>
+                    <button onclick="closeModal()" class="flex-1 py-2 border border-slate-300 text-slate-600 rounded-lg font-bold">Cancel</button>
+                </div>
+            </div>
+        `;
+        modal.classList.remove('hidden');
+    }
+
+    function viewLeadDetails(lead) {
+        const modal = document.getElementById('actionModal');
+        document.getElementById('modalTitle').textContent = 'Lead Details';
+        document.getElementById('modalContent').innerHTML = `
+            <div class="space-y-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-2xl font-bold">CG</div>
+                    <div>
+                        <div class="font-bold text-[#1e3a5f] text-lg">Corporate Group</div>
+                        <div class="text-sm text-slate-500">Dubai Business Trip • 12 people</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="p-3 bg-slate-50 rounded-lg">
+                        <div class="text-slate-500">Estimated Value</div>
+                        <div class="font-bold text-[#1e3a5f] text-lg">£15,600</div>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-lg">
+                        <div class="text-slate-500">Potential Commission</div>
+                        <div class="font-bold text-green-600 text-lg">£936</div>
+                    </div>
+                </div>
+                <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div class="font-bold text-yellow-700 mb-1">Requirements</div>
+                    <ul class="text-sm text-slate-600 space-y-1">
+                        <li>• 5-star hotels near business district</li>
+                        <li>• Airport transfers for 12 pax</li>
+                        <li>• Conference room booking</li>
+                        <li>• City tour on final day</li>
+                    </ul>
+                </div>
+                <button onclick="quickAction('call', 'corporate')" class="w-full py-3 bg-[#0066cc] text-white rounded-lg font-bold">Call Now</button>
+            </div>
+        `;
+        modal.classList.remove('hidden');
+    }
+
+    function viewPipelineStage(stage) {
+        alert(`Viewing all deals in ${stage} stage...\n\nThis would open a detailed list view.`);
+    }
+
+    function snoozeAll() {
+        alert('All urgent actions snoozed for 1 hour.\n\nYou will be reminded at 3:30 PM.');
+    }
+
+    function createNewQuote() { alert('Opening quote builder...'); }
+    function searchAvailability() { alert('Opening availability search...'); }
+    function sendBulkFollowUp() { alert('Opening bulk follow-up tool...'); }
+    function viewCalendar() { alert('Opening your calendar...'); }
+    function viewProfile() { alert('Opening your profile...'); }
+
+    function closeModal() {
+        document.getElementById('actionModal').classList.add('hidden');
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('actionModal');
+        if (event.target === modal) closeModal();
+    }
+</script>
+
+</body>
+</html>
