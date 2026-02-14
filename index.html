@@ -29,34 +29,34 @@
             padding: 2rem;
         }
 
-        /* Top Section - ORN Logo */
+        /* Top Section - White Background for Logos */
         .top-section {
             width: 100%;
             display: flex;
             justify-content: center;
-            margin-bottom: 2rem;
-        }
-
-        .orn-logo img {
-            max-height: 100px;
-            max-width: 350px;
-            object-fit: contain;
-        }
-
-        /* Middle Section - Two Logos Side by Side */
-        .logos-row {
-            width: 100%;
-            display: flex;
-            justify-content: center;
             align-items: center;
-            gap: 8rem;
-            margin-bottom: 3rem;
+            gap: 3rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: white;
         }
 
-        .logos-row img {
-            max-height: 70px;
-            max-width: 250px;
+        .logo-img {
+            height: 60px;
+            width: auto;
             object-fit: contain;
+        }
+
+        .orn-logo {
+            height: 70px;
+        }
+
+        .tripfactory-logo {
+            height: 55px;
+        }
+
+        .nexus-logo {
+            height: 50px;
         }
 
         /* Text Section - Centered */
@@ -207,19 +207,17 @@
                 padding: 1.5rem;
             }
 
-            .orn-logo img {
-                max-height: 80px;
-                max-width: 280px;
+            .top-section {
+                flex-direction: column;
+                gap: 1.5rem;
             }
 
-            .logos-row {
-                gap: 3rem;
-                margin-bottom: 2rem;
+            .logo-img {
+                height: 50px;
             }
 
-            .logos-row img {
-                max-height: 50px;
-                max-width: 180px;
+            .orn-logo {
+                height: 60px;
             }
 
             .text-section h1 {
@@ -239,17 +237,11 @@
 </head>
 <body>
 
-    <!-- ORN Logo - Top -->
+    <!-- Logos Section - White Background -->
     <div class="top-section">
-        <div class="orn-logo">
-            <img src="https://raw.githubusercontent.com/tripfactory-ajay/tripfactory/main/FA%20ORN%20Logo%20(Transparent%20Background).png" alt="ORN Logo">
-        </div>
-    </div>
-
-    <!-- TripFactory & Nexus Logos - Side by Side -->
-    <div class="logos-row">
-        <img src="https://raw.githubusercontent.com/tripfactory-ajay/tripfactory/main/TripFactory_Logo.jpg" alt="TripFactory Logo">
-        <img src="https://raw.githubusercontent.com/tripfactory-ajay/tripfactory/main/NexusDMC_Logo.jpg" alt="Nexus Logo">
+        <img src="Logos/orn-logo.png" alt="ORN Logo" class="logo-img orn-logo">
+        <img src="Logos/tripfactory-logo.png" alt="TripFactory Logo" class="logo-img tripfactory-logo">
+        <img src="Logos/nexus-logo.png" alt="Nexus Logo" class="logo-img nexus-logo">
     </div>
 
     <!-- Centered Text -->
